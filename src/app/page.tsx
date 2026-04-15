@@ -45,14 +45,14 @@ export default function LandingPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1 }}
           >
-            <h1 className="text-7xl md:text-[12rem] font-extrabold text-white tracking-tighter leading-[0.7] mb-8 uppercase">
-              The <span className="text-hormozi-yellow italic">Modern</span><br />
-              Standard
+            <h1 className="text-7xl md:text-[12xl] font-extrabold text-white tracking-tighter leading-[0.7] mb-8 uppercase">
+              EL ESTÁNDAR <br />
+              <span className="text-hormozi-yellow italic">MODERNO</span>
             </h1>
-            <p className="text-white/40 text-xl font-bold uppercase tracking-[0.2em] mb-12">Casa del Horizonte · Spain</p>
+            <p className="text-white/40 text-xl font-bold uppercase tracking-[0.2em] mb-12">Provincia de Soto · Santander</p>
             
             <button className="btn-hormozi group" onClick={() => document.getElementById('tour-section')?.scrollIntoView({ behavior: 'smooth' })}>
-              Get the Tour Now
+              ¡Pegue una vuelta ahora!
             </button>
           </motion.div>
         </div>
@@ -63,14 +63,14 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto">
           <div className="mb-12 flex flex-col md:flex-row items-end justify-between gap-6">
             <h2 className="text-5xl md:text-7xl font-extrabold text-white tracking-tight uppercase leading-none">
-              Step Into <br /><span className="text-hormozi-yellow">The Future</span>
+              Dese un <br /><span className="text-hormozi-yellow">recorridito</span>
             </h2>
             <p className="max-w-md text-white/50 text-right">
-              Our AI stage-craft transforms raw architectural spaces into fully realized living experiences. Click and drag to explore.
+              Mire cómo queda la casa limpiecita y amoblada con nuestra IA. De una foto simple de celular, nosotros le armamos todo.
             </p>
           </div>
           <TourViewer 
-            roomName="Gourmet Kitchen & Dining" 
+            roomName="Sala Principal y Comedor" 
             imageUrl="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1000" 
           />
         </div>
@@ -79,7 +79,7 @@ export default function LandingPage() {
       {/* 3. MOVING IMAGES SECTION (The "Alex Hormozi" Slider) */}
       <section className="py-24 bg-black/50 border-y border-white/5">
         <div className="px-6 md:px-24 mb-12">
-           <h3 className="text-3xl font-bold text-white uppercase italic tracking-tighter">Raw vs <span className="text-hormozi-yellow">Magic</span></h3>
+           <h3 className="text-3xl font-bold text-white uppercase italic tracking-tighter">Casa vacía vs <span className="text-hormozi-yellow">IA Mágica</span></h3>
         </div>
 
         <div className="flex gap-4 overflow-hidden whitespace-nowrap">
@@ -103,9 +103,9 @@ export default function LandingPage() {
             <div className="p-2 bg-hormozi-yellow rounded rotate-12">
               <Home size={20} className="text-black" />
             </div>
-            <span className="text-white font-extrabold tracking-tighter text-2xl uppercase">Showcase Virtual</span>
+            <span className="text-white font-extrabold tracking-tighter text-2xl uppercase">Inmueble IA</span>
          </div>
-         <p className="text-white/20 text-xs font-bold uppercase tracking-[0.4em]">Designed for Modern Sales</p>
+         <p className="text-white/20 text-xs font-bold uppercase tracking-[0.4em]">Diseñado para vender de una</p>
       </footer>
     </main>
   );
