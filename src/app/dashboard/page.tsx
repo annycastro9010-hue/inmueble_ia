@@ -62,23 +62,23 @@ export default function DashboardPage() {
         <nav className="flex-1 space-y-1">
           <button className="flex items-center gap-3 w-full px-4 py-3 bg-white/5 rounded-lg text-hormozi-yellow font-medium text-sm transition-all hover:bg-white/10">
             <LayoutDashboard size={18} />
-            Overview
+            Resumen
           </button>
           <button className="flex items-center gap-3 w-full px-4 py-3 text-white/40 hover:text-white hover:bg-white/5 rounded-lg text-sm transition-all">
             <ImageIcon size={18} />
-            Properties
+            Mis Inmuebles
           </button>
           <button className="flex items-center gap-3 w-full px-4 py-3 text-white/40 hover:text-white hover:bg-white/5 rounded-lg text-sm transition-all">
             <Settings size={18} />
-            Settings
+            Ajustes
           </button>
         </nav>
 
         <div className="mt-auto pt-6 border-t border-white/5">
           <div className="bg-gradient-to-br from-indigo-500/10 to-purple-500/10 p-4 rounded-xl border border-white/5">
-            <p className="text-[10px] uppercase tracking-widest text-white/40 mb-2">Pro Plan</p>
-            <p className="text-xs font-medium mb-3">Unlimited AI Staging</p>
-            <button className="w-full py-2 bg-white/5 hover:bg-white/10 rounded-lg text-xs font-bold transition-all">Upgrade</button>
+            <p className="text-[10px] uppercase tracking-widest text-white/40 mb-2">Plan Profesional</p>
+            <p className="text-xs font-medium mb-3">IA Ilimitada</p>
+            <button className="w-full py-2 bg-white/5 hover:bg-white/10 rounded-lg text-xs font-bold transition-all">Mejorar Plan</button>
           </div>
         </div>
       </aside>
@@ -88,7 +88,7 @@ export default function DashboardPage() {
         {/* Header */}
         <header className="h-20 border-b border-white/5 flex items-center justify-between px-8 bg-[#0a0a0a]/50 backdrop-blur-md">
           <div className="flex items-center gap-2 text-xs font-bold text-white/40 uppercase tracking-[0.2em]">
-            <span>Properties</span>
+            <span>Inmuebles</span>
             <ChevronRight size={14} />
             <span className="text-white">Casa del Horizonte</span>
           </div>
@@ -96,10 +96,10 @@ export default function DashboardPage() {
           <div className="flex gap-4">
             <button className="flex items-center gap-2 px-5 py-2.5 bg-white/5 border border-white/10 rounded-lg text-xs font-bold hover:bg-white/10 transition-all uppercase tracking-widest">
               <Video size={16} className="text-hormozi-yellow" />
-              Generate Viral Video
+              Crear Video Viral
             </button>
             <button className="flex items-center gap-2 px-5 py-2.5 bg-hormozi-yellow text-black rounded-lg text-xs font-bold hover:scale-105 transition-all uppercase tracking-widest">
-              Publish Showcase
+              Lanzar al Mundo
             </button>
           </div>
         </header>
@@ -109,9 +109,9 @@ export default function DashboardPage() {
           {/* Progress Steps */}
           <div className="flex items-center gap-4 mb-12">
             {[
-              { n: 1, t: "Upload RAW" },
-              { n: 2, t: "AI Staging" },
-              { n: 3, t: "Room Tagger" }
+              { n: 1, t: "Subir Fotos" },
+              { n: 2, t: "Mejorar con IA" },
+              { n: 3, t: "Etiquetar" }
             ].map((step) => (
               <div key={step.n} className={`flex items-center gap-3 ${activeStep === step.n ? "opacity-100" : "opacity-40"}`}>
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${activeStep === step.n ? "bg-hormozi-yellow text-black" : "bg-white/10"}`}>
@@ -133,10 +133,10 @@ export default function DashboardPage() {
               <div className="w-20 h-20 bg-hormozi-yellow/10 rounded-full flex items-center justify-center mb-6">
                 <Upload className="text-hormozi-yellow" size={32} />
               </div>
-              <h2 className="text-2xl font-bold mb-2">Drop your property photos</h2>
-              <p className="text-white/40 max-w-sm mb-8">Upload high-resolution images. Our AI will handle the rest—cleaning, staging, and building the tour.</p>
+              <h2 className="text-2xl font-bold mb-2">Suelte aquí sus fotos</h2>
+              <p className="text-white/40 max-w-sm mb-8">Suba fotos simples de celular. Nuestra IA se encarga de limpiarlas y amoblarlas por usted.</p>
               <label className="cursor-pointer px-10 py-4 bg-white text-black font-extrabold rounded-xl uppercase tracking-tighter hover:scale-105 transition-all">
-                Select Images
+                Seleccionar fotos
                 <input type="file" multiple className="hidden" onChange={handleUpload} accept="image/*" />
               </label>
             </motion.div>
@@ -160,7 +160,7 @@ export default function DashboardPage() {
                       <div className="absolute top-4 left-4 flex gap-2">
                         {img.status !== "original" && (
                           <div className="px-2 py-1 bg-green-500 text-white text-[10px] font-bold rounded flex items-center gap-1 uppercase">
-                            <CheckCircle2 size={10} /> {img.status}
+                            <CheckCircle2 size={10} /> {img.status === "cleaned" ? "LIMPIA" : "AMOBLADA"}
                           </div>
                         )}
                       </div>
@@ -182,12 +182,12 @@ export default function DashboardPage() {
                           setImages(newImages);
                         }}
                       >
-                        <option value="unassigned">Label Room Type...</option>
-                        <option value="living">Living Room</option>
-                        <option value="kitchen">Kitchen</option>
-                        <option value="bedroom">Master Bedroom</option>
-                        <option value="exterior">Exterior / Garden</option>
-                        <option value="pool">Pool Area</option>
+                        <option value="unassigned">¿Qué habitación es?</option>
+                        <option value="living">Sala Principal</option>
+                        <option value="kitchen">Cocina</option>
+                        <option value="bedroom">Habitación</option>
+                        <option value="exterior">Fachada / Jardín</option>
+                        <option value="pool">Piscina / Social</option>
                       </select>
 
                       <div className="flex gap-2">
@@ -197,7 +197,7 @@ export default function DashboardPage() {
                           className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-white/5 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-white/10 transition-all border border-white/10 disabled:opacity-50"
                         >
                           {isProcessing ? <Loader2 size={14} className="animate-spin" /> : <Wand2 size={14} className="text-hormozi-yellow" />}
-                          AI Clean
+                          Limpieza IA
                         </button>
                         <button 
                           onClick={() => processAI(img.id, "stage")}
@@ -205,7 +205,7 @@ export default function DashboardPage() {
                           className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-white/5 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-white/10 transition-all border border-white/10 disabled:opacity-50"
                         >
                           {isProcessing ? <Loader2 size={14} className="animate-spin" /> : <Settings size={14} className="text-indigo-400" />}
-                          Virtu-Stage
+                          Amoblar de una
                         </button>
                       </div>
                     </div>
@@ -216,7 +216,7 @@ export default function DashboardPage() {
               {/* Add More Button */}
               <label className="border-2 border-dashed border-white/5 rounded-2xl flex flex-col items-center justify-center gap-3 cursor-pointer hover:bg-white/[0.02] transition-colors p-12">
                  <Upload size={24} className="text-white/20" />
-                 <span className="text-[10px] font-bold uppercase tracking-widest text-white/20">Add More</span>
+                 <span className="text-[10px] font-bold uppercase tracking-widest text-white/20">Agregar más fotos</span>
                  <input type="file" multiple className="hidden" onChange={handleUpload} accept="image/*" />
               </label>
             </div>
