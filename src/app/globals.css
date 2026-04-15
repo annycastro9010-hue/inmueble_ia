@@ -9,7 +9,7 @@
 
 @layer base {
   body {
-    @apply bg-surface text-on-surface antialiased;
+    @apply bg-black text-white antialiased;
     font-family: var(--font-manrope);
   }
 

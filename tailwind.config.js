@@ -17,6 +17,7 @@ module.exports = {
         surface: {
           DEFAULT: "#f7f9fb",
           dark: "#191c1e",
+          on: "#191c1e",
         }
       },
       fontFamily: {
