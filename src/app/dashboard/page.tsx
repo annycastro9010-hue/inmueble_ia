@@ -40,12 +40,21 @@ export default function DashboardPage() {
 
   const processAI = async (id: string, type: "clean" | "stage") => {
     setIsProcessing(true);
+    
+    // Simulating the actual AI transformation
     setTimeout(() => {
       setImages(prev => prev.map(img => 
-        img.id === id ? { ...img, status: type === "clean" ? "cleaned" : "staged" } : img
+        img.id === id ? { 
+          ...img, 
+          status: type === "clean" ? "cleaned" : "staged",
+          // When 'cleaning', we swap to a beautiful AI placeholder to show the user the "magic"
+          url: type === "clean" 
+            ? "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&q=80&w=1000" // Modern clean room
+            : "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&q=80&w=1000" // Fully staged room
+        } : img
       ));
       setIsProcessing(false);
-    }, 2000);
+    }, 2500);
   };
 
   // Group images by floor for better organization
