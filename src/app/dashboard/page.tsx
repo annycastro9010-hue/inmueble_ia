@@ -21,14 +21,14 @@ export default function DashboardPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [activeStep, setActiveStep] = useState(1);
 
-  const handleUpload = (e: any) => {
+  const handleUpload = (e: any, floor: string = "1") => {
     const files = Array.from(e.target.files);
     const newImages = files.map((file: any) => ({
       id: Math.random().toString(36).substr(2, 9),
       url: URL.createObjectURL(file),
       name: file.name,
       roomType: "unassigned",
-      floor: "1",
+      floor: floor,
       status: "original"
     }));
     setImages([...images, ...newImages]);
@@ -106,7 +106,7 @@ export default function DashboardPage() {
               <p className="text-white/40 max-w-sm mb-8">No importa si es el primer piso o el patio. Súbalas todas y aquí las organizamos de una.</p>
               <label className="cursor-pointer px-10 py-4 bg-white text-black font-extrabold rounded-xl uppercase tracking-tighter hover:scale-105 transition-all shadow-[0_10px_30px_rgba(255,255,255,0.1)]">
                 Seleccionar fotos
-                <input type="file" multiple className="hidden" onChange={handleUpload} accept="image/*" />
+                <input type="file" multiple className="hidden" onChange={(e) => handleUpload(e, "1")} accept="image/*" />
               </label>
             </motion.div>
           ) : (
@@ -178,7 +178,7 @@ export default function DashboardPage() {
                        <label className="border-2 border-dashed border-white/5 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-white/[0.02] p-8">
                           <Upload size={20} className="text-white/20" />
                           <span className="text-[9px] font-bold uppercase tracking-widest text-white/20">Añadir más al {floor === "Exterior" ? "Exterior" : `Piso ${floor}`}</span>
-                          <input type="file" multiple className="hidden" onChange={handleUpload} accept="image/*" />
+                          <input type="file" multiple className="hidden" onChange={(e) => handleUpload(e, floor)} accept="image/*" />
                        </label>
                     </div>
                   </div>
