@@ -3,39 +3,28 @@
 @tailwind utilities;
 
 :root {
-  --font-manrope: 'Manrope', sans-serif;
-  --font-inter: 'Inter', sans-serif;
+  --primary: #facc15;
+  --black: #000000;
 }
 
-@layer base {
-  body {
-    @apply bg-black text-white antialiased;
-    font-family: var(--font-manrope);
-  }
-
-  h1, h2, h3, h4 {
-    @apply font-bold tracking-tight;
-  }
+body {
+  background-color: var(--black);
+  color: white;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-@layer components {
-  .glass {
-    @apply bg-white/70 backdrop-blur-xl border border-white/20;
-  }
-  
-  .glass-dark {
-    @apply bg-black/40 backdrop-blur-lg border border-white/10;
-  }
-
-  .btn-hormozi {
-    @apply bg-hormozi-yellow text-black font-extrabold px-8 py-4 rounded-lg 
-           uppercase tracking-tighter hover:scale-105 transition-transform 
-           shadow-[0_10px_20px_rgba(250,204,21,0.3)];
-  }
+h1, h2, h3, h4 {
+  font-weight: 800;
+  letter-spacing: -0.05em;
 }
 
-.reveal-text {
-  background: linear-gradient(to bottom, #fff 0%, #aaa 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+.btn-hormozi {
+  @apply bg-hormozi-yellow text-black font-extrabold px-8 py-4 rounded-lg 
+         uppercase tracking-tighter hover:scale-105 transition-transform 
+         shadow-[0_10px_20px_rgba(250,204,21,0.3)];
+}
+
+.glass-dark {
+  @apply bg-black/40 backdrop-blur-lg border border-white/10;
 }
