@@ -188,10 +188,6 @@ export default function DashboardPage() {
             Estudio de Diseño
           </button>
           <button className="flex items-center gap-4 w-full px-5 py-4 text-white/30 hover:text-white hover:bg-white/5 rounded-xl text-xs uppercase tracking-widest transition-all">
-            <ImageIcon size={18} />
-            Catálogo Real
-          </button>
-          <button className="flex items-center gap-4 w-full px-5 py-4 text-white/30 hover:text-white hover:bg-white/5 rounded-xl text-xs uppercase tracking-widest transition-all">
             <Settings size={18} />
             Configuración
           </button>

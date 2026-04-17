@@ -72,7 +72,7 @@ export default function LandingPage() {
                 className="btn-luxury"
                 onClick={() => document.getElementById('tour-section')?.scrollIntoView({ behavior: 'smooth' })}
               >
-                Explorar Catálogo
+                Ver Mansión Santander
               </button>
             </div>
           </motion.div>
