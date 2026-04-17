@@ -247,14 +247,21 @@ export default function DashboardPage() {
                         {floor === "Exterior" ? "Fachada y Exteriores" : `Piso ${floor}`}
                       </h3>
                       <div className="h-[1px] flex-1 bg-white/5" />
-                      <span className="text-[10px] font-bold text-white/20 uppercase tracking-[0.4em]">{floorImages.length} Activos</span>
+                      <span className="text-[10px] font-bold text-white/20 uppercase tracking-[0.4em]">
+                        {images.filter(img => img.floor === floor).length} Activos
+                      </span>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                        {floorImages.map((img) => (
                          <motion.div key={img.id} layout className="glass-luxury rounded-[2rem] overflow-hidden group">
                            <div className="aspect-[4/3] relative overflow-hidden">
-                             <img src={img.url} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1500ms]" />
+                             <img 
+                               src={img.url} 
+                               referrerPolicy="no-referrer"
+                               crossOrigin="anonymous"
+                               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1500ms]" 
+                             />
                              <div className="absolute top-6 left-6">
                                 {img.status !== 'original' && (
                                   <div className="px-4 py-1.5 bg-hormozi-yellow text-black text-[9px] font-black rounded-full uppercase tracking-widest flex items-center gap-1.5 shadow-xl">
