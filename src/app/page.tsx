@@ -11,30 +11,35 @@ export default function LandingPage() {
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
 
   const propertyImages = [
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuA4dYqDyk69GFn771jrhjQF6L_qfSpXpWks645bLXtHwXwKVhCQA0Ml10UG-0ALjKggCGm0m0Nm53emiGBNr_Grr0dvayR6X8KDPvimr5ZLeXEE07RITlMS3qacTWPSFH_B5iobL_fXckgB3YC9OiotyRUy98dYb_HvNuC-_96pmsuQSHDvo1BHVKO9hCrNASUdLdU8mSLy-pQuBePJU5wh4jmQFNwf1Y7qcfuNnhA9yeOR5rfXV-ppFZSln2YB_Gkt3CezPUfRTec",
-    "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1000",
-    "https://images.unsplash.com/photo-1600607687940-4ad236f75705?auto=format&fit=crop&q=80&w=1000",
-    "https://images.unsplash.com/photo-1600566753190-17f0bb2a6c3e?auto=format&fit=crop&q=80&w=1000",
+    "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1600",
+    "https://images.unsplash.com/photo-1600607687940-4ad236f75705?auto=format&fit=crop&q=80&w=1600",
+    "https://images.unsplash.com/photo-1600566753190-17f0bb2a6c3e?auto=format&fit=crop&q=80&w=1600",
   ];
 
   return (
     <main className="relative min-h-screen bg-primary overflow-hidden selection:bg-hormozi-yellow selection:text-black font-body">
       {/* 1. EDITORIAL HERO SECTION */}
       <section className="relative h-[90vh] w-full flex flex-col items-center justify-center overflow-hidden">
+        {/* Primary Background Image (The "House Alone") */}
         <div className="absolute inset-0 z-0">
+          <img 
+            src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80&w=1600" 
+            alt="Hero Architectural View"
+            className="w-full h-full object-cover opacity-50"
+          />
           <video
             autoPlay
             muted
             loop
             playsInline
             onCanPlay={() => setIsVideoLoaded(true)}
-            className={`w-full h-full object-cover transition-opacity duration-1000 ${
-              isVideoLoaded ? "opacity-40" : "opacity-0"
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 z-10 ${
+              isVideoLoaded ? "opacity-80" : "opacity-0"
             }`}
           >
             <source src="https://player.vimeo.com/external/494254065.sd.mp4?s=d150bf1f6004901f40d16c526aef6cc6d73f1d8c&profile_id=164&oauth2_token_id=57447761" type="video/mp4" />
           </video>
-          <div className="absolute inset-0 bg-gradient-to-at from-primary via-transparent to-primary/80" />
+          <div className="absolute inset-0 bg-gradient-to-at from-primary/60 via-transparent to-primary/60 z-20" />
         </div>
 
         {/* Floating Glass Navbar */}
@@ -51,14 +56,14 @@ export default function LandingPage() {
         </nav>
 
         {/* Editorial Title Overlay */}
-        <div className="relative z-10 text-center px-6 mt-20">
+        <div className="relative z-30 text-center px-6 mt-20">
           <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1.2, ease: "circOut" }}
+            initial={{ opacity: 0, scale: 1.1 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1.5, ease: "circOut" }}
           >
             <span className="text-[10px] font-bold text-hormozi-yellow uppercase tracking-[0.5em] mb-4 block">Arquitectura & Tecnología</span>
-            <h1 className="text-6xl md:text-[9rem] font-black text-white leading-[0.85] uppercase -ml-2">
+            <h1 className="text-5xl md:text-[7.5rem] font-black text-white leading-[0.85] uppercase -ml-2">
               EL NUEVO <br />
               <span className="italic">ESTÁNDAR</span>
             </h1>

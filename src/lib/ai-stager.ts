@@ -37,8 +37,8 @@ export async function processPropertyImage({ imageUrl, roomType, mode }: AIProce
     : {
         // Virtual Staging specialized model
         version: "39ed52f2a78e934b3ba6e2418e2808c1d1a12e52b86abf2f6445b23d578ec7b0",
-        prompt: `A luxuriously staged ${roomType}, modern Scandinavian furniture, elegant interior design, professional lighting, cozy atmosphere, realistic textures, high quality`,
-        negative_prompt: "low quality, bad lighting, empty room, distorted furniture, unrealistic"
+        prompt: `A luxuriously staged ${roomType}, high-end modern furniture, elegant interior design, 8k professional photography, warm studio lighting, realistic textures, cinematic composition`,
+        negative_prompt: "low quality, bad lighting, empty room, distorted furniture, unrealistic, old decor, messy"
       };
 
   try {
@@ -55,8 +55,8 @@ export async function processPropertyImage({ imageUrl, roomType, mode }: AIProce
           prompt: modelConfig.prompt,
           negative_prompt: modelConfig.negative_prompt,
           num_outputs: 1,
-          guidance_scale: 7.5,
-          refine: "expert_ensemble_refiner", // Enhances detail
+          guidance_scale: 8.0,
+          refine: "expert_ensemble_refiner",
           apply_watermark: false
         },
       }),
