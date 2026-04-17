@@ -1,17 +1,21 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
+// Limpiamos la URL para evitar que una barra diagonal '/' al final cause el error "Failed to fetch"
+const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseUrl = rawUrl.replace(/\/$/, ''); 
 
-// Definimos el cliente de forma segura para evitar errores durante el proceso de build
-// si las variables de entorno no están presentes momentáneamente.
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-/**
- * Nota para el Desarrollador:
- * Asegúrate de que las variables en Vercel se llamen exactamente:
- * NEXT_PUBLIC_SUPABASE_URL
- * NEXT_PUBLIC_SUPABASE_ANON_KEY
- * 
- * Evita que el traductor del navegador cambie "NEXT" por "SIGUIENTE".
- */
+if (!supabaseUrl || supabaseUrl.includes('placeholder')) {
+  console.warn("⚠️ Advertencia: NEXT_PUBLIC_SUPABASE_URL no está configurada correctamente en Vercel.");
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+  },
+  global: {
+    headers: { 'x-application-name': 'inmueble-ia' },
+  },
+});

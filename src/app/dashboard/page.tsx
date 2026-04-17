@@ -44,17 +44,29 @@ export default function DashboardPage() {
     setIsUploading(true);
     
     for (const file of files) {
+      if (supabase.supabaseUrl.includes('placeholder')) {
+        alert("⚠️ Error de Configuración: La aplicación todavía está usando la URL de prueba. Por favor, asegúrate de que en Vercel la variable se llame NEXT_PUBLIC_SUPABASE_URL y no 'SIGUIENTE_URL_SUPABASE_PÚBLICA'.");
+        setIsUploading(false);
+        return;
+      }
+
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
+      const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `uploads/${fileName}`;
+
+      console.log("Subiendo activo a:", filePath);
 
       // 1. Subir al Storage
       const { error: uploadError } = await supabase.storage
         .from("propiedades")
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
       if (uploadError) {
-        alert(`Error subiendo ${file.name}: ${uploadError.message}`);
+        console.error("Detalle del error de subida:", uploadError);
+        alert(`Error subiendo ${file.name}: ${uploadError.message || 'Error de conexión (Failed to fetch)'}. Verifica los permisos de Storage.`);
         continue;
       }
 
