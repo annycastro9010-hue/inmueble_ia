@@ -27,35 +27,28 @@ export async function processPropertyImage({ imageUrl, roomType, mode }: AIProce
   // Model Selection:
   // For 'clean', we use a specialized object removal model or Inpainting with a clear prompt.
   // For 'stage', we use a Diffusion model with interior design focus.
-  const modelConfig = mode === "clean" 
-    ? {
-        // MVP Interior Design for Decluttering
-        version: "76604b3ab357832e44d1ad3b47a0664445657390ee85549033486c673130767c", 
-        prompt: `An empty and vacant room, no furniture, high quality architecture, professional real estate photography`,
-        negative_prompt: "furniture, chairs, tables, beds, decor, clutter, messy, people, text, watermark, blurry"
-      }
-    : {
-        // SDXL Interior Design for Virtual Staging
-        version: "de77f3e6a06692998a4421b933390cc52b6188b2ea57077e31d4d8a576c24f9f",
-        prompt: `A luxuriously staged ${roomType || 'room'}, high-end modern furniture, elegant interior design, professional real estate photography, 8k, highly detailed`,
-        negative_prompt: "low quality, bad lighting, empty room, distorted furniture, unrealistic"
-      };
+  const modelPath = mode === "clean" 
+    ? "timothybrooks/instruct-pix2pix"
+    : "stability-ai/sdxl";
+
+  const prompt = mode === "clean"
+    ? "remove all furniture, empty room, clean walls, pristine floor, vacant space, professional real estate photography"
+    : `A luxuriously staged ${roomType || 'room'}, high-end modern furniture, elegant interior design, professional real estate photography, 8k, highly detailed`;
 
   try {
-    const response = await fetch("https://api.replicate.com/v1/predictions", {
+    const response = await fetch(`https://api.replicate.com/v1/models/${modelPath}/predictions`, {
       method: "POST",
       headers: {
         "Authorization": `Token ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        version: modelConfig.version,
         input: {
           image: imageUrl,
-          prompt: modelConfig.prompt,
-          negative_prompt: modelConfig.negative_prompt,
-          guidance_scale: 8.0,
-          num_inference_steps: 50
+          prompt: prompt,
+          negative_prompt: "clutter, messy, low quality, distorted, extra furniture",
+          guidance_scale: 7.5,
+          num_inference_steps: 30
         },
       }),
     });
