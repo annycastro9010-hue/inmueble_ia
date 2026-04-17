@@ -15,7 +15,7 @@ import {
   Clock
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured, supabaseUrl } from "@/lib/supabase";
 import TourViewer from "@/components/TourViewer";
 
 export default function DashboardPage() {
@@ -75,9 +75,9 @@ export default function DashboardPage() {
         continue;
       }
 
-      const { data: { publicUrl } } = supabase.storage
-        .from("propiedades")
-        .getPublicUrl(filePath);
+      // Construcción manual de la URL para asegurar visibilidad inmediata
+      const publicUrl = `${supabaseUrl}/storage/v1/object/public/propiedades/${filePath}`;
+      console.log("Activo listo en:", publicUrl);
 
       // 2. Insertar en BD
       const { data: mediaData, error: dbError } = await supabase
