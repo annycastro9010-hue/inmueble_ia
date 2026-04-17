@@ -27,29 +27,41 @@ export async function processPropertyImage({ imageUrl, roomType, mode }: AIProce
   // Model Selection:
   // For 'clean', we use a specialized object removal model or Inpainting with a clear prompt.
   // For 'stage', we use a Diffusion model with interior design focus.
-  const version = mode === "clean" 
-    ? "30c289233cf23037243c5b96796adba23668f3a362dbd66e8fa134709d290333" // Pix2Pix
-    : "7762fdc0ed2343d6bb30887ee5cf93f8ce4537c1a25c2483ce6b2848f2c698c9"; // SDXL
+  const modelPath = mode === "clean" 
+    ? "timothybrooks/instruct-pix2pix"
+    : "stability-ai/sdxl";
 
   const prompt = mode === "clean"
     ? "remove all furniture and clutter, show an empty clean room, white walls, wood floor, empty vacant space"
-    : `A luxuriously staged ${roomType || 'room'}, ultra-modern furniture, minimalist luxury, high-end interior design, 8k professional photography, high resolution, detailed furniture`;
+    : `A luxuriously staged ${roomType || 'room'}, ultra-modern luxury furniture, high-end interior design, professional real estate photography, 8k, photorealistic`;
 
   try {
-    const response = await fetch(`https://api.replicate.com/v1/predictions`, {
+    // 1. Obtener la VERSION MAS RECIENTE dinámicamente para que nunca falle
+    console.log(`Buscando versión más reciente para ${modelPath}...`);
+    const modelResponse = await fetch(`https://api.replicate.com/v1/models/${modelPath}`, {
+      headers: { "Authorization": `Token ${apiKey}` }
+    });
+    
+    if (!modelResponse.ok) throw new Error(`No se pudo encontrar el modelo ${modelPath}`);
+    const modelData = await modelResponse.json();
+    const latestVersion = modelData.latest_version.id;
+    console.log(`Usando versión: ${latestVersion}`);
+
+    // 2. Crear la predicción con la versión que Replicate nos acaba de dar
+    const response = await fetch("https://api.replicate.com/v1/predictions", {
       method: "POST",
       headers: {
         "Authorization": `Token ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        version: version,
+        version: latestVersion,
         input: {
           image: imageUrl,
           prompt: prompt,
-          negative_prompt: "people, blurry, distorted, messy, low quality, cartoon, drawing, text, watermark",
+          negative_prompt: "people, blurry, distorted, messy, low quality, text, watermark",
           guidance_scale: 7.5,
-          num_inference_steps: 50
+          num_inference_steps: 30
         },
       }),
     });
