@@ -15,7 +15,7 @@ import {
   Clock
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 export default function DashboardPage() {
   const [images, setImages] = useState<any[]>([]);
@@ -41,15 +41,14 @@ export default function DashboardPage() {
     const files = Array.from(e.target.files) as File[];
     if (files.length === 0) return;
 
+    if (!isSupabaseConfigured) {
+      alert("⚠️ Error de Configuración: La aplicación todavía está usando la URL de prueba. Por favor, asegúrate de que en Vercel la variable se llame NEXT_PUBLIC_SUPABASE_URL y no 'SIGUIENTE_URL_SUPABASE_PÚBLICA'.");
+      return;
+    }
+
     setIsUploading(true);
     
     for (const file of files) {
-      if (supabase.supabaseUrl.includes('placeholder')) {
-        alert("⚠️ Error de Configuración: La aplicación todavía está usando la URL de prueba. Por favor, asegúrate de que en Vercel la variable se llame NEXT_PUBLIC_SUPABASE_URL y no 'SIGUIENTE_URL_SUPABASE_PÚBLICA'.");
-        setIsUploading(false);
-        return;
-      }
-
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `uploads/${fileName}`;
