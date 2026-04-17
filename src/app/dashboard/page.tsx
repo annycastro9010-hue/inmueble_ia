@@ -279,6 +279,21 @@ export default function DashboardPage() {
                                  <Trash2 size={16} />
                                </button>
                              </div>
+                             
+                             {/* Overlay de acciones rápidas */}
+                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all flex flex-col justify-end p-8 gap-4">
+                               {img.status === 'original' && (
+                                 <button 
+                                   onClick={async () => {
+                                     await supabase.from("media").update({ status: 'staged' }).eq("id", img.id);
+                                     setImages(prev => prev.map(i => i.id === img.id ? { ...i, status: 'staged' } : i));
+                                   }}
+                                   className="w-full py-2 bg-white/5 hover:bg-white/10 text-white/50 hover:text-white text-[9px] font-bold rounded-lg uppercase tracking-[0.2em] border border-white/5 transition-all"
+                                 >
+                                   Marcar como Amueblado (Manual)
+                                 </button>
+                               )}
+                             </div>
                            </div>
                            
                            <div className="p-6 space-y-4">
