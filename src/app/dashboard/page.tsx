@@ -16,11 +16,17 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import TourViewer from "@/components/TourViewer";
 
 export default function DashboardPage() {
   const [images, setImages] = useState<any[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [activeTourIndex, setActiveTourIndex] = useState(0);
+
+  // Filter images that are ready for the tour (prefer staged, then cleaned, then original)
+  const tourImages = images.filter(img => img.status !== 'original' || images.length > 0);
 
   // Cargar imágenes de Supabase
   useEffect(() => {
@@ -201,7 +207,11 @@ export default function DashboardPage() {
                 <Video size={16} className="text-hormozi-yellow" />
                 Generar Video Viral
               </button>
-              <button className="btn-luxury">
+              <button 
+                onClick={() => setIsPreviewOpen(true)}
+                className="btn-luxury"
+                disabled={images.length === 0}
+              >
                 Ver Tour 360
               </button>
             </div>
@@ -308,6 +318,44 @@ export default function DashboardPage() {
           )}
         </div>
       </main>
+
+      {/* Visor de Tour Virtual */}
+      <AnimatePresence>
+        {isPreviewOpen && tourImages.length > 0 && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-2xl flex items-center justify-center p-12"
+          >
+             <button 
+               onClick={() => setIsPreviewOpen(false)}
+               className="absolute top-10 right-10 text-white/50 hover:text-white transition-all text-sm font-bold uppercase tracking-widest"
+             >
+               Esc · Cerrar Estudio
+             </button>
+
+             <div className="max-w-6xl w-full space-y-8">
+                <TourViewer 
+                  imageUrl={tourImages[activeTourIndex].url} 
+                  roomName={tourImages[activeTourIndex].room_type || "Espacio"} 
+                />
+
+                <div className="flex justify-center gap-4">
+                   {tourImages.map((img, idx) => (
+                     <button 
+                        key={img.id}
+                        onClick={() => setActiveTourIndex(idx)}
+                        className={`w-24 aspect-video rounded-xl overflow-hidden border-2 transition-all ${idx === activeTourIndex ? 'border-hormozi-yellow scale-110 shadow-[0_0_20px_rgba(255,255,0,0.2)]' : 'border-white/10 opacity-40 hover:opacity-100'}`}
+                     >
+                        <img src={img.url} className="w-full h-full object-cover" />
+                     </button>
+                   ))}
+                </div>
+             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
