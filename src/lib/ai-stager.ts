@@ -29,16 +29,16 @@ export async function processPropertyImage({ imageUrl, roomType, mode }: AIProce
   // For 'stage', we use a Diffusion model with interior design focus.
   const modelConfig = mode === "clean" 
     ? {
-        // SDXL Inpainting focused on empty spaces
-        version: "f86cd1bd-2950-4560-9118-a681df7311d4", 
-        prompt: `An empty and vacant ${roomType}, pristine hardwood floors, clear walls, professional real estate photography, minimalist architecture, wide angle, natural sunlight, high resolution`,
+        // MVP Interior Design for Decluttering
+        version: "76604b3ab357832e44d1ad3b47a0664445657390ee85549033486c673130767c", 
+        prompt: `An empty and vacant room, no furniture, high quality architecture, professional real estate photography`,
         negative_prompt: "furniture, chairs, tables, beds, decor, clutter, messy, people, text, watermark, blurry"
       }
     : {
-        // Virtual Staging specialized model
-        version: "39ed52f2a78e934b3ba6e2418e2808c1d1a12e52b86abf2f6445b23d578ec7b0",
-        prompt: `A luxuriously staged ${roomType}, high-end modern furniture, elegant interior design, 8k professional photography, warm studio lighting, realistic textures, cinematic composition`,
-        negative_prompt: "low quality, bad lighting, empty room, distorted furniture, unrealistic, old decor, messy"
+        // SDXL Interior Design for Virtual Staging
+        version: "de77f3e6a06692998a4421b933390cc52b6188b2ea57077e31d4d8a576c24f9f",
+        prompt: `A luxuriously staged ${roomType || 'room'}, high-end modern furniture, elegant interior design, professional real estate photography, 8k, highly detailed`,
+        negative_prompt: "low quality, bad lighting, empty room, distorted furniture, unrealistic"
       };
 
   try {
@@ -54,10 +54,8 @@ export async function processPropertyImage({ imageUrl, roomType, mode }: AIProce
           image: imageUrl,
           prompt: modelConfig.prompt,
           negative_prompt: modelConfig.negative_prompt,
-          num_outputs: 1,
           guidance_scale: 8.0,
-          refine: "expert_ensemble_refiner",
-          apply_watermark: false
+          num_inference_steps: 50
         },
       }),
     });
