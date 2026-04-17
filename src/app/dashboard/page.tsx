@@ -141,9 +141,13 @@ export default function DashboardPage() {
         })
       });
 
-      if (!response.ok) throw new Error("Error en la IA");
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Error desconocido en el servidor");
+      }
       
-      const prediction = await response.json();
+      const prediction = result;
 
       // Actualizar estado en BD
       const newStatus = type === "clean" ? "cleaned" : "staged";
@@ -156,9 +160,10 @@ export default function DashboardPage() {
         img.id === id ? { ...img, status: newStatus } : img
       ));
       
-      alert(`La IA ha comenzado la ${type === "clean" ? 'limpieza' : 'decoración'}. Los cambios aparecerán pronto.`);
-    } catch (error) {
-      alert("Error procesando con IA. Verifica tu conexión y configuración.");
+      alert(`¡IA Iniciada! El proceso de ${type === "clean" ? 'limpieza' : 'decoración'} ha comenzado. En unos segundos verás el resultado.`);
+    } catch (error: any) {
+      console.error("Error de IA:", error);
+      alert(`Ups! Algo salió mal con la IA: ${error.message}`);
     } finally {
       setIsProcessing(false);
     }
