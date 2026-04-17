@@ -3,28 +3,41 @@
 @tailwind utilities;
 
 :root {
-  --primary: #facc15;
-  --black: #000000;
+  --primary: #062b54;
+  --primary-container: #23416b;
+  --surface: #f7f9fb;
+  --on-surface: #191c1e;
+  --hormozi-yellow: #facc15;
 }
 
 body {
-  background-color: var(--black);
-  color: white;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  @apply bg-[#062b54] text-white selection:bg-hormozi-yellow selection:text-black antialiased;
+  font-family: 'Inter', sans-serif;
 }
 
 h1, h2, h3, h4 {
-  font-weight: 800;
-  letter-spacing: -0.05em;
+  font-family: 'Manrope', sans-serif;
+  @apply tracking-tighter leading-none;
 }
 
-.btn-hormozi {
-  @apply bg-hormozi-yellow text-black font-extrabold px-8 py-4 rounded-lg 
-         uppercase tracking-tighter hover:scale-105 transition-transform 
-         shadow-[0_10px_20px_rgba(250,204,21,0.3)];
+/* Glassmorphism Rule from Stitch */
+.glass-luxury {
+  @apply bg-white/10 backdrop-blur-[32px] border-none shadow-[0_20px_40px_rgba(6,43,84,0.12)];
 }
 
-.glass-dark {
-  @apply bg-black/40 backdrop-blur-lg border border-white/10;
+/* No-Line Rule: boundaries through tonal shifts */
+.section-tonal-shift {
+  @apply bg-[#f2f4f6]/5;
 }
+
+.btn-luxury {
+  @apply bg-gradient-to-br from-[#062b54] to-[#23416b] text-white font-bold 
+         px-10 py-5 rounded-xl uppercase tracking-widest text-xs
+         hover:scale-[1.02] transition-all shadow-[0_10px_30px_rgba(6,43,84,0.3)];
+}
+
+/* Horizontal line fallback with 15% opacity as per Stitch docs */
+.ghost-border {
+  @apply border-white/15;
+}
+
