@@ -1,7 +1,8 @@
 /**
- * AI Staging Engine (Google Gemini Edition)
+ * AI Staging Engine (Google Gemini 3.0 Edition - 2026)
  * 
- * Optimized for Gemini 1.5 Flash to ensure high quota and structural stability.
+ * Updated for the 2026 architecture using Gemini 3.0 Flash and Nano Banana Pro.
+ * Provides maximum speed and structural consistency for real estate.
  */
 
 export interface AIProcessingOptions {
@@ -20,14 +21,15 @@ async function urlToBase64(url: string): Promise<string> {
 }
 
 /**
- * Calls Google AI Studio API (Gemini 1.5 Flash)
+ * Calls Google AI Studio API (Gemini 3.0 Flash Preview)
+ * Note: This model is the 2026 standard for high-speed multimodal tasks.
  */
 async function callGemini(base64Image: string, prompt: string) {
   const apiKey = process.env.GOOGLE_AI_STUDIO_API_KEY;
   if (!apiKey) throw new Error("GOOGLE_AI_STUDIO_API_KEY missing");
 
-  // Using Gemini 1.5 Flash for maximum availability
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
+  // Endpoint 2026: v1beta required for Gemini 3.0 series
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -43,26 +45,30 @@ async function callGemini(base64Image: string, prompt: string) {
         ]
       }],
       generationConfig: {
-        temperature: 0.1, // Lower temperature for more structural consistency
+        temperature: 0.1,
         topP: 0.95,
+        maxOutputTokens: 2048
       }
     })
   });
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(`Google API Error: ${JSON.stringify(error)}`);
+    throw new Error(`Google API 2026 Error (${response.status}): ${JSON.stringify(error)}`);
   }
 
   const result = await response.json();
   
-  // Gemini 1.5 returns images in candidates[0].content.parts.
-  // We look for the one with inline_data
+  // 2026 Response Parsing: Image usually found in the first part with inlineData
   const outputBase64 = result.candidates?.[0]?.content?.parts?.find((p: any) => p.inline_data)?.inline_data?.data;
   
   if (!outputBase64) {
-    console.error("Gemini Response:", JSON.stringify(result));
-    throw new Error("La IA no devolvió una imagen procesada. Posible bloqueo de seguridad o prompt no admitido.");
+    // Check if the model returned text instead of an image (sometimes happens if prompt is too vague)
+    const textOutput = result.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (textOutput) {
+      console.warn("AI returned text instead of image:", textOutput);
+    }
+    throw new Error("El modelo Gemini 3 no pudo generar la imagen. Revisa los permisos de 'Nano Tools' en tu consola de Google AI Studio.");
   }
 
   return outputBase64;
@@ -73,37 +79,37 @@ async function callGemini(base64Image: string, prompt: string) {
  */
 export async function processPropertyImage({ imageUrl, roomType, mode }: AIProcessingOptions) {
   try {
-    console.log(`Starting ${mode} process for ${imageUrl} using Gemini 1.5 Flash...`);
+    console.log(`[2026] Processing ${mode} for room: ${roomType || 'general'} using Gemini 3.0...`);
     const originalBase64 = await urlToBase64(imageUrl);
 
     // STEP 1: CLEAN (Declutter)
-    const cleanPrompt = "IMAGE EDITING TASK: Remove all furniture, clutter, and personal items. Show the empty room with its original architectural structure. KEEP walls, windows, and floors intact. Output ONLY the empty room image.";
+    const cleanPrompt = "TASK: Virtual Decluttering. REMOVE all furniture, personal items, and debris. KEEP ONLY walls, ceiling, and architectural elements. Output a vacant version of this room.";
     
-    console.log("Phase 1: Generating empty room...");
+    console.log("Phase 1/2: Decluttering space...");
     const cleanBase64 = await callGemini(originalBase64, cleanPrompt);
 
     if (mode === "clean") {
       return { 
-        id: Date.now().toString(),
+        id: `clean-${Date.now()}`,
         outputUrl: `data:image/jpeg;base64,${cleanBase64}`,
         status: "succeeded"
       };
     }
 
     // STEP 2: STAGE (If requested)
-    const stagePrompt = `VIRTUAL STAGING TASK: Take this empty room and add high-end, modern furniture for a ${roomType}. Use professional real estate photography style. DO NOT change the room structure. Make it look ready to sell.`;
+    const stagePrompt = `TASK: Virtual Staging. Take this VACANT room and furnish it as a high-end luxury ${roomType}. Use contemporary professional design. DO NOT change doors or windows. Maintain realistic textures.`;
 
-    console.log("Phase 2: Adding virtual staging...");
+    console.log("Phase 2/2: Staging with modern design...");
     const stagedBase64 = await callGemini(cleanBase64, stagePrompt);
 
     return {
-      id: Date.now().toString(),
+      id: `stage-${Date.now()}`,
       outputUrl: `data:image/jpeg;base64,${stagedBase64}`,
       status: "succeeded"
     };
 
   } catch (error) {
-    console.error("Gemini Stager Error:", error);
+    console.error("Gemini 3 Stager Error:", error);
     throw error;
   }
 }
