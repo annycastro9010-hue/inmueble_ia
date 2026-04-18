@@ -105,8 +105,33 @@ export default function LandingPage() {
           <div className="lg:col-span-7">
             <div className="relative glass-luxury p-4 rounded-3xl overflow-hidden">
                <TourViewer 
-                roomName="Master Interior" 
-                imageUrl="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1000" 
+                scenes={[
+                  {
+                    id: 'sala',
+                    name: 'Sala Principal',
+                    imageUrl: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1000',
+                    hotspots: [
+                      { x: 80, y: 50, targetSceneId: 'cocina', label: 'Ver Cocina' },
+                      { x: 20, y: 40, targetSceneId: 'cuarto', label: 'Pasillo Habitaciones' }
+                    ]
+                  },
+                  {
+                    id: 'cocina',
+                    name: 'Cocina Integral',
+                    imageUrl: 'https://images.unsplash.com/photo-1600607687940-4ad236f75705?auto=format&fit=crop&q=80&w=1000',
+                    hotspots: [
+                      { x: 10, y: 60, targetSceneId: 'sala', label: 'Volver a la Sala' }
+                    ]
+                  },
+                  {
+                    id: 'cuarto',
+                    name: 'Master Suite',
+                    imageUrl: 'https://images.unsplash.com/photo-1600566753190-17f0bb2a6c3e?auto=format&fit=crop&q=80&w=1000',
+                    hotspots: [
+                      { x: 50, y: 80, targetSceneId: 'sala', label: 'Salir a la Sala' }
+                    ]
+                  }
+                ]} 
               />
             </div>
           </div>
