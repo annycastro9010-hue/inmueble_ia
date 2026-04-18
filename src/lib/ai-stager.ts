@@ -1,8 +1,8 @@
 /**
- * AI Staging Engine (Google Nano Banana Pro - 2026)
+ * AI Staging Engine (Google Gemini 3.0 Editor - 2026)
  * 
- * Using the Pro edition of Nano Banana for direct image-to-image
- * execution, bypassing the coordinate-only response.
+ * Reverting to the verified Gemini 3 Flash Preview model
+ * but forcing the 'image_editor' tool to avoid JSON-only responses.
  */
 
 export interface AIProcessingOptions {
@@ -21,14 +21,13 @@ async function urlToBase64(url: string): Promise<string> {
 }
 
 /**
- * Calls Google AI Studio API (Nano Banana Pro)
+ * Calls Google AI Studio API (Gemini 3.0 Flash Preview)
  */
-async function callNanoBanana(base64Image: string, prompt: string) {
+async function callGemini(base64Image: string, prompt: string) {
   const apiKey = process.env.GOOGLE_AI_STUDIO_API_KEY;
   if (!apiKey) throw new Error("GOOGLE_AI_STUDIO_API_KEY missing");
 
-  // Endpoint 2026: nano-banana-pro is the specialized image engine
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/nano-banana-pro:generateContent?key=${apiKey}`, {
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -43,6 +42,13 @@ async function callNanoBanana(base64Image: string, prompt: string) {
           }
         ]
       }],
+      // REQUIRED FOR 2026: Enable the image editor tool to avoid diagnostic JSON
+      tools: [
+        {
+          // @ts-ignore - Specific 2026 tool naming
+          image_editor: {}
+        }
+      ],
       safetySettings: [
         { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
         { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
@@ -63,16 +69,14 @@ async function callNanoBanana(base64Image: string, prompt: string) {
 
   const result = await response.json();
   
-  // Nano Banana Pro returns the direct image in the parts
+  // Look for the image in the parts returned by the image_editor tool
   const outputBase64 = result.candidates?.[0]?.content?.parts?.find((p: any) => p.inline_data)?.inline_data?.data;
   
   if (!outputBase64) {
-    // If it still returns JSON, we force it via a fallback or error
+    // If it still returns text/JSON, we show it to debug
     const textOutput = result.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (textOutput && textOutput.includes("objects_to_remove")) {
-       throw new Error("El modelo entró en modo diagnóstico. Reintentando con parámetros de ejecución directa...");
-    }
-    throw new Error("No se pudo obtener la imagen editada. Verifica que 'Direct Execution' esté activo en tu consola de Google.");
+    if (textOutput) throw new Error(`La IA respondió con texto/JSON en lugar de imagen: ${textOutput.substring(0, 100)}...`);
+    throw new Error("El editor de imagen no devolvió datos. Revisa si el modelo 'gemini-3-flash-preview' tiene habilitado el Image Editor en tu consola.");
   }
 
   return outputBase64;
@@ -83,37 +87,37 @@ async function callNanoBanana(base64Image: string, prompt: string) {
  */
 export async function processPropertyImage({ imageUrl, roomType, mode }: AIProcessingOptions) {
   try {
-    console.log(`[Nano-Pro-2026] Processing ${mode}...`);
+    console.log(`[Gemini-3-Editor-2026] Processing ${mode}...`);
     const originalBase64 = await urlToBase64(imageUrl);
 
     // STEP 1: CLEAN
-    const cleanPrompt = "DIRECT EDIT: Remove all furniture and objects. Output ONLY the vacant empty room image. NO TEXT, NO JSON. Just the image.";
+    const cleanPrompt = "EXECUTE IMAGE EDIT: Remove all furniture and personal belongings. Output ONLY the resulting image of the vacant room.";
     
-    console.log("Phase 1: Nano Cleaning...");
-    const cleanBase64 = await callNanoBanana(originalBase64, cleanPrompt);
+    console.log("Phase 1: Editor Cleaning...");
+    const cleanBase64 = await callGemini(originalBase64, cleanPrompt);
 
     if (mode === "clean") {
       return { 
-        id: `nano-clean-${Date.now()}`,
+        id: `clean-${Date.now()}`,
         outputUrl: `data:image/jpeg;base64,${cleanBase64}`,
         status: "succeeded"
       };
     }
 
     // STEP 2: STAGE
-    const stagePrompt = `DIRECT EDIT: Stage this room as a luxury ${roomType}. Add realistic furniture. Output ONLY the resulting image. NO TEXT.`;
+    const stagePrompt = `EXECUTE IMAGE EDIT: Stage this room with modern luxury furniture for a ${roomType}. Output ONLY the new image.`;
 
-    console.log("Phase 2: Nano Staging...");
-    const stagedBase64 = await callNanoBanana(cleanBase64, stagePrompt);
+    console.log("Phase 2: Editor Staging...");
+    const stagedBase64 = await callGemini(cleanBase64, stagePrompt);
 
     return {
-      id: `nano-stage-${Date.now()}`,
+      id: `stage-${Date.now()}`,
       outputUrl: `data:image/jpeg;base64,${stagedBase64}`,
       status: "succeeded"
     };
 
   } catch (error) {
-    console.error("Nano Banana Pro Error:", error);
+    console.error("Gemini 3 Editor Error:", error);
     throw error;
   }
 }
