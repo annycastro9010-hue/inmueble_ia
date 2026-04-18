@@ -360,8 +360,13 @@ export default function DashboardPage() {
 
              <div className="max-w-6xl w-full space-y-8">
                 <TourViewer 
-                  imageUrl={tourImages[activeTourIndex].url} 
-                  roomName={tourImages[activeTourIndex].room_type || "Espacio"} 
+                  scenes={tourImages.map((img: any) => ({
+                    id: img.id,
+                    name: img.room_type || "Espacio",
+                    imageUrl: img.url,
+                    hotspots: []
+                  }))}
+                  initialSceneId={tourImages[activeTourIndex]?.id}
                 />
 
                 <div className="flex justify-center gap-4">
