@@ -1,8 +1,7 @@
 /**
- * AI Staging Engine (Google Gemini 3.0 Editor - 2026)
+ * AI Staging Engine (Google Gemini 3.0 Pro Image Preview - 2026)
  * 
- * Reverting to the verified Gemini 3 Flash Preview model
- * but forcing the 'image_editor' tool to avoid JSON-only responses.
+ * Verified technical IDs for the 2026 REST API.
  */
 
 export interface AIProcessingOptions {
@@ -21,13 +20,14 @@ async function urlToBase64(url: string): Promise<string> {
 }
 
 /**
- * Calls Google AI Studio API (Gemini 3.0 Flash Preview)
+ * Calls Google AI Studio API (Gemini 3 Pro Image)
  */
 async function callGemini(base64Image: string, prompt: string) {
   const apiKey = process.env.GOOGLE_AI_STUDIO_API_KEY;
   if (!apiKey) throw new Error("GOOGLE_AI_STUDIO_API_KEY missing");
 
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`, {
+  // REST API 2026: Official model ID is gemini-3-pro-image-preview
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent?key=${apiKey}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -42,41 +42,31 @@ async function callGemini(base64Image: string, prompt: string) {
           }
         ]
       }],
-      // REQUIRED FOR 2026: Enable the image editor tool to avoid diagnostic JSON
+      // Official tool name in 2026 is 'imagen' for editing/generation
       tools: [
         {
-          // @ts-ignore - Specific 2026 tool naming
-          image_editor: {}
+          imagen: {}
         }
       ],
-      safetySettings: [
-        { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-        { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-        { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-        { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
-      ],
       generationConfig: {
-        temperature: 0.1,
-        topP: 0.95,
+        temperature: 0.0,
+        topP: 0.95
       }
     })
   });
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(`Google API Error: ${JSON.stringify(error)}`);
+    throw new Error(`Google API Error (${response.status}): ${JSON.stringify(error)}`);
   }
 
   const result = await response.json();
   
-  // Look for the image in the parts returned by the image_editor tool
+  // Output extraction: 'imagen' tool returns binary in candidates[0].content.parts
   const outputBase64 = result.candidates?.[0]?.content?.parts?.find((p: any) => p.inline_data)?.inline_data?.data;
   
   if (!outputBase64) {
-    // If it still returns text/JSON, we show it to debug
-    const textOutput = result.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (textOutput) throw new Error(`La IA respondió con texto/JSON en lugar de imagen: ${textOutput.substring(0, 100)}...`);
-    throw new Error("El editor de imagen no devolvió datos. Revisa si el modelo 'gemini-3-flash-preview' tiene habilitado el Image Editor en tu consola.");
+    throw new Error("El motor 'imagen' no devolvió el renderizado. Revisa los límites de tu proyecto en Google Cloud.");
   }
 
   return outputBase64;
@@ -87,13 +77,13 @@ async function callGemini(base64Image: string, prompt: string) {
  */
 export async function processPropertyImage({ imageUrl, roomType, mode }: AIProcessingOptions) {
   try {
-    console.log(`[Gemini-3-Editor-2026] Processing ${mode}...`);
+    console.log(`[Gemini-3-Pro-2026] Executing ${mode}...`);
     const originalBase64 = await urlToBase64(imageUrl);
 
     // STEP 1: CLEAN
-    const cleanPrompt = "EXECUTE IMAGE EDIT: Remove all furniture and personal belongings. Output ONLY the resulting image of the vacant room.";
+    const cleanPrompt = "TASK: IMAGE CLEANING. Remove all furniture and debris. Fill the resulting spaces with realistic wall and floor textures. Return the empty room.";
     
-    console.log("Phase 1: Editor Cleaning...");
+    console.log("Phase 1: Generating empty room...");
     const cleanBase64 = await callGemini(originalBase64, cleanPrompt);
 
     if (mode === "clean") {
@@ -105,9 +95,9 @@ export async function processPropertyImage({ imageUrl, roomType, mode }: AIProce
     }
 
     // STEP 2: STAGE
-    const stagePrompt = `EXECUTE IMAGE EDIT: Stage this room with modern luxury furniture for a ${roomType}. Output ONLY the new image.`;
+    const stagePrompt = `TASK: VIRTUAL STAGING. Add high-end furniture for a luxury ${roomType} to this empty room. Real estate photography style.`;
 
-    console.log("Phase 2: Editor Staging...");
+    console.log("Phase 2: Adding luxury furniture...");
     const stagedBase64 = await callGemini(cleanBase64, stagePrompt);
 
     return {
@@ -117,7 +107,7 @@ export async function processPropertyImage({ imageUrl, roomType, mode }: AIProce
     };
 
   } catch (error) {
-    console.error("Gemini 3 Editor Error:", error);
+    console.error("Gemini 3 Pro Error:", error);
     throw error;
   }
 }
