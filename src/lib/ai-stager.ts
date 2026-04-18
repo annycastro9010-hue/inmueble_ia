@@ -1,8 +1,7 @@
 /**
- * AI Staging Engine (Google Nano Banana Edition)
+ * AI Staging Engine (Google Gemini Edition)
  * 
- * This module handles integration with Google AI Studio (Gemini 3.1)
- * to perform virtual decluttering and staging without manual masks.
+ * Optimized for Gemini 1.5 Flash to ensure high quota and structural stability.
  */
 
 export interface AIProcessingOptions {
@@ -21,13 +20,14 @@ async function urlToBase64(url: string): Promise<string> {
 }
 
 /**
- * Calls Google AI Studio API (Gemini 3.1 / Nano Banana)
+ * Calls Google AI Studio API (Gemini 1.5 Flash)
  */
-async function callGeminiNano(base64Image: string, prompt: string) {
+async function callGemini(base64Image: string, prompt: string) {
   const apiKey = process.env.GOOGLE_AI_STUDIO_API_KEY;
   if (!apiKey) throw new Error("GOOGLE_AI_STUDIO_API_KEY missing");
 
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=${apiKey}`, {
+  // Using Gemini 1.5 Flash for maximum availability
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -43,8 +43,8 @@ async function callGeminiNano(base64Image: string, prompt: string) {
         ]
       }],
       generationConfig: {
-        temperature: 0.4,
-        topP: 0.9,
+        temperature: 0.1, // Lower temperature for more structural consistency
+        topP: 0.95,
       }
     })
   });
@@ -55,12 +55,14 @@ async function callGeminiNano(base64Image: string, prompt: string) {
   }
 
   const result = await response.json();
-  // In 2026, the API returns the edited image directly in candidates[0].content.parts[0].inline_data
-  const outputBase64 = result.candidates[0].content.parts.find((p: any) => p.inline_data)?.inline_data.data;
+  
+  // Gemini 1.5 returns images in candidates[0].content.parts.
+  // We look for the one with inline_data
+  const outputBase64 = result.candidates?.[0]?.content?.parts?.find((p: any) => p.inline_data)?.inline_data?.data;
   
   if (!outputBase64) {
-    // If it returns text instead of image, it might be a fallback or block
-    throw new Error("AI did not return an image. Check prompt constraints.");
+    console.error("Gemini Response:", JSON.stringify(result));
+    throw new Error("La IA no devolvió una imagen procesada. Posible bloqueo de seguridad o prompt no admitido.");
   }
 
   return outputBase64;
@@ -71,15 +73,14 @@ async function callGeminiNano(base64Image: string, prompt: string) {
  */
 export async function processPropertyImage({ imageUrl, roomType, mode }: AIProcessingOptions) {
   try {
-    console.log(`Starting ${mode} process for ${imageUrl}...`);
+    console.log(`Starting ${mode} process for ${imageUrl} using Gemini 1.5 Flash...`);
     const originalBase64 = await urlToBase64(imageUrl);
 
-    // STEP 1: ALWAYS CLEAN (Declutter)
-    // This removes furniture without damaging the structure
-    const cleanPrompt = "ACT AS AN ARCHITECTURAL PHOTOGRAPHER. Remove all furniture, curtains, clutter, and personal items. Clean the floors and walls. DO NOT change the room structure, doors, or windows. The output MUST be a completely EMPTY, VACANT room with pristine walls and floors.";
+    // STEP 1: CLEAN (Declutter)
+    const cleanPrompt = "IMAGE EDITING TASK: Remove all furniture, clutter, and personal items. Show the empty room with its original architectural structure. KEEP walls, windows, and floors intact. Output ONLY the empty room image.";
     
-    console.log("Cleaning room (Phase 1)...");
-    const cleanBase64 = await callGeminiNano(originalBase64, cleanPrompt);
+    console.log("Phase 1: Generating empty room...");
+    const cleanBase64 = await callGemini(originalBase64, cleanPrompt);
 
     if (mode === "clean") {
       return { 
@@ -90,11 +91,10 @@ export async function processPropertyImage({ imageUrl, roomType, mode }: AIProce
     }
 
     // STEP 2: STAGE (If requested)
-    // We use the cleaned image as a base for perfect integration
-    const stagePrompt = `Virtual Stage this empty room into a luxury ${roomType}. Add modern, stylish furniture (sofas, rugs, art, lamps). Use realistic materials. KEEP the walls and structure exactly as they are in the empty photo. High-end real estate photography style.`;
+    const stagePrompt = `VIRTUAL STAGING TASK: Take this empty room and add high-end, modern furniture for a ${roomType}. Use professional real estate photography style. DO NOT change the room structure. Make it look ready to sell.`;
 
-    console.log("Furnishing room (Phase 2)...");
-    const stagedBase64 = await callGeminiNano(cleanBase64, stagePrompt);
+    console.log("Phase 2: Adding virtual staging...");
+    const stagedBase64 = await callGemini(cleanBase64, stagePrompt);
 
     return {
       id: Date.now().toString(),
@@ -103,7 +103,7 @@ export async function processPropertyImage({ imageUrl, roomType, mode }: AIProce
     };
 
   } catch (error) {
-    console.error("Nano Banana Workflow Error:", error);
+    console.error("Gemini Stager Error:", error);
     throw error;
   }
 }
