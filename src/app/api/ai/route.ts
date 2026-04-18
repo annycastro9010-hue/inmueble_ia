@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { processPropertyImage } from '@/lib/ai-stager';
+import { processPropertyImage } from '@/lib/ai-stager'; // Updated for Google AI Studio
 
 export async function POST(request: Request) {
   try {
