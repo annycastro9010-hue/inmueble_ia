@@ -1,24 +1,36 @@
 import { NextResponse } from 'next/server';
-import { processPropertyImage } from '@/lib/ai-stager'; // Updated for Google AI Studio
+import { processPropertyImage } from '@/lib/ai-stager';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { imageUrl, roomType, mode } = body;
-
-    if (!imageUrl || !mode) {
-      return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
-    }
-
-    const prediction = await processPropertyImage({
-      imageUrl,
-      roomType: roomType || 'room',
-      mode
-    });
-
-    return NextResponse.json(prediction);
+    const result = await processPropertyImage(body);
+    return NextResponse.json(result);
   } catch (error: any) {
     console.error('AI Proxy Error:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get('id');
+  const replicateKey = process.env.REPLICATE_API_TOKEN;
+
+  if (!id) return NextResponse.json({ error: 'Missing ID' }, { status: 400 });
+
+  try {
+    const response = await fetch(`https://api.replicate.com/v1/predictions/${id}`, {
+      headers: { "Authorization": `Token ${replicateKey}` }
+    });
+    const prediction = await response.json();
+    
+    return NextResponse.json({
+      status: prediction.status,
+      outputUrl: Array.isArray(prediction.output) ? prediction.output[0] : prediction.output,
+      error: prediction.error
+    });
+  } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

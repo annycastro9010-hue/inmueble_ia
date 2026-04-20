@@ -27,39 +27,39 @@ export default function DashboardPage() {
   const [activeTourIndex, setActiveTourIndex] = useState(0);
 
   const handleGenerateVideo = async () => {
-    const stagedImages = images.filter(img => img.status !== 'original');
-    if (stagedImages.length === 0) {
-      alert("Necesitas al menos una imagen amoblada o limpia para el video.");
+    // Ahora permitimos todas las imágenes subidas, incluso las que ya traes limpias de fuera
+    if (images.length === 0) {
+      alert("Primero sube las fotos de la casa (ya limpias o amobladas).");
       return;
     }
 
     setIsProcessing(true);
     try {
-      alert("🎥 Iniciando motor de video... Esto se procesa en tu navegador para mayor velocidad.");
+      alert("🎬 Generando video con tus fotos... Esto tomará unos segundos.");
       
       const videoBlob = await generatePropertyVideo({
-        imageUrls: stagedImages.map(img => img.url),
-        title: "Mansión Santander",
-        price: "Oportunidad Única"
+        imageUrls: images.map(img => img.url), // Usamos todas las fotos subidas
+        title: "PROPIEDAD DESTACADA",
+        price: "LISTA PARA ESTRENAR"
       });
 
       const url = URL.createObjectURL(videoBlob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `Tour_Viral_${Date.now()}.mp4`;
+      a.download = `Video_Propiedad_${Date.now()}.mp4`;
       a.click();
       
-      alert("✅ ¡Video generado y descargado!");
+      alert("✅ ¡Video Viral descargado con éxito!");
     } catch (error) {
       console.error(error);
-      alert("Error al generar el video. Asegúrate de que las fotos carguen correctamente.");
+      alert("Error al generar el video. Intenta subir menos de 5 fotos a la vez para mayor velocidad.");
     } finally {
       setIsProcessing(false);
     }
   };
 
-  // Filter images that are ready for the tour (prefer staged, then cleaned, then original)
-  const tourImages = images.filter(img => img.status !== 'original' || images.length > 0);
+  // El Tour ahora mostrará todo lo que subas
+  const tourImages = images;
 
   // Cargar imágenes de Supabase
   useEffect(() => {
@@ -81,7 +81,7 @@ export default function DashboardPage() {
     if (files.length === 0) return;
 
     if (!isSupabaseConfigured) {
-      alert("⚠️ Error de Configuración: La aplicación todavía está usando la URL de prueba. Por favor, asegúrate de que en Vercel la variable se llame NEXT_PUBLIC_SUPABASE_URL y no 'SIGUIENTE_URL_SUPABASE_PÚBLICA'.");
+      alert("⚠️ Error de Configuración: La aplicación todavía está usando la URL de prueba. Por favor, asegúrate de que en Vercel la variable se llame NEXT_PUBLIC_SUPABASE_URL.");
       return;
     }
 
@@ -92,9 +92,6 @@ export default function DashboardPage() {
       const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `uploads/${fileName}`;
 
-      console.log("Subiendo activo a:", filePath);
-
-      // 1. Subir al Storage
       const { error: uploadError } = await supabase.storage
         .from("propiedades")
         .upload(filePath, file, {
@@ -103,16 +100,12 @@ export default function DashboardPage() {
         });
 
       if (uploadError) {
-        console.error("Detalle del error de subida:", uploadError);
-        alert(`Error subiendo ${file.name}: ${uploadError.message || 'Error de conexión (Failed to fetch)'}. Verifica los permisos de Storage.`);
+        alert(`Error subiendo ${file.name}: ${uploadError.message}`);
         continue;
       }
 
-      // Construcción manual de la URL para asegurar visibilidad inmediata
       const publicUrl = `${supabaseUrl}/storage/v1/object/public/propiedades/${filePath}`;
-      console.log("Activo listo en:", publicUrl);
 
-      // 2. Insertar en BD
       const { data: mediaData, error: dbError } = await supabase
         .from("media")
         .insert([{
@@ -174,33 +167,44 @@ export default function DashboardPage() {
         })
       });
 
-      const result = await response.json();
+      let result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || "Error desconocido en el servidor");
+        throw new Error(result.error || "Error en el servidor");
+      }
+
+      // POLLING: Si la IA está procesando (Replicate), esperamos desde el navegador (Evita error 504)
+      if (result.status === "processing") {
+        const predictionId = result.id;
+        console.log("Esperando a la IA...", predictionId);
+        
+        while (result.status !== "succeeded" && result.status !== "failed") {
+          await new Promise(r => setTimeout(r, 4000)); // Esperar 4 seg
+          const pollRes = await fetch(`/api/ai?id=${predictionId}`);
+          result = await pollRes.json();
+        }
+      }
+
+      if (result.status === "failed") {
+        throw new Error(result.error || "La IA falló al procesar la imagen");
       }
       
-      const prediction = result;
-      const newUrl = prediction.outputUrl; // La nueva imagen procesada
-
-      // Actualizar estado y URL en BD
+      const newUrl = result.outputUrl; 
       const newStatus = type === "clean" ? "cleaned" : "staged";
+
       await supabase
         .from("media")
-        .update({ 
-          status: newStatus,
-          url: newUrl // Guardamos la versión procesada para que sea visible
-        })
+        .update({ status: newStatus, url: newUrl })
         .eq("id", id);
 
       setImages(prev => prev.map(img => 
         img.id === id ? { ...img, status: newStatus, url: newUrl } : img
       ));
       
-      alert(`¡Éxito! La casa ha sido ${type === "clean" ? 'limpiada' : 'amoblada'} con éxito.`);
+      alert(`✅ ¡Éxito! Imagen ${type === "clean" ? 'limpiada' : 'amoblada'}.`);
     } catch (error: any) {
       console.error("Error de IA:", error);
-      alert(`Ups! Algo salió mal con la IA: ${error.message}`);
+      alert(`Ups! Algo salió mal: ${error.message}`);
     } finally {
       setIsProcessing(false);
     }
@@ -298,11 +302,11 @@ export default function DashboardPage() {
                          <motion.div key={img.id} layout className="glass-luxury rounded-[2rem] overflow-hidden group">
                            <div className="aspect-[4/3] relative overflow-hidden">
                              <img 
-                               src={img.url} 
-                               referrerPolicy="no-referrer"
-                               crossOrigin="anonymous"
-                               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1500ms]" 
-                             />
+                                src={img.url} 
+                                referrerPolicy="no-referrer"
+                                crossOrigin="anonymous"
+                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1500ms]" 
+                              />
                              <div className="absolute top-6 left-6">
                                 {img.status !== 'original' && (
                                   <div className="px-4 py-1.5 bg-hormozi-yellow text-black text-[9px] font-black rounded-full uppercase tracking-widest flex items-center gap-1.5 shadow-xl">
@@ -318,17 +322,16 @@ export default function DashboardPage() {
                              
                              {/* Overlay de acciones rápidas */}
                              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all flex flex-col justify-end p-8 gap-4">
-                               {img.status === 'original' && (
-                                 <button 
-                                   onClick={async () => {
-                                     await supabase.from("media").update({ status: 'staged' }).eq("id", img.id);
-                                     setImages(prev => prev.map(i => i.id === img.id ? { ...i, status: 'staged' } : i));
-                                   }}
-                                   className="w-full py-2 bg-white/5 hover:bg-white/10 text-white/50 hover:text-white text-[9px] font-bold rounded-lg uppercase tracking-[0.2em] border border-white/5 transition-all"
-                                 >
-                                   Marcar como Amueblado (Manual)
-                                 </button>
-                               )}
+                               <button 
+                                 onClick={async () => {
+                                   const newStatus = img.status === 'staged' ? 'original' : 'staged';
+                                   await supabase.from("media").update({ status: newStatus }).eq("id", img.id);
+                                   setImages(prev => prev.map(i => i.id === img.id ? { ...i, status: newStatus } : i));
+                                 }}
+                                 className="w-full py-2 bg-white/5 hover:bg-white/10 text-white/50 hover:text-white text-[9px] font-bold rounded-lg uppercase tracking-[0.2em] border border-white/5 transition-all"
+                               >
+                                 {img.status === 'staged' ? 'Quitar Marca Final' : 'Marcar como Final (Link al Tour)'}
+                               </button>
                              </div>
                            </div>
                            
@@ -361,8 +364,20 @@ export default function DashboardPage() {
                              </div>
 
                              <div className="flex gap-3">
-                                <button onClick={() => processAI(img.id, "clean")} className="flex-1 py-3 bg-white/5 border border-white/10 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-hormozi-yellow hover:text-black transition-all">Limpiar Espacio (IA)</button>
-                                <button onClick={() => processAI(img.id, "stage")} className="flex-1 py-3 bg-white/5 border border-white/10 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all">Amueblar Estilo (IA)</button>
+                                <button 
+                                  onClick={() => processAI(img.id, "clean")} 
+                                  disabled={isProcessing}
+                                  className="flex-1 py-3 bg-white/5 border border-white/10 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-hormozi-yellow hover:text-black transition-all disabled:opacity-30"
+                                >
+                                  {isProcessing ? 'Procesando...' : 'Limpiar Espacio (IA)'}
+                                </button>
+                                <button 
+                                  onClick={() => processAI(img.id, "stage")} 
+                                  disabled={isProcessing}
+                                  className="flex-1 py-3 bg-white/5 border border-white/10 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all disabled:opacity-30"
+                                >
+                                  {isProcessing ? 'Procesando...' : 'Amueblar Estilo (IA)'}
+                                </button>
                              </div>
                            </div>
                          </motion.div>

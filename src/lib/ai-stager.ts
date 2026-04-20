@@ -1,8 +1,5 @@
 /**
- * AI Staging Engine (Firefly Mode - Pro Quality 2026)
- * 
- * Optimized to preserve architectural structure (walls, windows, doors)
- * using a hybrid Google/Replicate pipeline.
+ * AI Staging Engine (Async Mode - Anti-Timeout 2026)
  */
 
 export interface AIProcessingOptions {
@@ -11,110 +8,83 @@ export interface AIProcessingOptions {
   mode: "clean" | "stage";
 }
 
-/**
- * Proxy to bypass CORS when sending images to AI
- */
-async function getProxyImageBase64(url: string): Promise<string> {
-  try {
-    // Intentamos cargarla directamente primero
-    const response = await fetch(url);
-    const buffer = await response.arrayBuffer();
-    return Buffer.from(buffer).toString('base64');
-  } catch (e) {
-    // Si falla por CORS, usamos un proxy público (común en desarrollo)
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-    const response = await fetch(proxyUrl);
-    const data = await response.json();
-    return data.contents.split(',')[1]; // Extraer base64
-  }
-}
-
-async function callGeminiFirefly(base64Image: string, prompt: string) {
-  const apiKey = process.env.GOOGLE_AI_STUDIO_API_KEY;
-  if (!apiKey) throw new Error("GOOGLE_AI_STUDIO_API_KEY missing");
-
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=${apiKey}`;
-
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [{
-        parts: [
-          { text: `ACT AS ADOBE FIREFLY. ${prompt}. STICK TO THE ARCHITECTURAL STRUCTURE. DO NOT ALTER WALLS, WINDOWS, OR DOORS. Return only the image.` },
-          { inline_data: { mime_type: "image/jpeg", data: base64Image } }
-        ]
-      }],
-      generationConfig: { temperature: 0.1, topP: 0.95 }
-    })
-  });
-
-  if (response.status === 429) throw new Error("QUOTA");
-  const result = await response.json();
-  return result.candidates?.[0]?.content?.parts?.find((p: any) => p.inline_data)?.inline_data?.data;
-}
-
-async function callReplicateFirefly(imageUrl: string, prompt: string, mode: string) {
-  const apiKey = process.env.REPLICATE_API_TOKEN;
-  const version = mode === "clean" 
-    ? "30c289233cf23037243c5b96796adba23668f3a362dbd66e8fa134709d290333" 
-    : "7762fdc0ed2343d6bb30887ee5cf93f8ce4537c1a25c2483ce6b2848f2c698c9";
-
-  const response = await fetch("https://api.replicate.com/v1/predictions", {
-    method: "POST",
-    headers: { "Authorization": `Token ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      version,
-      input: {
-        image: imageUrl,
-        prompt: `${prompt}, architectural photography, high resolution, empty room, realistic textures`,
-        negative_prompt: "distorted architecture, changing windows, extra walls, blurry",
-        num_inference_steps: 50
-      }
-    })
-  });
-
-  const prediction = await response.json();
-  let result = prediction;
-  while (result.status !== "succeeded" && result.status !== "failed") {
-    await new Promise(r => setTimeout(r, 2000));
-    const p = await fetch(`https://api.replicate.com/v1/predictions/${prediction.id}`, {
-      headers: { "Authorization": `Token ${apiKey}` }
-    });
-    result = await p.json();
-  }
-  return Array.isArray(result.output) ? result.output[0] : result.output;
+async function toBase64(url: string): Promise<string> {
+  const response = await fetch(url);
+  const arrayBuffer = await response.arrayBuffer();
+  return Buffer.from(arrayBuffer).toString('base64');
 }
 
 export async function processPropertyImage({ imageUrl, roomType, mode }: AIProcessingOptions) {
-  try {
-    console.log(`[FIREFLY-MODE] Processing ${mode}...`);
-    
-    const prompt = mode === "clean"
-      ? "CLEANING TASK: Remove all furniture and debris. KEEP structure, walls, windows, and doors EXACTLY as they are. Modern clean floor texture."
-      : `STAGING TASK: Add luxury ${roomType} furniture. Photorealistic real estate style. Respect the room dimensions.`;
+  const googleKey = process.env.GOOGLE_AI_STUDIO_API_KEY;
+  const replicateKey = process.env.REPLICATE_API_TOKEN;
 
-    try {
-      // Intento 1: Google Gemini (Estructural)
-      const base64 = await getProxyImageBase64(imageUrl);
-      const outputBase64 = await callGeminiFirefly(base64, prompt);
-      if (outputBase64) {
-        return { id: `google-${Date.now()}`, outputUrl: `data:image/jpeg;base64,${outputBase64}`, status: "succeeded" };
+  try {
+    // Prompt tipo Firefly
+    const prompt = mode === "clean"
+      ? "ACT AS ADOBE FIREFLY. REMOVE ALL FURNITURE. DO NOT CHANGE WALLS, WINDOWS, OR DOORS. RETURN ONLY THE EMPTY PHOTOGRAPH."
+      : `ADD MODERN LUXURY FURNITURE FOR A ${roomType.toUpperCase()}. HIGH-END REAL ESTATE STYLE.`;
+
+    // 1. INTENTO RAPIDO CON GOOGLE (Máximo 8 seg)
+    if (googleKey) {
+      try {
+        const base64 = await toBase64(imageUrl);
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=${googleKey}`;
+        
+        // Timeout manual para Google de 8 segundos para no bloquear la función
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+        const response = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: "image/jpeg", data: base64 } }] }]
+          }),
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (response.ok) {
+          const result = await response.json();
+          const imgData = result.candidates?.[0]?.content?.parts?.find((p: any) => p.inline_data)?.inline_data?.data;
+          if (imgData) return { outputUrl: `data:image/jpeg;base64,${imgData}`, status: "succeeded" };
+        }
+      } catch (e) {
+        console.warn("Google tardó mucho o falló, pasando a Replicate Async...");
       }
-    } catch (e: any) {
-      if (e.message !== "QUOTA") throw e;
-      console.warn("Quota exceeded, switching to Replicate High-Def...");
     }
 
-    // Intento 2: Replicate (Calidad Pro)
-    const outputUrl = await callReplicateFirefly(imageUrl, prompt, mode);
-    return { id: `replicate-${Date.now()}`, outputUrl, status: "succeeded" };
+    // 2. REPLICATE ASYNC (Para evitar el error 504 de Vercel)
+    if (replicateKey) {
+      const version = mode === "clean" 
+        ? "30c289233cf23037243c5b96796adba23668f3a362dbd66e8fa134709d290333" 
+        : "7762fdc0ed2343d6bb30887ee5cf93f8ce4537c1a25c2483ce6b2848f2c698c9";
+
+      const predRes = await fetch("https://api.replicate.com/v1/predictions", {
+        method: "POST",
+        headers: { "Authorization": `Token ${replicateKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ version, input: { image: imageUrl, prompt } })
+      });
+
+      const prediction = await predRes.json();
+      // DEVOLVEMOS LA PREDICCIÓN INCOMPLETA. El frontend se encarga de esperar.
+      return { 
+        id: prediction.id, 
+        status: "processing", 
+        pollingUrl: prediction.urls.get 
+      };
+    }
+
+    throw new Error("No hay llaves de API configuradas.");
 
   } catch (error: any) {
-    console.error("Firefly Mode Error:", error);
+    console.error("Error en Stager:", error);
     throw error;
   }
 }
+
+
 
 
 
