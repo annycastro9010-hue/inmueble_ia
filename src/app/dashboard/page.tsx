@@ -148,19 +148,23 @@ export default function DashboardPage() {
       }
       
       const prediction = result;
+      const newUrl = prediction.outputUrl; // La nueva imagen procesada
 
-      // Actualizar estado en BD
+      // Actualizar estado y URL en BD
       const newStatus = type === "clean" ? "cleaned" : "staged";
       await supabase
         .from("media")
-        .update({ status: newStatus })
+        .update({ 
+          status: newStatus,
+          url: newUrl // Guardamos la versión procesada para que sea visible
+        })
         .eq("id", id);
 
       setImages(prev => prev.map(img => 
-        img.id === id ? { ...img, status: newStatus } : img
+        img.id === id ? { ...img, status: newStatus, url: newUrl } : img
       ));
       
-      alert(`¡IA Iniciada! El proceso de ${type === "clean" ? 'limpieza' : 'decoración'} ha comenzado. En unos segundos verás el resultado.`);
+      alert(`¡Éxito! La casa ha sido ${type === "clean" ? 'limpiada' : 'amoblada'} con éxito.`);
     } catch (error: any) {
       console.error("Error de IA:", error);
       alert(`Ups! Algo salió mal con la IA: ${error.message}`);
