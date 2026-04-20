@@ -1,6 +1,6 @@
 # Estructura del Proyecto: Inmueble IA
 
-Actualizado automáticamente: 16/4/2026, 11:22:57 p. m.
+Actualizado automáticamente: 20/4/2026, 2:41:30 p. m.
 
 ```text
 /inmueble_ia
@@ -26,6 +26,9 @@ Actualizado automáticamente: 16/4/2026, 11:22:57 p. m.
 │   └── update-docs.js
 ├── src/
 │   ├── app/
+│   │   ├── api/
+│   │   │   └── ai/
+│   │   │       └── route.ts
 │   │   ├── dashboard/
 │   │   │   └── page.tsx
 │   │   ├── globals.css
