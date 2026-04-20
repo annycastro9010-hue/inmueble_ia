@@ -1,7 +1,8 @@
 /**
- * AI Staging Engine (Google Gemini 3.1 Flash - Nano Banana 2026)
+ * AI Staging Engine (Firefly Mode - Pro Quality 2026)
  * 
- * Optimized for local and Vercel deployments using native multimodal editing.
+ * Optimized to preserve architectural structure (walls, windows, doors)
+ * using a hybrid Google/Replicate pipeline.
  */
 
 export interface AIProcessingOptions {
@@ -11,25 +12,28 @@ export interface AIProcessingOptions {
 }
 
 /**
- * Helper: URL to Base64
+ * Proxy to bypass CORS when sending images to AI
  */
-async function urlToBase64(url: string): Promise<string> {
-  const response = await fetch(url);
-  const buffer = await response.arrayBuffer();
-  return Buffer.from(buffer).toString('base64');
+async function getProxyImageBase64(url: string): Promise<string> {
+  try {
+    // Intentamos cargarla directamente primero
+    const response = await fetch(url);
+    const buffer = await response.arrayBuffer();
+    return Buffer.from(buffer).toString('base64');
+  } catch (e) {
+    // Si falla por CORS, usamos un proxy público (común en desarrollo)
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+    const response = await fetch(proxyUrl);
+    const data = await response.json();
+    return data.contents.split(',')[1]; // Extraer base64
+  }
 }
 
-/**
- * Calls Google AI Studio API (Gemini 3.1 Flash)
- * Using NATIVE MULTIMODAL EDITING (no individual tools required in 2026)
- */
-async function callGemini(base64Image: string, prompt: string) {
+async function callGeminiFirefly(base64Image: string, prompt: string) {
   const apiKey = process.env.GOOGLE_AI_STUDIO_API_KEY;
   if (!apiKey) throw new Error("GOOGLE_AI_STUDIO_API_KEY missing");
 
-  // Endpoint 2026 para la versión de producción en Vercel
-  const model = "gemini-3.1-flash-image-preview";
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=${apiKey}`;
 
   const response = await fetch(url, {
     method: "POST",
@@ -37,82 +41,81 @@ async function callGemini(base64Image: string, prompt: string) {
     body: JSON.stringify({
       contents: [{
         parts: [
-          { text: prompt },
-          {
-            inline_data: {
-              mime_type: "image/jpeg",
-              data: base64Image
-            }
-          }
+          { text: `ACT AS ADOBE FIREFLY. ${prompt}. STICK TO THE ARCHITECTURAL STRUCTURE. DO NOT ALTER WALLS, WINDOWS, OR DOORS. Return only the image.` },
+          { inline_data: { mime_type: "image/jpeg", data: base64Image } }
         ]
       }],
-      // FIX 400: Eliminamos el bloque 'tools' que causaba el error de validación
-      generationConfig: {
-        temperature: 0.4, // Un poco más de creatividad para el staging
-        topP: 0.9,
-        maxOutputTokens: 2048
+      generationConfig: { temperature: 0.1, topP: 0.95 }
+    })
+  });
+
+  if (response.status === 429) throw new Error("QUOTA");
+  const result = await response.json();
+  return result.candidates?.[0]?.content?.parts?.find((p: any) => p.inline_data)?.inline_data?.data;
+}
+
+async function callReplicateFirefly(imageUrl: string, prompt: string, mode: string) {
+  const apiKey = process.env.REPLICATE_API_TOKEN;
+  const version = mode === "clean" 
+    ? "30c289233cf23037243c5b96796adba23668f3a362dbd66e8fa134709d290333" 
+    : "7762fdc0ed2343d6bb30887ee5cf93f8ce4537c1a25c2483ce6b2848f2c698c9";
+
+  const response = await fetch("https://api.replicate.com/v1/predictions", {
+    method: "POST",
+    headers: { "Authorization": `Token ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      version,
+      input: {
+        image: imageUrl,
+        prompt: `${prompt}, architectural photography, high resolution, empty room, realistic textures`,
+        negative_prompt: "distorted architecture, changing windows, extra walls, blurry",
+        num_inference_steps: 50
       }
     })
   });
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(`Google AI Studio Error (${response.status}): ${JSON.stringify(errorData)}`);
+  const prediction = await response.json();
+  let result = prediction;
+  while (result.status !== "succeeded" && result.status !== "failed") {
+    await new Promise(r => setTimeout(r, 2000));
+    const p = await fetch(`https://api.replicate.com/v1/predictions/${prediction.id}`, {
+      headers: { "Authorization": `Token ${apiKey}` }
+    });
+    result = await p.json();
   }
-
-  const result = await response.json();
-  
-  // En Gemini 3.1, el renderizado vuelve como inline_data en la primera parte de la respuesta
-  const outputBase64 = result.candidates?.[0]?.content?.parts?.find((p: any) => p.inline_data)?.inline_data?.data;
-  
-  if (!outputBase64) {
-    // Si no hay imagen, revisamos si el modelo respondió con texto (posible bloqueo de seguridad)
-    const textOutput = result.candidates?.[0]?.content?.parts?.find((p: any) => p.text)?.text;
-    if (textOutput) throw new Error(`AI Safety/Info: ${textOutput}`);
-    throw new Error("El motor de Google no devolvió la imagen procesada. Revisa los filtros de seguridad en AI Studio.");
-  }
-
-  return outputBase64;
+  return Array.isArray(result.output) ? result.output[0] : result.output;
 }
 
-/**
- * Workflow: Clean then Stage (Propiedad IA)
- */
 export async function processPropertyImage({ imageUrl, roomType, mode }: AIProcessingOptions) {
   try {
-    console.log(`[Google-AI-2026] Processing ${mode}...`);
-    const originalBase64 = await urlToBase64(imageUrl);
-
-    // STEP 1: CLEANING
-    const cleanPrompt = "IMAGE EDITING TASK: Remove ALL furniture and clutter. Show a completely empty room with pristine walls and floors. Return ONLY the edited image.";
+    console.log(`[FIREFLY-MODE] Processing ${mode}...`);
     
-    console.log("Status: Generating empty room shell...");
-    const cleanBase64 = await callGemini(originalBase64, cleanPrompt);
+    const prompt = mode === "clean"
+      ? "CLEANING TASK: Remove all furniture and debris. KEEP structure, walls, windows, and doors EXACTLY as they are. Modern clean floor texture."
+      : `STAGING TASK: Add luxury ${roomType} furniture. Photorealistic real estate style. Respect the room dimensions.`;
 
-    if (mode === "clean") {
-      return { 
-        id: `google-clean-${Date.now()}`,
-        outputUrl: `data:image/jpeg;base64,${cleanBase64}`,
-        status: "succeeded"
-      };
+    try {
+      // Intento 1: Google Gemini (Estructural)
+      const base64 = await getProxyImageBase64(imageUrl);
+      const outputBase64 = await callGeminiFirefly(base64, prompt);
+      if (outputBase64) {
+        return { id: `google-${Date.now()}`, outputUrl: `data:image/jpeg;base64,${outputBase64}`, status: "succeeded" };
+      }
+    } catch (e: any) {
+      if (e.message !== "QUOTA") throw e;
+      console.warn("Quota exceeded, switching to Replicate High-Def...");
     }
 
-    // STEP 2: STAGING
-    const stagePrompt = `IMAGE EDITING TASK: Add high-end modern furniture for a ${roomType}. Professional interior design style. Return ONLY the edited image.`;
-
-    console.log(`Status: Furnishing ${roomType}...`);
-    const stagedBase64 = await callGemini(cleanBase64, stagePrompt);
-
-    return {
-      id: `google-stage-${Date.now()}`,
-      outputUrl: `data:image/jpeg;base64,${stagedBase64}`,
-      status: "succeeded"
-    };
+    // Intento 2: Replicate (Calidad Pro)
+    const outputUrl = await callReplicateFirefly(imageUrl, prompt, mode);
+    return { id: `replicate-${Date.now()}`, outputUrl, status: "succeeded" };
 
   } catch (error: any) {
-    console.error("Gemini 3.1 Stager Error:", error);
+    console.error("Firefly Mode Error:", error);
     throw error;
   }
 }
+
+
 
 

@@ -17,6 +17,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase, isSupabaseConfigured, supabaseUrl } from "@/lib/supabase";
 import TourViewer from "@/components/TourViewer";
+import { generatePropertyVideo } from "@/lib/video-engine"; // Importamos el motor de video
 
 export default function DashboardPage() {
   const [images, setImages] = useState<any[]>([]);
@@ -24,6 +25,38 @@ export default function DashboardPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [activeTourIndex, setActiveTourIndex] = useState(0);
+
+  const handleGenerateVideo = async () => {
+    const stagedImages = images.filter(img => img.status !== 'original');
+    if (stagedImages.length === 0) {
+      alert("Necesitas al menos una imagen amoblada o limpia para el video.");
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      alert("🎥 Iniciando motor de video... Esto se procesa en tu navegador para mayor velocidad.");
+      
+      const videoBlob = await generatePropertyVideo({
+        imageUrls: stagedImages.map(img => img.url),
+        title: "Mansión Santander",
+        price: "Oportunidad Única"
+      });
+
+      const url = URL.createObjectURL(videoBlob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Tour_Viral_${Date.now()}.mp4`;
+      a.click();
+      
+      alert("✅ ¡Video generado y descargado!");
+    } catch (error) {
+      console.error(error);
+      alert("Error al generar el video. Asegúrate de que las fotos carguen correctamente.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   // Filter images that are ready for the tour (prefer staged, then cleaned, then original)
   const tourImages = images.filter(img => img.status !== 'original' || images.length > 0);
@@ -208,7 +241,10 @@ export default function DashboardPage() {
 
             <div className="flex gap-4 items-center">
                {isUploading && <span className="flex items-center gap-2 text-[10px] font-bold text-hormozi-yellow animate-pulse"><Clock size={14}/> SUBIENDO...</span>}
-              <button className="flex items-center gap-2 px-6 py-3 bg-white/5 border border-white/10 rounded-xl text-[10px] font-bold hover:bg-white/10 transition-all uppercase tracking-widest">
+              <button 
+                onClick={handleGenerateVideo}
+                className="flex items-center gap-2 px-6 py-3 bg-white/5 border border-white/10 rounded-xl text-[10px] font-bold hover:bg-white/10 transition-all uppercase tracking-widest"
+              >
                 <Video size={16} className="text-hormozi-yellow" />
                 Generar Video Viral
               </button>
