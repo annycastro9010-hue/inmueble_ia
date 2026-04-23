@@ -14,7 +14,8 @@ import {
   Clock,
   ExternalLink,
   Save,
-  AlertCircle
+  AlertCircle,
+  X
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase, isSupabaseConfigured, supabaseUrl } from "@/lib/supabase";
