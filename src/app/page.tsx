@@ -133,10 +133,10 @@ export default function PropertyPage() {
 
         {/* Controles del carrusel */}
         <button onClick={prevPhoto} className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 p-3 md:p-4 bg-black/30 backdrop-blur-md rounded-full border border-white/10 hover:bg-white/10 transition-all z-10">
-          <ChevronLeft size={18} md:size={20} />
+          <ChevronLeft size={20} />
         </button>
         <button onClick={nextPhoto} className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 p-3 md:p-4 bg-black/30 backdrop-blur-md rounded-full border border-white/10 hover:bg-white/10 transition-all z-10">
-          <ChevronRight size={18} md:size={20} />
+          <ChevronRight size={20} />
         </button>
 
         {/* Indicadores de foto */}
@@ -160,7 +160,7 @@ export default function PropertyPage() {
             transition={{ delay: 0.3 }}
           >
             <div className="flex items-center gap-2 text-[9px] md:text-[10px] font-black text-hormozi-yellow uppercase tracking-[0.3em] md:tracking-[0.5em] mb-3 md:mb-4">
-              <MapPin size={10} md:size={12} />
+              <MapPin size={12} />
               <span className="truncate">{PROPERTY.address}</span>
             </div>
 
@@ -183,7 +183,7 @@ export default function PropertyPage() {
             <div className="mt-6 md:mt-8 flex flex-wrap gap-2 md:gap-4">
               {PROPERTY.specs.map(({ icon: Icon, label, value }) => (
                 <div key={label} className="flex items-center gap-2 md:gap-3 px-3 md:px-5 py-2 md:py-3 bg-black/30 backdrop-blur-md rounded-full border border-white/10">
-                  <Icon size={14} md:size={16} className="text-hormozi-yellow" />
+                  <Icon size={16} className="text-hormozi-yellow" />
                   <span className="font-black text-xs md:text-sm">{value}</span>
                   <span className="text-white/40 text-[8px] md:text-[10px] uppercase tracking-widest">{label}</span>
                 </div>
@@ -293,7 +293,7 @@ export default function PropertyPage() {
               />
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-6 text-center">
                 <div className="w-16 h-16 md:w-20 md:h-20 bg-hormozi-yellow rounded-full flex items-center justify-center shadow-2xl shadow-hormozi-yellow/30 group-hover:scale-110 transition-transform">
-                  <Play size={28} md:size={32} className="text-black ml-1" />
+                  <Play size={32} className="text-black ml-1" />
                 </div>
                 <div>
                   <p className="font-black uppercase tracking-widest text-xs md:text-sm">Clic para recorrer la casa</p>
@@ -321,7 +321,7 @@ export default function PropertyPage() {
               {PROPERTY.specs.map(({ icon: Icon, label, value }) => (
                 <div key={label} className="flex items-center justify-between py-3 md:py-4 border-b border-white/5">
                   <div className="flex items-center gap-3 text-white/50">
-                    <Icon size={14} md:size={16} className="text-hormozi-yellow" />
+                    <Icon size={16} className="text-hormozi-yellow" />
                     <span className="text-[10px] md:text-sm uppercase tracking-widest font-bold">{label}</span>
                   </div>
                   <span className="font-black text-white text-lg md:text-xl">{value}</span>

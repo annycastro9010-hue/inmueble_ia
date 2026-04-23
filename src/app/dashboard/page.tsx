@@ -270,7 +270,7 @@ export default function DashboardPage() {
                 disabled={isProcessing || images.length === 0}
                 className="flex items-center gap-2 px-4 md:px-6 py-2.5 md:py-3 bg-white/5 border border-white/10 rounded-xl text-[9px] md:text-[10px] font-bold hover:bg-white/10 transition-all uppercase tracking-widest disabled:opacity-20 flex-1 sm:flex-none"
               >
-                <Video size={14} md:size={16} className="text-hormozi-yellow" />
+                <Video size={16} className="text-hormozi-yellow" />
                 <span className="hidden sm:inline">Generar</span> Video
               </button>
               <button 
@@ -293,7 +293,7 @@ export default function DashboardPage() {
                 className="h-full border border-dashed border-white/10 rounded-[2rem] md:rounded-[3rem] p-8 md:p-24 flex flex-col items-center justify-center text-center bg-white/[0.01]"
               >
                 <div className="w-16 h-16 md:w-20 md:h-20 bg-white/5 rounded-full flex items-center justify-center mb-6 md:mb-8 text-hormozi-yellow">
-                  <Upload size={28} md:size={32} />
+                  <Upload size={32} />
                 </div>
                 <h2 className="text-2xl md:text-4xl font-extrabold mb-4 uppercase tracking-tighter italic text-white leading-tight">Sube las fotos de tu inmueble</h2>
                 <p className="text-white/30 max-w-sm mb-10 md:mb-12 text-xs md:text-sm leading-relaxed">Puedes subirlas normales o panorámicas. La IA se encargará del resto.</p>

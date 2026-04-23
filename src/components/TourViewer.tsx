@@ -227,7 +227,7 @@ export default function TourViewer({ scenes, initialSceneId }: TourViewerProps) 
         <div className="pointer-events-auto">
           <div className="flex items-center gap-2 text-[8px] md:text-[10px] uppercase font-black tracking-[0.3em] md:tracking-[0.5em] text-hormozi-yellow mb-2 md:mb-4">
             <div className="w-1.5 h-1.5 bg-hormozi-yellow rounded-full animate-pulse" />
-            <MapPin size={10} md:size={12} /> Recorrido Virtual
+            <MapPin size={12} /> Recorrido Virtual
           </div>
           <h3 className="text-3xl md:text-5xl font-black text-white tracking-tighter uppercase italic line-clamp-1">
             {currentScene.name}
@@ -239,7 +239,7 @@ export default function TourViewer({ scenes, initialSceneId }: TourViewerProps) 
             onClick={() => setShowSurvey(true)}
             className="px-6 md:px-8 py-3 md:py-5 bg-hormozi-yellow text-black rounded-full font-black flex items-center gap-2 md:gap-3 hover:scale-105 transition-all shadow-[0_20px_40px_rgba(255,255,0,0.2)] uppercase tracking-widest text-[9px] md:text-[10px]"
           >
-            <ClipboardList size={18} md:size={22} />
+            <ClipboardList size={22} />
             <span>Interesado</span>
           </button>
 
@@ -248,7 +248,7 @@ export default function TourViewer({ scenes, initialSceneId }: TourViewerProps) 
             className="p-3 md:p-5 bg-white/10 backdrop-blur-xl rounded-full text-white hover:bg-white/20 transition-all border border-white/10"
             title="Compartir"
           >
-            <Share2 size={18} md:size={22} />
+            <Share2 size={22} />
           </button>
 
           <button
@@ -256,7 +256,7 @@ export default function TourViewer({ scenes, initialSceneId }: TourViewerProps) 
             className="p-3 md:p-5 bg-white/10 backdrop-blur-xl rounded-full text-white hover:bg-white/20 transition-all border border-white/10"
             title="Pantalla Completa"
           >
-            <Maximize size={18} md:size={22} />
+            <Maximize size={22} />
           </button>
         </div>
       </div>
