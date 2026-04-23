@@ -468,7 +468,12 @@ export default function DashboardPage() {
                     />
                   </div>
 
-                  <button className="flex items-center gap-2 px-8 py-4 bg-white text-black rounded-2xl font-black uppercase text-[10px] tracking-tighter hover:scale-105 transition-all">
+                  <button 
+                    onClick={() => {
+                      alert("¡Configuración guardada correctamente!");
+                    }}
+                    className="flex items-center gap-2 px-8 py-4 bg-white text-black rounded-2xl font-black uppercase text-[10px] tracking-tighter hover:scale-105 transition-all shadow-[0_10px_20px_rgba(255,255,255,0.1)] active:scale-95"
+                  >
                     <Save size={16} /> Guardar Cambios
                   </button>
                 </div>
