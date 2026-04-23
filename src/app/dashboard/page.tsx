@@ -346,22 +346,22 @@ export default function DashboardPage() {
                                   )}
                                </div>
 
-                               <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all">
-                                 <button onClick={() => removeImage(img.id)} className="p-3 bg-red-500/20 text-red-500 rounded-xl backdrop-blur-3xl hover:bg-red-500 hover:text-white transition-all shadow-xl">
+                               <div className="absolute top-4 right-4 z-20">
+                                 <button onClick={() => removeImage(img.id)} className="p-3 bg-red-500 text-white rounded-xl shadow-xl active:scale-90 transition-all">
                                    <Trash2 size={16} />
                                  </button>
                                </div>
                                
-                               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all flex flex-col justify-end p-8">
+                               <div className="absolute inset-x-0 bottom-0 p-4 md:p-6 bg-gradient-to-t from-black via-black/40 to-transparent z-10 transition-all">
                                  <button 
                                    onClick={async () => {
                                      const newStatus = img.status === 'staged' ? 'original' : 'staged';
                                      await supabase.from("media").update({ status: newStatus }).eq("id", img.id);
                                      setImages(prev => prev.map(i => i.id === img.id ? { ...i, status: newStatus } : i));
                                    }}
-                                   className={`w-full py-3 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${img.status === 'staged' ? 'bg-blue-500/20 border-blue-500/50 text-blue-400' : 'bg-white/5 border-white/10 text-white/60 hover:text-white hover:bg-white/10'}`}
+                                   className={`w-full py-4 md:py-3 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${img.status === 'staged' ? 'bg-hormozi-yellow border-hormozi-yellow text-black' : 'bg-white/10 border-white/20 text-white hover:bg-white/20'}`}
                                  >
-                                   {img.status === 'staged' ? 'Quitar Marca Final' : 'Marcar como Final (Link al Tour)'}
+                                   {img.status === 'staged' ? '⭐ Foto en Tour' : 'Añadir al Tour'}
                                  </button>
                                </div>
                              </div>

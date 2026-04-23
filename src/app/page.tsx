@@ -201,22 +201,40 @@ export default function PropertyPage() {
             <p className="text-white/40 text-sm mt-1">Responde 3 preguntas rápidas y te contactamos hoy mismo.</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-4 shrink-0 w-full md:w-auto">
-            <a
+            <motion.a
               href={WHATSAPP_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-3 px-8 md:px-10 py-4 md:py-5 bg-green-500 hover:bg-green-400 text-white font-black rounded-2xl text-xs md:text-sm uppercase tracking-widest transition-all hover:scale-105 shadow-2xl shadow-green-500/30 w-full sm:w-auto"
+              animate={{ 
+                scale: [1, 1.05, 1],
+              }}
+              transition={{ 
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+              className="flex items-center justify-center gap-3 px-8 md:px-10 py-4 md:py-5 bg-green-500 hover:bg-green-400 text-white font-black rounded-2xl text-xs md:text-sm uppercase tracking-widest transition-all hover:scale-110 shadow-2xl shadow-green-500/30 w-full sm:w-auto"
             >
               <MessageCircle size={20} />
               WhatsApp
-            </a>
-            <button
+            </motion.a>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              animate={{ 
+                y: [0, -4, 0],
+              }}
+              transition={{ 
+                duration: 2.5,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
               onClick={() => { setShowTour(true); document.getElementById("tour-section")?.scrollIntoView({ behavior: "smooth" }); }}
-              className="flex items-center justify-center gap-3 px-8 md:px-10 py-4 md:py-5 bg-white/5 border border-white/10 hover:bg-white/10 font-black rounded-2xl text-xs md:text-sm uppercase tracking-widest transition-all w-full sm:w-auto"
+              className="flex items-center justify-center gap-3 px-8 md:px-10 py-4 md:py-5 bg-white/5 border border-white/10 hover:bg-white/10 font-black rounded-2xl text-xs md:text-sm uppercase tracking-widest transition-all w-full sm:w-auto shadow-xl"
             >
               <Play size={20} className="text-hormozi-yellow" />
               Tour Virtual
-            </button>
+            </motion.button>
           </div>
         </div>
       </section>
