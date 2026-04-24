@@ -89,7 +89,7 @@ export async function generatePropertyVideo(assets: PropertyVideoAssets): Promis
     } catch (e) {}
 
     const numImgs = assets.imageUrls.length;
-    const totalDuration = 12; 
+    const totalDuration = 24; // Aumentamos a 24s para suavidad extrema
     const durationPerImg = totalDuration / numImgs;
     const fps = 25;
 
@@ -104,8 +104,8 @@ export async function generatePropertyVideo(assets: PropertyVideoAssets): Promis
     let filterComplex = '';
     for (let i = 0; i < numImgs; i++) {
       const frames = Math.round(durationPerImg * fps);
-      // Paneo horizontal: si iw > 720, movemos x de 0 al final. Si no, hacemos zoom al centro.
-      filterComplex += `[${i}:v]zoompan=z='1.1':x='if(gt(iw,720),(iw-720)*on/${frames},iw/2-(iw/zoom/2))':y='ih/2-(ih/zoom/2)':d=${frames}:s=720x1280,trim=duration=${durationPerImg.toFixed(2)},setpts=PTS-STARTPTS,setsar=1[v${i}];`;
+      // Paneo cinemático suave: reducimos la velocidad del zoom y ajustamos el paneo x perfectamente
+      filterComplex += `[${i}:v]zoompan=z='1.05':x='if(gt(iw,720),(iw-720)*on/${frames},iw/2-(iw/zoom/2))':y='ih/2-(ih/zoom/2)':d=${frames}:s=720x1280,trim=duration=${durationPerImg.toFixed(2)},setpts=PTS-STARTPTS,setsar=1[v${i}];`;
     }
 
     let concatInputs = '';
@@ -115,7 +115,7 @@ export async function generatePropertyVideo(assets: PropertyVideoAssets): Promis
     let finalLabel = '[v_base]';
     if (hasFont) {
         const cleanTitle = assets.title.toUpperCase().replace(/'/g, "");
-        filterComplex += `;[v_base]drawtext=text='${cleanTitle}':fontfile='font.ttf':fontcolor=yellow:fontsize=50:x=(w-text_w)/2:y=200:borderw=4:bordercolor=black[v_final]`;
+        filterComplex += `;[v_base]drawtext=text='${cleanTitle}':fontfile='font.ttf':fontcolor=white:fontsize=40:x=(w-text_w)/2:y=h-180:borderw=2:bordercolor=black:shadowcolor=black:shadowx=2:shadowy=2[v_final]`;
         finalLabel = '[v_final]';
     }
 
@@ -125,9 +125,9 @@ export async function generatePropertyVideo(assets: PropertyVideoAssets): Promis
       '-c:v', 'libx264',
       '-pix_fmt', 'yuv420p',
       '-preset', 'ultrafast',
-      '-crf', '28',
+      '-crf', '22', // Calidad premium
       '-r', '25',
-      '-t', '12',
+      '-t', '24',   // Duración extendida
       'output.mp4'
     );
 

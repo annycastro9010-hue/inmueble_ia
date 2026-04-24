@@ -88,7 +88,7 @@ export default function PropertyPage() {
   return (
     <main className="min-h-screen bg-[#062b54] text-white font-body selection:bg-hormozi-yellow selection:text-black">
       {/* ── NAV ── */}
-      <nav className="fixed top-0 w-full z-50 px-6 md:px-12 py-4 md:py-5 flex justify-between items-center bg-black/40 md:bg-gradient-to-b md:from-black/60 md:to-transparent backdrop-blur-md">
+      <nav className="fixed top-0 w-full z-50 px-6 md:px-12 py-4 md:py-5 flex justify-between items-center bg-black/10 backdrop-blur-md md:bg-transparent">
         <div className="flex items-center gap-2">
           <div className="p-1.5 bg-hormozi-yellow rounded-sm">
             <Home size={16} className="text-black" />
@@ -112,84 +112,107 @@ export default function PropertyPage() {
         </div>
       </nav>
 
-      {/* ── HERO GALERÍA ── */}
-      <section className="relative h-[85vh] md:h-[92vh] w-full overflow-hidden">
-        {/* Foto principal */}
-        <AnimatePresence mode="wait">
-          <motion.img
-            key={currentPhoto}
-            src={displayPhotos[currentPhoto]}
-            initial={{ opacity: 0, scale: 1.05 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.8 }}
-            className="absolute inset-0 w-full h-full object-cover"
-            alt={`Foto ${currentPhoto + 1} de la propiedad`}
-          />
-        </AnimatePresence>
-        
-        {/* Overlay gradiente */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#062b54] via-black/20 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#062b54]/60 via-transparent to-transparent" />
-
-        {/* Controles del carrusel */}
-        <button onClick={prevPhoto} className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 p-3 md:p-4 bg-black/30 backdrop-blur-md rounded-full border border-white/10 hover:bg-white/10 transition-all z-10">
-          <ChevronLeft size={20} />
-        </button>
-        <button onClick={nextPhoto} className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 p-3 md:p-4 bg-black/30 backdrop-blur-md rounded-full border border-white/10 hover:bg-white/10 transition-all z-10">
-          <ChevronRight size={20} />
-        </button>
-
-        {/* Indicadores de foto */}
-        <div className="absolute bottom-[280px] md:bottom-48 left-1/2 -translate-x-1/2 flex gap-1.5 md:gap-2 z-10">
-          {displayPhotos.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setCurrentPhoto(i)}
-              className={`h-1 rounded-full transition-all duration-500 ${
-                i === currentPhoto ? "w-6 md:w-8 bg-hormozi-yellow" : "w-2 md:w-3 bg-white/30"
-              }`}
+      {/* ── HERO DYNAMIC (Video or Photos) ── */}
+      <section className="relative h-screen w-full overflow-hidden bg-black">
+        {displayProperty.video_url ? (
+          <div className="absolute inset-0 w-full h-full">
+            <video 
+              src={displayProperty.video_url} 
+              autoPlay 
+              loop 
+              muted 
+              playsInline
+              className="w-full h-full object-cover opacity-60"
             />
-          ))}
-        </div>
+            <div className="absolute inset-0 bg-gradient-to-t from-[#062b54] via-transparent to-black/40" />
+          </div>
+        ) : (
+          <>
+            <AnimatePresence mode="wait">
+              <motion.img
+                key={currentPhoto}
+                src={displayPhotos[currentPhoto]}
+                initial={{ opacity: 0, scale: 1.05 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.8 }}
+                className="absolute inset-0 w-full h-full object-cover opacity-50"
+                alt={`Foto ${currentPhoto + 1} de la propiedad`}
+              />
+            </AnimatePresence>
+            <div className="absolute inset-0 bg-gradient-to-t from-[#062b54] via-black/20 to-transparent" />
+            
+            {/* Controles solo si no hay video */}
+            <button onClick={prevPhoto} className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 p-3 md:p-4 bg-black/30 backdrop-blur-md rounded-full border border-white/10 hover:bg-white/10 transition-all z-10">
+              <ChevronLeft size={20} />
+            </button>
+            <button onClick={nextPhoto} className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 p-3 md:p-4 bg-black/30 backdrop-blur-md rounded-full border border-white/10 hover:bg-white/10 transition-all z-10">
+              <ChevronRight size={20} />
+            </button>
+          </>
+        )}
 
-        {/* Info principal sobre el hero */}
-        <div className="absolute bottom-0 left-0 right-0 px-6 md:px-16 pb-12 md:pb-16 z-10">
+        {/* Info principal sobre el hero — SIEMPRE VISIBLE */}
+        <div className="absolute inset-x-0 bottom-0 px-6 md:px-16 pb-20 md:pb-24 z-20">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
+            className="max-w-6xl mx-auto"
           >
-            <div className="flex items-center gap-2 text-[9px] md:text-[10px] font-black text-hormozi-yellow uppercase tracking-[0.3em] md:tracking-[0.5em] mb-3 md:mb-4">
+            <div className="flex items-center gap-2 text-[9px] md:text-[10px] font-black text-hormozi-yellow uppercase tracking-[0.3em] md:tracking-[0.5em] mb-4">
               <MapPin size={12} />
               <span className="truncate">{displayProperty.address}</span>
             </div>
 
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 md:gap-8">
-              <div className="max-w-2xl">
-                <h1 className="text-3xl sm:text-4xl md:text-7xl font-black uppercase italic tracking-tighter leading-none mb-2 md:mb-3">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+              <div className="max-w-3xl">
+                <h1 className="text-4xl sm:text-5xl md:text-8xl font-black uppercase italic tracking-tighter leading-[0.9] mb-4">
                   {displayProperty.title}
                 </h1>
-                <p className="text-white/50 text-xs md:text-sm">Publicado recientemente</p>
+                <div className="flex items-center gap-4">
+                  <div className="px-3 py-1 bg-hormozi-yellow text-black font-black text-[10px] uppercase tracking-widest rounded-full">
+                    Garantizado
+                  </div>
+                  <p className="text-white/50 text-[10px] md:text-xs uppercase tracking-[0.2em]">Última unidad disponible</p>
+                </div>
               </div>
 
-              <div className="md:text-right shrink-0">
-                <p className="text-[9px] md:text-[10px] font-black text-white/30 uppercase tracking-widest mb-1">Precio</p>
-                <p className="text-2xl md:text-5xl font-black text-hormozi-yellow tracking-tighter">
+              <div className="md:text-right shrink-0 bg-black/40 backdrop-blur-xl p-6 md:p-8 rounded-[2rem] border border-white/10 self-start md:self-auto">
+                <p className="text-[9px] md:text-[10px] font-black text-white/30 uppercase tracking-widest mb-1">Inversión</p>
+                <p className="text-3xl md:text-6xl font-black text-hormozi-yellow tracking-tighter">
                   {typeof displayProperty.price === 'number' ? `$${displayProperty.price.toLocaleString()}` : displayProperty.price}
                 </p>
-              </div>
-            </div>
-
-            {/* Quick Specs (Placeholder si no hay en DB) */}
-            <div className="mt-6 md:mt-8 flex flex-wrap gap-2 md:gap-4">
-              <div className="flex items-center gap-2 md:gap-3 px-3 md:px-5 py-2 md:py-3 bg-black/30 backdrop-blur-md rounded-full border border-white/10">
-                <BedDouble size={16} className="text-hormozi-yellow" />
-                <span className="font-black text-xs md:text-sm">{displayProperty.floors_count || 1}</span>
-                <span className="text-white/40 text-[8px] md:text-[10px] uppercase tracking-widest">Niveles</span>
+                <p className="text-[10px] text-white/40 mt-2">Escritura inmediata · Única oportunidad</p>
               </div>
             </div>
           </motion.div>
+        </div>
+      </section>
+
+      {/* ── BOTONES DE ACCIÓN RÁPIDA ── */}
+      <section className="relative z-30 -mt-10 md:-mt-12 px-6">
+        <div className="max-w-4xl mx-auto flex flex-col sm:flex-row gap-4">
+           <motion.a
+              href={WHATSAPP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="flex-1 flex items-center justify-center gap-3 px-8 py-5 md:py-6 bg-green-500 hover:bg-green-400 text-white font-black rounded-2xl text-xs md:text-sm uppercase tracking-widest transition-all shadow-2xl shadow-green-500/30"
+            >
+              <MessageCircle size={20} />
+              Quiero Agendar una Cita
+            </motion.a>
+            <motion.button
+              onClick={() => { setShowTour(true); document.getElementById("tour-section")?.scrollIntoView({ behavior: "smooth" }); }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="flex-1 flex items-center justify-center gap-3 px-8 py-5 md:py-6 bg-white text-black font-black rounded-2xl text-xs md:text-sm uppercase tracking-widest transition-all shadow-2xl"
+            >
+              <Play size={20} />
+              Ver Tour Virtual 360°
+            </motion.button>
         </div>
       </section>
 
