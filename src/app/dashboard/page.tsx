@@ -41,6 +41,7 @@ export default function DashboardPage() {
   const [propertyPrice, setPropertyPrice] = useState("0");
   const [propertyLocation, setPropertyLocation] = useState("");
   const [propertyDescription, setPropertyDescription] = useState("");
+  const [propertySlug, setPropertySlug] = useState("");
   const [loading, setLoading] = useState(true);
 
   const formattedPrice = (parseFloat(propertyPrice?.toString().replace(/[^0-9.]/g, '') || "0")).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
@@ -67,6 +68,7 @@ export default function DashboardPage() {
       setPropertyPrice(propData.price?.toString() || "0");
       setPropertyLocation(propData.location || "");
       setPropertyDescription(propData.description || "");
+      setPropertySlug(propData.slug || "");
     }
 
     const { data: mediaData } = await supabase.from("media").select("*").eq("property_id", id).order("floor", { ascending: true }).order("created_at", { ascending: true });
@@ -82,8 +84,11 @@ export default function DashboardPage() {
     const title = prompt("Introduce el nombre del nuevo inmueble:");
     if (!title) return;
 
+    const slug = title.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    
     const { data, error } = await supabase.from("properties").insert({
       title,
+      slug,
       price: 0,
       location: "Sin ubicación",
       description: "Nueva descripción",
@@ -100,12 +105,15 @@ export default function DashboardPage() {
     setIsProcessing(true);
     setCurrentAction("Guardando cambios...");
     try {
+      const slug = projectName.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
       await supabase.from("properties").update({
         title: projectName,
+        slug,
         price: parseFloat(propertyPrice.replace(/[^0-9.]/g, '')) || 0,
         location: propertyLocation,
         description: propertyDescription
       }).eq("id", activePropertyId);
+      setPropertySlug(slug);
       alert("✅ ¡Información actualizada!");
       fetchProperties();
     } catch (e: any) {
@@ -345,9 +353,7 @@ export default function DashboardPage() {
         <nav className="flex lg:flex-col gap-3 w-full">
           {/* VOLVER - Ahora arriba y destacado */}
           <Link 
-            href={activePropertyId && projectName 
-              ? `/propiedad/${projectName.toLowerCase().replace(/ /g, '-')}` 
-              : "/"} 
+            href={activePropertyId ? `/propiedad/${propertySlug || activePropertyId}` : "/"} 
             target="_blank"
             className="mb-6 flex items-center gap-3 px-5 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all w-full bg-white text-black hover:bg-hormozi-yellow shadow-xl shadow-white/5"
           >
@@ -533,7 +539,22 @@ export default function DashboardPage() {
                             <tr>
                                <td colSpan={5} className="px-8 py-32 text-center">
                                   <div className="text-white/10 font-black uppercase tracking-[0.3em] text-sm mb-4 italic">No hay clientes todavía</div>
-                                  <p className="text-white/20 text-[10px] max-w-sm mx-auto uppercase">Cuando un interesado llene el formulario en tu web pública, sus datos aparecerán mágicamente aquí.</p>
+                                  <p className="text-white/20 text-[10px] max-w-sm mx-auto uppercase mb-8">Cuando un interesado llene el formulario en tu web pública, sus datos aparecerán mágicamente aquí.</p>
+                                  
+                                  <button 
+                                    onClick={async () => {
+                                      const { data } = await supabase.from("leads").insert([{
+                                        property_id: activePropertyId,
+                                        client_name: "Cliente de Prueba",
+                                        phone: "+57 300 000 0000",
+                                        interest_level: 5
+                                      }]).select().single();
+                                      if(data) setLeads([data, ...leads]);
+                                    }}
+                                    className="px-6 py-3 bg-white/5 border border-white/10 rounded-xl text-[9px] font-black uppercase tracking-widest text-hormozi-yellow hover:bg-white/10 transition-all"
+                                  >
+                                    ⚡ Simular Cliente Nuevo (Prueba)
+                                  </button>
                                </td>
                             </tr>
                          )}

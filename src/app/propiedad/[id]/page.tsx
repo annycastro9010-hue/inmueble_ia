@@ -7,7 +7,7 @@ import {
   User, Phone, Send
 } from "lucide-react";
 import Link from "next/link";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import TourViewer from "@/components/TourViewer";
 import { supabase } from "@/lib/supabase";
 
@@ -149,28 +149,31 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
 
   if (!property) return null;
 
-  // Filtrar para mostrar la mejor calidad por habitación en el tour
-  const bestImages = images.reduce((acc: any[], current) => {
-    const key = `${current.floor}-${current.room_type}`;
-    const existingIdx = acc.findIndex(img => `${img.floor}-${img.room_type}` === key);
-    
-    // Prioridad de calidad: staged > cleaned > enhanced > original
-    const priority = (s: string) => ({ staged: 4, cleaned: 3, enhanced: 2, original: 1 }[s] || 0);
-    
-    if (existingIdx === -1) {
-      acc.push(current);
-    } else if (priority(current.status) > priority(acc[existingIdx].status)) {
-      acc[existingIdx] = current;
-    }
-    return acc;
-  }, []);
+  // Filtrar para mostrar la mejor calidad por habitación en el tour (Memoized)
+  const bestImages = useMemo(() => {
+    return images.reduce((acc: any[], current) => {
+      const key = `${current.floor}-${current.room_type}`;
+      const existingIdx = acc.findIndex(img => `${img.floor}-${img.room_type}` === key);
+      
+      const priority = (s: string) => ({ staged: 4, cleaned: 3, enhanced: 2, original: 1 }[s] || 0);
+      
+      if (existingIdx === -1) {
+        acc.push(current);
+      } else if (priority(current.status) > priority(acc[existingIdx].status)) {
+        acc[existingIdx] = current;
+      }
+      return acc;
+    }, []);
+  }, [images]);
 
-  const tourScenes = bestImages.map(img => ({
-    id: img.id,
-    name: img.floor ? `PISO ${img.floor} - ${img.room_type?.toUpperCase()}` : (img.room_type?.toUpperCase() || "CASA"),
-    imageUrl: img.url,
-    hotspots: []
-  }));
+  const tourScenes = useMemo(() => {
+    return bestImages.map(img => ({
+      id: img.id,
+      name: img.floor ? `PISO ${img.floor} - ${img.room_type?.toUpperCase()}` : (img.room_type?.toUpperCase() || "CASA"),
+      imageUrl: img.url,
+      hotspots: []
+    }));
+  }, [bestImages]);
 
   const stagedImg = images.find(img => img.status === 'staged');
   const originalImg = images.find(img => img.status === 'original' || img.status === 'enhanced');
