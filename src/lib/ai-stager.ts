@@ -1,5 +1,8 @@
 /**
- * AI Staging Engine (Async Mode - Anti-Timeout 2026)
+ * AI Staging Engine - Google Gemini Image Generation
+ * ────────────────────────────────────────────────────
+ * Usa gemini-2.0-flash-preview-image-generation que SÍ genera imágenes.
+ * El modelo anterior (1.5-flash) solo devolvía texto, por eso salía en blanco.
  */
 
 export interface AIProcessingOptions {
@@ -14,82 +17,106 @@ async function toBase64(url: string): Promise<string> {
   return Buffer.from(arrayBuffer).toString('base64');
 }
 
+function getMimeType(url: string): string {
+  if (url.includes('.png')) return 'image/png';
+  if (url.includes('.webp')) return 'image/webp';
+  return 'image/jpeg';
+}
+
 export async function processPropertyImage({ imageUrl, roomType, mode }: AIProcessingOptions) {
   const googleKey = process.env.GOOGLE_AI_STUDIO_API_KEY;
-  const replicateKey = process.env.REPLICATE_API_TOKEN;
+
+  // ── PROMPT DE ALTA FIDELIDAD ──
+  // Instrucción explícita para mantener la arquitectura exacta
+  const prompt = mode === "clean"
+    ? `You are a professional virtual staging AI. 
+       TASK: Remove ALL furniture, objects, and decorations from this room photo.
+       STRICT RULES:
+       - Keep walls, floors, ceiling, windows, and doors EXACTLY as they are
+       - Do NOT change colors, textures or structure of any architectural element
+       - Remove sofas, tables, chairs, lamps, rugs, paintings, curtains, and ANY movable object
+       - The output must look like an empty, clean, freshly-renovated room
+       - Return ONLY the photograph, no text`
+    : `You are a luxury interior design AI for real estate marketing.
+       TASK: Add beautiful, modern, high-end furniture to this empty/unfurnished room.
+       ROOM TYPE: ${roomType || 'living room'}
+       STRICT RULES:
+       - Keep walls, floors, ceiling, windows, doors EXACTLY as they are — do NOT alter them
+       - Do NOT change paint colors, flooring material, or architectural features
+       - Add coordinated, stylish, contemporary furniture appropriate for the room type
+       - Use a warm, inviting color palette for the furniture
+       - Ensure the room looks luxurious, photo-ready for real estate marketing
+       - The result should look like a professional interior design photo shoot
+       - Return ONLY the photograph, no text`;
+
+  if (!googleKey) {
+    throw new Error("GOOGLE_AI_STUDIO_API_KEY no está configurada en las variables de entorno.");
+  }
 
   try {
-    // Prompt exacto sugerido por el usuario para máxima fidelidad
-    const prompt = mode === "clean"
-      ? "MANTEN LAS PAREDES, SUELOS Y ARQUITECTURA EXACTAMENTE IGUAL. NO DAÑES NADA. ELIMINA TODOS LOS MUEBLES. DEVUELVE SOLO LA FOTOGRAFÍA VACÍA."
-      : `MANTEN LAS PAREDES, TECHOS Y SUELOS EXACTAMENTE IGUAL. NO DAÑES NADA. AMUEBLA ESTA HABITACIÓN CON ESTILO MODERNO Y LUJOSO PARA UN AMBIENTE DE ${roomType.toUpperCase()}. DEVUELVE SOLO LA FOTOGRAFÍA FINAL.`;
+    const base64 = await toBase64(imageUrl);
+    const mimeType = getMimeType(imageUrl);
 
-    // 1. INTENTO RAPIDO CON GOOGLE (Máximo 8 seg)
-    if (googleKey) {
-      try {
-        const base64 = await toBase64(imageUrl);
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${googleKey}`;
-        
-        // Timeout manual para Google de 8 segundos para no bloquear la función
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 8000);
+    // ── MODELO CORRECTO: gemini-2.0-flash-preview-image-generation ──
+    // Este es el único modelo de Google AI Studio que GENERA imágenes
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${googleKey}`;
 
-        const response = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: "image/jpeg", data: base64 } }] }]
-          }),
-          signal: controller.signal
-        });
+    const controller = new AbortController();
+    // 55 segundos de timeout (generación de imagen tarda más que texto)
+    const timeoutId = setTimeout(() => controller.abort(), 55000);
 
-        clearTimeout(timeoutId);
-
-        if (response.ok) {
-          const result = await response.json();
-          // Buscar específicamente el DATA de la imagen, ignorar cualquier texto de Gemini
-          const parts = result.candidates?.[0]?.content?.parts || [];
-          const part = parts.find((p: any) => p.inline_data);
-          const imgData = part?.inline_data?.data;
-          
-          if (imgData) return { outputUrl: `data:image/jpeg;base64,${imgData}`, status: "succeeded" };
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{
+          parts: [
+            { text: prompt },
+            { inline_data: { mime_type: mimeType, data: base64 } }
+          ]
+        }],
+        generationConfig: {
+          // CRÍTICO: sin esto, Gemini solo devuelve texto
+          responseModalities: ["IMAGE", "TEXT"],
         }
-      } catch (e) {
-        console.warn("Google tardó mucho o falló, pasando a Replicate Async...");
-      }
+      }),
+      signal: controller.signal
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const errBody = await response.text();
+      console.error("Google API error:", response.status, errBody);
+      throw new Error(`Google API respondió ${response.status}: ${errBody.slice(0, 200)}`);
     }
 
-    // 2. REPLICATE ASYNC (Para evitar el error 504 de Vercel)
-    if (replicateKey) {
-      const version = mode === "clean" 
-        ? "30c289233cf23037243c5b96796adba23668f3a362dbd66e8fa134709d290333" 
-        : "7762fdc0ed2343d6bb30887ee5cf93f8ce4537c1a25c2483ce6b2848f2c698c9";
+    const result = await response.json();
 
-      const predRes = await fetch("https://api.replicate.com/v1/predictions", {
-        method: "POST",
-        headers: { "Authorization": `Token ${replicateKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ version, input: { image: imageUrl, prompt } })
-      });
+    // Extraer datos de imagen de la respuesta
+    const parts = result.candidates?.[0]?.content?.parts || [];
+    const imagePart = parts.find((p: any) => p.inline_data?.data);
+    const imgData = imagePart?.inline_data?.data;
+    const imgMime = imagePart?.inline_data?.mime_type || 'image/jpeg';
 
-      const prediction = await predRes.json();
-      // DEVOLVEMOS LA PREDICCIÓN INCOMPLETA. El frontend se encarga de esperar.
-      return { 
-        id: prediction.id, 
-        status: "processing", 
-        pollingUrl: prediction.urls.get 
+    if (imgData) {
+      console.log(`✅ Gemini generó imagen correctamente (${(imgData.length * 0.75 / 1024).toFixed(0)}KB)`);
+      return {
+        outputUrl: `data:${imgMime};base64,${imgData}`,
+        status: "succeeded"
       };
     }
 
-    throw new Error("No hay llaves de API configuradas.");
+    // Si no hay imagen, loguear qué devolvió para debugging
+    const textPart = parts.find((p: any) => p.text);
+    console.error("Gemini no devolvió imagen. Texto:", textPart?.text?.slice(0, 300));
+    throw new Error("Gemini procesó la solicitud pero no generó una imagen. Verifica que tu clave de API tenga acceso a gemini-2.0-flash-preview-image-generation.");
 
   } catch (error: any) {
+    if (error.name === 'AbortError') {
+      throw new Error("La generación tardó más de 55 segundos. Intenta con una imagen más pequeña.");
+    }
     console.error("Error en Stager:", error);
     throw error;
   }
 }
-
-
-
-
-
-

@@ -1,12 +1,9 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  MapPin, BedDouble, Bath, Maximize2, Car,
-  ChevronLeft, ChevronRight, Play, X, MessageCircle, Home, Phone
-} from "lucide-react";
+import { MapPin, ChevronLeft, ChevronRight, Play, X, MessageCircle, Home, Eye } from "lucide-react";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import TourViewer from "@/components/TourViewer";
 import { supabase } from "@/lib/supabase";
 
@@ -16,34 +13,25 @@ export default function PropertyPage() {
   const [property, setProperty] = useState<any>(null);
   const [images, setImages] = useState<any[]>([]);
   const [currentPhoto, setCurrentPhoto] = useState(0);
-  const [showTour, setShowTour] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [showTour, setShowTour] = useState(false);
   const [loading, setLoading] = useState(true);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        // Obtenemos la propiedad única (Usando el ID maestro)
-        const { data: propData, error: propErr } = await supabase
-          .from('properties')
-          .select('*')
-          .eq('id', MAIN_PROPERTY_ID)
-          .maybeSingle();
-
-        if (propErr) throw propErr;
+        const { data: propData } = await supabase
+          .from('properties').select('*').eq('id', MAIN_PROPERTY_ID).maybeSingle();
         setProperty(propData);
 
-        // Obtenemos las imágenes de esta propiedad específica
-        const { data: mediaData, error: mediaErr } = await supabase
-          .from('media')
-          .select('*')
+        const { data: mediaData } = await supabase
+          .from('media').select('*')
           .eq('property_id', MAIN_PROPERTY_ID)
           .order('created_at', { ascending: true });
-
-        if (mediaErr) throw mediaErr;
         setImages(mediaData || []);
       } catch (err) {
-        console.error("Error cargando datos dinámicos:", err);
+        console.error("Error:", err);
       } finally {
         setLoading(false);
       }
@@ -57,450 +45,362 @@ export default function PropertyPage() {
     </div>
   );
 
-  // Fallback si no hay datos
   const displayProperty = property || {
-    title: "Mansión Santander",
+    title: "Casa Exclusiva Santander",
     location: "Bucaramanga, Santander",
-    price: 0,
-    description: "Carga tus fotos y genera tu video desde el panel de administración para ver el contenido real aquí."
+    price: 179900000,
+    description: "Espacio diseñado para el máximo confort y lujo.",
+    video_url: null,
   };
 
-  const displayPhotos = images.length > 0 ? images.map(img => img.url) : [
-    "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1600"
-  ];
+  // Fotos: todas las que vengan de Supabase; si no hay, usa placeholder
+  const displayPhotos = images.length > 0
+    ? images.map(img => img.url)
+    : [
+        "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1600",
+        "https://images.unsplash.com/photo-1600566752355-35792bedcfea?auto=format&fit=crop&q=80&w=1600",
+        "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?auto=format&fit=crop&q=80&w=1600",
+        "https://images.unsplash.com/photo-1565182999561-18d7dc61c393?auto=format&fit=crop&q=80&w=1600",
+        "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&q=80&w=1600",
+        "https://images.unsplash.com/photo-1484101403633-562f891dc89a?auto=format&fit=crop&q=80&w=1600",
+      ];
 
-  const tourScenes = images.map(img => ({
-    id: img.id,
-    name: img.room_type !== "unassigned" ? img.room_type.toUpperCase() : "AMBIENTE",
-    imageUrl: img.url,
-    hotspots: []
-  }));
+  const tourScenes = images.length > 0
+    ? images.map(img => ({
+        id: img.id,
+        name: img.room_type && img.room_type !== "unassigned" ? img.room_type.toUpperCase() : "ESPACIO",
+        imageUrl: img.url,
+        hotspots: []
+      }))
+    : displayPhotos.map((url, i) => ({
+        id: `scene-${i}`,
+        name: `ESPACIO ${i + 1}`,
+        imageUrl: url,
+        hotspots: []
+      }));
 
-  const nextPhoto = () => setCurrentPhoto((p) => (p + 1) % displayPhotos.length);
-  const prevPhoto = () => setCurrentPhoto((p) => (p - 1 + displayPhotos.length) % displayPhotos.length);
+  const nextPhoto = () => setCurrentPhoto(p => (p + 1) % displayPhotos.length);
+  const prevPhoto = () => setCurrentPhoto(p => (p - 1 + displayPhotos.length) % displayPhotos.length);
 
-  // WhatsApp dinámico
-  const WHATSAPP_NUMBER = "573001234567"; 
-  const WHATSAPP_MESSAGE = encodeURIComponent(
-    `¡Hola! Me interesa la propiedad ${displayProperty.title} (${displayProperty.price}). ¿Podemos agendar una cita?`
-  );
-  const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MESSAGE}`;
+  const openLightbox = (index: number) => {
+    setCurrentPhoto(index);
+    setLightboxOpen(true);
+  };
+
+  const WHATSAPP_NUMBER = "573001234567";
+  const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Hola! Me interesa la propiedad: ${displayProperty.title}`)}`;
+
+  const formattedPrice = typeof displayProperty.price === 'number'
+    ? `$${displayProperty.price.toLocaleString('es-CO')}`
+    : displayProperty.price || "Precio a consultar";
 
   return (
     <main className="min-h-screen bg-[#062b54] text-white font-body selection:bg-hormozi-yellow selection:text-black">
+
       {/* ── NAV ── */}
-      <nav className="fixed top-0 w-full z-50 px-6 md:px-12 py-4 md:py-5 flex justify-between items-center bg-black/10 backdrop-blur-md md:bg-transparent">
+      <nav className="fixed top-0 w-full z-50 px-6 md:px-12 py-4 flex justify-between items-center bg-black/30 backdrop-blur-md border-b border-white/5">
         <div className="flex items-center gap-2">
-          <div className="p-1.5 bg-hormozi-yellow rounded-sm">
+          <div className="p-1.5 bg-hormozi-yellow rounded-sm rotate-3">
             <Home size={16} className="text-black" />
           </div>
-          <span className="font-black tracking-[0.2em] text-xs md:text-sm uppercase">
-            SOTO <span className="text-hormozi-yellow">IA</span>
-          </span>
+          <span className="font-black tracking-[0.2em] text-xs uppercase">SOTO <span className="text-hormozi-yellow">IA</span></span>
         </div>
-        <div className="flex items-center gap-3 md:gap-4">
+        <div className="flex items-center gap-3">
+          <Link href="/dashboard" className="text-[10px] font-bold text-white/40 uppercase tracking-widest hover:text-white transition-colors hidden md:block">
+            Administración
+          </Link>
           <a
             href={WHATSAPP_URL}
             target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 px-4 md:px-5 py-2 md:py-2.5 bg-green-500 hover:bg-green-400 text-white font-black rounded-full text-[9px] md:text-[10px] uppercase tracking-widest transition-all hover:scale-105 shadow-lg shadow-green-500/20"
+            className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white font-black rounded-full text-[10px] uppercase tracking-widest hover:scale-105 hover:bg-green-400 transition-all shadow-lg shadow-green-500/30"
           >
-            <MessageCircle size={14} className="hidden sm:block" /> {typeof window !== 'undefined' && window.innerWidth < 640 ? 'WhatsApp' : 'WhatsApp'}
+            <MessageCircle size={14} /> WhatsApp
           </a>
-          <Link href="/dashboard" className="text-[9px] md:text-[10px] font-bold text-white/30 uppercase tracking-widest hover:text-white transition-colors">
-            Admin
-          </Link>
         </div>
       </nav>
 
-      {/* ── TOUR VIRTUAL (IMPACTO DIRECTO) ── */}
-      <section id="tour-section" className="relative pt-24 pb-12 px-0 md:px-0 overflow-hidden">
-        <div className="w-full max-w-7xl mx-auto px-4 md:px-6">
-          
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }} 
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1 }}
-            className="mb-8"
-          >
+      {/* ── SECCIÓN 1: HERO — TOUR 360 A PANTALLA COMPLETA ── */}
+      <section className="relative bg-black overflow-hidden">
+        {/* Tour ocupa todo el viewport */}
+        <div className="w-full" style={{ paddingTop: '56.25%', position: 'relative' }}>
+          <div className="absolute inset-0">
             <TourViewer scenes={tourScenes} initialSceneId={tourScenes[0]?.id} autoPlay={true} />
-          </motion.div>
+          </div>
+        </div>
 
-          {/* Frase compacta abajo */}
-          <div className="text-center md:text-left px-6">
-            <h2 className="text-2xl md:text-3xl font-black uppercase italic tracking-tighter">Tu próximo hogar, <span className="text-hormozi-yellow">en un vistazo.</span></h2>
-            <p className="text-white/40 text-[9px] uppercase tracking-[0.3em] mt-2">Recorrido automático · Toca para interactuar</p>
+        {/* Overlay de info encima del tour */}
+        <div className="absolute inset-0 pointer-events-none">
+          {/* Gradiente inferior */}
+          <div className="absolute bottom-0 left-0 right-0 h-2/3 bg-gradient-to-t from-[#062b54] via-[#062b54]/60 to-transparent" />
+        </div>
+
+        {/* Contenido sobre el gradiente */}
+        <div className="absolute bottom-0 left-0 right-0 px-6 md:px-16 pb-10 pointer-events-none">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center gap-2 text-hormozi-yellow font-black uppercase tracking-[0.3em] text-[10px] mb-3">
+              <MapPin size={12} /> {displayProperty.location}
+            </div>
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-black uppercase italic tracking-tighter leading-[0.9] mb-2">
+              {displayProperty.title}
+            </h1>
+            <p className="text-3xl md:text-4xl font-black text-hormozi-yellow italic tracking-tighter">
+              {formattedPrice}
+            </p>
           </div>
         </div>
       </section>
 
-      {/* ── EL RESTO DE SECCIONES ── */}
-
-      {/* ── HERO DYNAMIC (Video or Photos) ── */}
-      <section className="relative h-screen w-full overflow-hidden bg-black">
-        {displayProperty.video_url ? (
-          <div className="absolute inset-0 w-full h-full bg-black">
-            <video 
-              key={displayProperty.video_url}
-              autoPlay 
-              loop 
-              muted 
-              playsInline
-              preload="auto"
-              crossOrigin="anonymous"
-              className="w-full h-full object-cover transition-opacity duration-1000"
-              onCanPlayThrough={(e) => (e.currentTarget.style.opacity = "1")}
-              style={{ opacity: 0 }}
-            >
-              <source src={displayProperty.video_url} type="video/mp4" />
-              Tu navegador no soporta videos.
-            </video>
-            <div className="absolute inset-0 bg-gradient-to-t from-[#062b54] via-transparent to-black/20" />
-          </div>
-        ) : (
-          <>
-            <AnimatePresence mode="wait">
-              <motion.img
-                key={currentPhoto}
-                src={displayPhotos[currentPhoto]}
-                crossOrigin="anonymous"
-                initial={{ opacity: 0, scale: 1.05 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.8 }}
-                className="absolute inset-0 w-full h-full object-cover opacity-50"
-                alt={`Foto ${currentPhoto + 1} de la propiedad`}
-              />
-            </AnimatePresence>
-            <div className="absolute inset-0 bg-gradient-to-t from-[#062b54] via-black/20 to-transparent" />
-            
-            {/* Controles solo si no hay video */}
-            <button onClick={prevPhoto} className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 p-3 md:p-4 bg-black/30 backdrop-blur-md rounded-full border border-white/10 hover:bg-white/10 transition-all z-10">
-              <ChevronLeft size={20} />
-            </button>
-            <button onClick={nextPhoto} className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 p-3 md:p-4 bg-black/30 backdrop-blur-md rounded-full border border-white/10 hover:bg-white/10 transition-all z-10">
-              <ChevronRight size={20} />
-            </button>
-          </>
-        )}
-
-        {/* Info principal sobre el hero — SIEMPRE VISIBLE */}
-        <div className="absolute inset-x-0 bottom-0 px-6 md:px-16 pb-20 md:pb-24 z-20">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="max-w-6xl mx-auto"
+      {/* ── CTA BOTONES — debajo del hero, bien organizados ── */}
+      <section className="bg-[#062b54] px-6 md:px-16 py-8 border-b border-white/5">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row gap-4 justify-center items-center">
+          {/* Botón WhatsApp — principal */}
+          <motion.a
+            href={WHATSAPP_URL}
+            target="_blank"
+            animate={{ scale: [1, 1.03, 1] }}
+            transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
+            className="flex items-center justify-center gap-3 w-full sm:w-auto sm:min-w-[280px] px-10 py-5 bg-green-500 text-white font-black rounded-2xl text-sm uppercase tracking-wider shadow-2xl shadow-green-500/30 hover:bg-green-400 transition-colors"
           >
-            <div className="flex items-center gap-2 text-[9px] md:text-[10px] font-black text-hormozi-yellow uppercase tracking-[0.3em] md:tracking-[0.5em] mb-4">
-              <MapPin size={12} />
-              <span className="truncate">{displayProperty.location}</span>
-            </div>
+            <MessageCircle size={20} />
+            Quiero Agendar una Cita
+          </motion.a>
 
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-              <div className="max-w-3xl">
-                <h1 className={`font-black uppercase italic tracking-tighter leading-[0.9] mb-4 transition-all ${displayProperty.video_url ? 'text-3xl sm:text-4xl md:text-6xl text-white/90 drop-shadow-2xl' : 'text-4xl sm:text-5xl md:text-8xl text-white'}`}>
-                  {displayProperty.title}
-                </h1>
-                <div className="flex items-center gap-4">
-                  <div className="px-3 py-1 bg-hormozi-yellow text-black font-black text-[10px] uppercase tracking-widest rounded-full">
-                    Garantizado
-                  </div>
-                  <p className="text-white/50 text-[10px] md:text-xs uppercase tracking-[0.2em]">Exclusividad IA</p>
-                </div>
-              </div>
-
-              <div className={`md:text-right shrink-0 backdrop-blur-xl p-6 md:p-8 rounded-[2rem] border border-white/10 self-start md:self-auto transition-all ${displayProperty.video_url ? 'bg-black/20' : 'bg-black/40'}`}>
-                <p className="text-[9px] md:text-[10px] font-black text-white/30 uppercase tracking-widest mb-1">Inversión</p>
-                <p className="text-3xl md:text-5xl font-black text-hormozi-yellow tracking-tighter">
-                  {typeof displayProperty.price === 'number' ? `$${displayProperty.price.toLocaleString()}` : displayProperty.price}
-                </p>
-              </div>
-            </div>
-          </motion.div>
+          {/* Botón Tour 360 */}
+          <motion.button
+            onClick={() => setShowTour(true)}
+            animate={{ boxShadow: ["0 0 0px rgba(255,255,255,0)", "0 0 30px rgba(255,255,255,0.15)", "0 0 0px rgba(255,255,255,0)"] }}
+            transition={{ repeat: Infinity, duration: 3 }}
+            className="flex items-center justify-center gap-3 w-full sm:w-auto sm:min-w-[280px] px-10 py-5 bg-white text-black font-black rounded-2xl text-sm uppercase tracking-wider hover:bg-hormozi-yellow transition-colors"
+          >
+            <Play size={18} className="fill-black" />
+            Ver Tour Virtual 360°
+          </motion.button>
         </div>
       </section>
 
-      {/* ── BOTONES DE ACCIÓN RÁPIDA ── */}
-      <section className="relative z-30 -mt-10 md:-mt-12 px-6">
-        <div className="max-w-4xl mx-auto flex flex-col sm:flex-row gap-4">
-           <motion.a
-              href={WHATSAPP_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="flex-1 flex items-center justify-center gap-3 px-8 py-5 md:py-6 bg-green-500 hover:bg-green-400 text-white font-black rounded-2xl text-xs md:text-sm uppercase tracking-widest transition-all shadow-2xl shadow-green-500/30"
-            >
-              <MessageCircle size={20} />
-              Quiero Agendar una Cita
-            </motion.a>
-            <motion.button
-              onClick={() => { setShowTour(true); document.getElementById("tour-section")?.scrollIntoView({ behavior: "smooth" }); }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="flex-1 flex items-center justify-center gap-3 px-8 py-5 md:py-6 bg-white text-black font-black rounded-2xl text-xs md:text-sm uppercase tracking-widest transition-all shadow-2xl"
-            >
-              <Play size={20} />
-              Ver Tour Virtual 360°
-            </motion.button>
-        </div>
-      </section>
-
-      {/* ── VIDEO REEL (Vertical TikTok Style) — AHORA EN PRIMER PLANO ── */}
-      {/* @ts-ignore */}
-      {displayProperty.video_url && (
-        <section className="relative z-20 -mt-20 md:-mt-32 px-6">
-          <div className="max-w-4xl mx-auto">
-            <motion.div 
-               initial={{ opacity: 0, scale: 0.9 }}
-               animate={{ opacity: 1, scale: 1 }}
-               className="bg-black/60 backdrop-blur-2xl p-6 md:p-10 rounded-[3rem] border border-white/10 shadow-2xl flex flex-col md:flex-row items-center gap-8"
-            >
-              <div className="flex-1 text-center md:text-left space-y-4">
-                <div className="inline-block px-4 py-1.5 bg-hormozi-yellow text-black font-black text-[10px] uppercase tracking-widest rounded-full">
-                  Reel de Presentación
-                </div>
-                <h2 className="text-4xl md:text-5xl font-black italic uppercase leading-none tracking-tighter">
-                  Vive la experiencia <br /> <span className="text-hormozi-yellow">en movimiento</span>
-                </h2>
-                <p className="text-white/50 text-xs md:text-sm">
-                  Mira este resumen rápido de la propiedad. Calidad 4K para que no te pierdas ningún detalle.
-                </p>
-              </div>
-              
-              <div className="relative w-full max-w-[280px] aspect-[9/16] rounded-[2rem] overflow-hidden border-[8px] border-white/20 shadow-2xl group">
-                <video 
-                  src={displayProperty.video_url} 
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  className="w-full h-full object-cover"
-                  poster={displayPhotos[0]}
-                />
-              </div>
-            </motion.div>
-          </div>
-        </section>
-      )}
-
-      {/* ── CTA PRINCIPAL (El primer WhatsApp) ── */}
-      <section className="py-12 px-6 md:px-16">
-        <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8 md:gap-6 text-center md:text-left">
-          <div>
-            <p className="text-white font-black text-xl md:text-2xl tracking-tight">¿Te interesa esta propiedad?</p>
-            <p className="text-white/40 text-sm mt-1">Contacta al agente ahora mismo.</p>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-4 shrink-0 w-full md:w-auto">
-            <motion.a
-              href={WHATSAPP_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              animate={{ 
-                scale: [1, 1.05, 1],
-              }}
-              transition={{ 
-                duration: 2,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-              className="flex items-center justify-center gap-3 px-8 md:px-10 py-4 md:py-5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-black rounded-2xl text-xs md:text-sm uppercase tracking-widest transition-all hover:scale-110 shadow-2xl shadow-green-500/30 w-full sm:w-auto"
-            >
-              <MessageCircle size={20} />
-              Agendar Cita
-            </motion.a>
-          </div>
-        </div>
-      </section>
-
-      {/* ── GALERÍA SIMPLE (Para quien no quiere el tour) ── */}
-      <section className="py-16 md:py-20 px-6 md:px-16">
-        <div className="max-w-6xl mx-auto">
-          <div className="mb-8 md:mb-10 text-center md:text-left">
-            <p className="text-[9px] md:text-[10px] font-black text-white/30 uppercase tracking-[0.3em] md:tracking-[0.5em] mb-3">Galería de Fotos</p>
-            <h2 className="text-3xl md:text-4xl font-black uppercase italic tracking-tighter">Conoce cada rincón</h2>
+      {/* ── SECCIÓN 2: VIDEO SHOWCASE ── */}
+      <section className="py-16 md:py-24 bg-[#041a30] px-6">
+        <div className="max-w-5xl mx-auto">
+          <div className="mb-10 text-center">
+            <p className="text-hormozi-yellow font-black uppercase tracking-[0.5em] text-[10px] mb-3">Reel de Presentación</p>
+            <h2 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter">
+              Vive la Experiencia <span className="text-hormozi-yellow">en Movimiento.</span>
+            </h2>
+            <p className="text-white/40 text-sm mt-3 uppercase tracking-[0.2em]">
+              Mira este resumen rápido de la propiedad. Calidad 4K para que no te pierdas ningún detalle.
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-            {displayPhotos.map((url, i) => (
-              <motion.button
-                key={i}
-                onClick={() => { setCurrentPhoto(i); setLightboxOpen(true); }}
-                whileHover={{ scale: 1.02 }}
-                className={`relative overflow-hidden rounded-2xl md:rounded-[2.5rem] bg-black/20 ${
-                  i === 0 ? "sm:col-span-2 sm:row-span-2 aspect-[4/3]" : "aspect-square"
-                }`}
-              >
-                <img
-                  src={url}
-                  crossOrigin="anonymous"
-                  alt={`Foto ${i + 1}`}
-                  className="w-full h-full object-cover hover:scale-110 transition-transform duration-700"
-                />
-                {i === 0 && (
-                  <div className="absolute inset-0 flex items-end p-4 md:p-6 bg-gradient-to-t from-black/60 to-transparent">
-                    <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-white/60">
-                      {displayPhotos.length} fotos disponibles · Clic para ampliar
-                    </span>
-                  </div>
-                )}
-              </motion.button>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── TOUR VIRTUAL (Opcional, para quienes quieren explorarlo) ── */}
-      <section id="tour-section" className="py-16 md:py-20 px-6 md:px-16 bg-black/20">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 md:mb-10 text-center md:text-left">
-            <div>
-              <p className="text-[9px] md:text-[10px] font-black text-white/30 uppercase tracking-[0.3em] md:tracking-[0.5em] mb-3">Recorrido Interactivo</p>
-              <h2 className="text-3xl md:text-4xl font-black uppercase italic tracking-tighter">Tour Virtual 360°</h2>
-              <p className="text-white/40 text-xs md:text-sm mt-2">Recorre cada habitación de tu casa desde tu celular.</p>
-            </div>
-            {!showTour && (
-              <button
-                onClick={() => setShowTour(true)}
-                className="flex items-center justify-center gap-3 px-8 py-4 bg-hormozi-yellow hover:bg-yellow-300 text-black font-black rounded-2xl text-[9px] md:text-[10px] uppercase tracking-widest transition-all hover:scale-105 shadow-xl shadow-hormozi-yellow/20 shrink-0 mx-auto md:mx-0"
-              >
-                <Play size={18} /> Iniciar Recorrido
-              </button>
-            )}
-          </div>
-
-          {showTour ? (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-              <TourViewer scenes={tourScenes} initialSceneId={tourScenes[0]?.id} />
-            </motion.div>
-          ) : (
-            /* Placeholder para quien no activa el tour */
-            <div
-              onClick={() => setShowTour(true)}
-              className="relative h-[300px] md:h-[400px] rounded-[2rem] overflow-hidden border border-white/10 cursor-pointer group bg-black/40"
-            >
-              <img
-                src={displayPhotos[0]}
-                crossOrigin="anonymous"
-                className="w-full h-full object-cover opacity-40 group-hover:opacity-60 transition-all duration-700 group-hover:scale-105"
-                alt="Preview del tour"
+          {/* Video — si existe en Supabase se reproduce, si no muestra la galería en slideshow */}
+          {displayProperty.video_url ? (
+            <div className="relative rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl aspect-video bg-black">
+              <video
+                ref={videoRef}
+                src={displayProperty.video_url}
+                autoPlay loop muted playsInline
+                className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-6 text-center">
-                <div className="w-16 h-16 md:w-20 md:h-20 bg-hormozi-yellow rounded-full flex items-center justify-center shadow-2xl shadow-hormozi-yellow/30 group-hover:scale-110 transition-transform">
-                  <Play size={32} className="text-black ml-1" />
+              {/* botón overlay */}
+              <div className="absolute inset-0 flex items-center justify-center bg-black/20 hover:bg-transparent transition-colors group">
+                <div className="w-20 h-20 bg-white/20 backdrop-blur-xl rounded-full flex items-center justify-center border border-white/30 group-hover:scale-110 transition-transform">
+                  <Play size={32} className="text-white fill-white ml-1" />
                 </div>
-                <div>
-                  <p className="font-black uppercase tracking-widest text-xs md:text-sm">Clic para recorrer la casa</p>
-                  <p className="text-white/40 text-[10px] md:text-xs">No necesitas instalar nada</p>
-                </div>
+              </div>
+            </div>
+          ) : (
+            /* Si no hay video, slideshow automático con las fotos */
+            <div className="relative rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl aspect-video bg-black">
+              <AnimatePresence mode="wait">
+                <motion.img
+                  key={currentPhoto}
+                  src={displayPhotos[currentPhoto]}
+                  alt={`Foto ${currentPhoto + 1}`}
+                  initial={{ opacity: 0, scale: 1.05 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.8 }}
+                  className="w-full h-full object-cover"
+                />
+              </AnimatePresence>
+              {/* Auto-advance */}
+              <AutoSlideshow
+                total={displayPhotos.length}
+                current={currentPhoto}
+                onChange={setCurrentPhoto}
+              />
+              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
+                {displayPhotos.slice(0, 6).map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setCurrentPhoto(i)}
+                    className={`h-1.5 rounded-full transition-all ${i === currentPhoto ? 'w-8 bg-hormozi-yellow' : 'w-2 bg-white/30'}`}
+                  />
+                ))}
               </div>
             </div>
           )}
         </div>
       </section>
 
-      {/* ── DESCRIPCIÓN + DATOS CONCRETOS ── */}
-      <section className="py-12 md:py-20 px-6 md:px-16">
-        <div className="max-w-4xl mx-auto flex flex-col gap-6">
-            <p className="text-[9px] md:text-[10px] font-black text-white/30 uppercase tracking-[0.3em] md:tracking-[0.5em] mb-4 md:mb-6">Descripción</p>
-            <p className="text-white/70 leading-relaxed text-sm md:text-base whitespace-pre-line">
-              {displayProperty.description}
-            </p>
-        </div>
-      </section>
+      {/* ── SECCIÓN 3: GALERÍA ── */}
+      <section className="py-20 px-6 bg-[#062b54]">
+        <div className="max-w-6xl mx-auto">
+          <div className="mb-10">
+            <p className="text-hormozi-yellow font-black uppercase tracking-[0.5em] text-[10px] mb-2">Galería</p>
+            <h2 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter">
+              Cada rincón, <span className="text-hormozi-yellow">una historia.</span>
+            </h2>
+            <p className="text-white/30 text-sm mt-2">Haz clic en cualquier foto para verla en grande</p>
+          </div>
 
-      {/* ── CTA FINAL (WhatsApp) ── */}
-      <section className="py-20 md:py-24 px-6 text-center bg-black/30">
-        <div className="max-w-2xl mx-auto">
-          <p className="text-hormozi-yellow text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] md:tracking-[0.5em] mb-4">¿Listo para el siguiente paso?</p>
-          <h3 className="text-3xl md:text-6xl font-black uppercase italic tracking-tighter mb-6">
-            Habla con nosotros ahora
-          </h3>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a
-              href={WHATSAPP_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-3 px-10 md:px-12 py-5 md:py-6 bg-green-500 hover:bg-green-400 text-white font-black rounded-2xl text-sm md:text-base uppercase tracking-widest transition-all hover:scale-105 shadow-2xl shadow-green-500/30"
-            >
-              <MessageCircle size={24} className="hidden sm:block" />
-              WhatsApp — Escribir Ya
-            </a>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+            {displayPhotos.map((url, i) => (
+              <motion.div
+                key={i}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => openLightbox(i)}
+                className={`relative rounded-2xl overflow-hidden cursor-pointer group border border-white/5 hover:border-hormozi-yellow/50 transition-colors ${
+                  i === 0 ? 'col-span-2 aspect-video' : 'aspect-square'
+                }`}
+              >
+                <img
+                  src={url}
+                  alt={`Foto ${i + 1}`}
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                />
+                {/* Hover overlay */}
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity transform scale-50 group-hover:scale-100 duration-300">
+                    <div className="w-12 h-12 bg-hormozi-yellow rounded-full flex items-center justify-center shadow-2xl">
+                      <Eye size={20} className="text-black" />
+                    </div>
+                  </div>
+                </div>
+                {/* Número */}
+                <div className="absolute bottom-3 right-3 px-2 py-0.5 bg-black/60 backdrop-blur-md rounded-full text-[8px] font-black text-white/60">
+                  {i + 1}/{displayPhotos.length}
+                </div>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ── FOOTER ── */}
-      <footer className="py-12 text-center border-t border-white/5">
-        <p className="text-white/10 text-[9px] uppercase font-bold tracking-widest">
-          © 2026 Soto IA · Tecnología Inmobiliaria · Santander, Colombia
-        </p>
+      {/* ── SECCIÓN 4: DESCRIPCIÓN ── */}
+      {displayProperty.description && (
+        <section className="py-20 bg-black/20 px-6">
+          <div className="max-w-4xl mx-auto">
+            <h3 className="text-2xl md:text-3xl font-black uppercase italic tracking-tighter mb-6 text-hormozi-yellow">
+              Acerca de la propiedad
+            </h3>
+            <p className="text-white/70 text-lg md:text-xl leading-relaxed font-medium">
+              {displayProperty.description}
+            </p>
+          </div>
+        </section>
+      )}
+
+      {/* ── FOOTER CTA ── */}
+      <footer className="py-24 border-t border-white/5 text-center px-6">
+        <div className="max-w-2xl mx-auto">
+          <h4 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter mb-10 leading-tight">
+            ¿Es esta la casa de <br/> <span className="text-hormozi-yellow">tus sueños?</span>
+          </h4>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href={WHATSAPP_URL} target="_blank" className="px-10 py-5 bg-white text-black font-black rounded-2xl text-sm uppercase tracking-widest hover:bg-hormozi-yellow transition-colors">
+              WhatsApp Ahora
+            </a>
+            <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="px-10 py-5 border border-white/10 text-white font-black rounded-2xl text-sm uppercase tracking-widest hover:bg-white/5 transition-all">
+              Volver arriba
+            </button>
+          </div>
+          <p className="mt-16 text-[10px] text-white/10 font-bold uppercase tracking-[0.5em]">© 2026 SOTO IA · Santander, CO</p>
+        </div>
       </footer>
 
-      {/* ── BOTÓN WHATSAPP FLOTANTE (siempre visible en móvil) ── */}
-      <motion.a
-        href={WHATSAPP_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        animate={{ 
-          scale: [1, 1.05, 1],
-        }}
-        transition={{ 
-          duration: 2,
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
-        className="fixed bottom-8 right-6 z-50 flex items-center gap-3 px-6 py-4 bg-green-500 hover:bg-green-400 text-white font-black rounded-full shadow-2xl shadow-green-500/40 transition-all hover:scale-110 md:hidden"
-      >
-        <MessageCircle size={20} />
-        <span className="text-[11px] uppercase tracking-widest">WhatsApp</span>
-      </motion.a>
+      {/* ── MODAL: TOUR VIRTUAL FULL SCREEN ── */}
+      <AnimatePresence>
+        {showTour && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] bg-black/98 backdrop-blur-3xl flex items-center justify-center p-4 md:p-10"
+          >
+            <button
+              onClick={() => setShowTour(false)}
+              className="absolute top-6 right-6 z-10 flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-full text-[10px] font-black uppercase tracking-widest transition-all"
+            >
+              <X size={16} /> Cerrar
+            </button>
+            <div className="w-full max-w-6xl rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/10" style={{ aspectRatio: '16/9' }}>
+              <TourViewer scenes={tourScenes} initialSceneId={tourScenes[0]?.id} autoPlay={true} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* ── LIGHTBOX de fotos ── */}
+      {/* ── LIGHTBOX: IMÁGENES EN GRANDE ── */}
       <AnimatePresence>
         {lightboxOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-xl flex items-center justify-center"
+            className="fixed inset-0 z-[300] bg-black/97 backdrop-blur-2xl flex items-center justify-center"
             onClick={() => setLightboxOpen(false)}
           >
+            {/* Botón cerrar */}
             <button
-              className="absolute top-8 right-8 p-3 bg-white/10 rounded-full border border-white/10 hover:bg-white/20 transition-all"
+              className="absolute top-6 right-6 z-10 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-all"
               onClick={() => setLightboxOpen(false)}
             >
-              <X size={24} />
+              <X size={20} />
             </button>
+
+            {/* Contador */}
+            <div className="absolute top-6 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-white/10 rounded-full text-[10px] font-black uppercase tracking-widest">
+              {currentPhoto + 1} / {displayPhotos.length}
+            </div>
+
+            {/* Imagen central */}
+            <motion.img
+              key={currentPhoto}
+              initial={{ opacity: 0, scale: 0.93 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.97 }}
+              transition={{ duration: 0.25 }}
+              src={displayPhotos[currentPhoto]}
+              alt={`Foto ${currentPhoto + 1}`}
+              className="max-h-[82vh] max-w-[88vw] object-contain rounded-2xl shadow-2xl"
+              onClick={e => e.stopPropagation()}
+            />
+
+            {/* Flechas de navegación */}
             <button
-              className="absolute left-6 top-1/2 -translate-y-1/2 p-4 bg-black/50 rounded-full border border-white/10 z-10"
-              onClick={(e) => { e.stopPropagation(); prevPhoto(); }}
+              onClick={e => { e.stopPropagation(); prevPhoto(); }}
+              className="absolute left-4 md:left-8 w-14 h-14 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-all hover:scale-110"
             >
               <ChevronLeft size={24} />
             </button>
-            <motion.img
-              key={currentPhoto}
-              src={displayPhotos[currentPhoto]}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="max-h-[90vh] max-w-[90vw] object-contain rounded-2xl"
-              onClick={(e) => e.stopPropagation()}
-              alt={`Foto ${currentPhoto + 1}`}
-            />
             <button
-              className="absolute right-6 top-1/2 -translate-y-1/2 p-4 bg-black/50 rounded-full border border-white/10 z-10"
-              onClick={(e) => { e.stopPropagation(); nextPhoto(); }}
+              onClick={e => { e.stopPropagation(); nextPhoto(); }}
+              className="absolute right-4 md:right-8 w-14 h-14 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-all hover:scale-110"
             >
               <ChevronRight size={24} />
             </button>
-            <div className="absolute bottom-8 flex gap-2">
-              {displayPhotos.map((_, i) => (
+
+            {/* Miniaturas en la parte inferior */}
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 max-w-[90vw] overflow-x-auto px-4 pb-1">
+              {displayPhotos.map((url, i) => (
                 <button
                   key={i}
-                  onClick={(e) => { e.stopPropagation(); setCurrentPhoto(i); }}
-                  className={`h-1.5 rounded-full transition-all ${i === currentPhoto ? "w-8 bg-hormozi-yellow" : "w-3 bg-white/30"}`}
-                />
+                  onClick={e => { e.stopPropagation(); setCurrentPhoto(i); }}
+                  className={`shrink-0 w-14 h-14 rounded-xl overflow-hidden border-2 transition-all ${i === currentPhoto ? 'border-hormozi-yellow scale-110' : 'border-white/20 opacity-60 hover:opacity-100'}`}
+                >
+                  <img src={url} className="w-full h-full object-cover" />
+                </button>
               ))}
             </div>
           </motion.div>
@@ -508,4 +408,16 @@ export default function PropertyPage() {
       </AnimatePresence>
     </main>
   );
+}
+
+/** Componente auxiliar para hacer auto-slideshow cuando no hay video */
+function AutoSlideshow({ total, current, onChange }: { total: number; current: number; onChange: (i: number) => void }) {
+  useEffect(() => {
+    if (total <= 1) return;
+    const interval = setInterval(() => {
+      onChange((current + 1) % total);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [current, total, onChange]);
+  return null;
 }
