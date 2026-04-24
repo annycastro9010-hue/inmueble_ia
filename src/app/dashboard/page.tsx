@@ -343,19 +343,36 @@ export default function DashboardPage() {
                     setIsProcessing(true);
                     setCurrentAction("Publicando video...");
                     try {
-                      // Obtenemos la primera propiedad para asignarle el video
-                      const { data: prop } = await supabase.from('properties').select('id').limit(1).single();
-                      if (!prop) throw new Error("No hay propiedad configurada");
+                      // Intentamos obtener la primera propiedad
+                      let { data: prop } = await supabase.from('properties').select('id').limit(1).single();
+                      
+                      // Si no existe ninguna propiedad en la DB, la creamos al vuelo
+                      if (!prop) {
+                        console.log("Creando propiedad inicial...");
+                        const { data: newProp, error: createError } = await supabase
+                          .from('properties')
+                          .insert([{ 
+                            title: projectName.split("·")[0].trim() || 'Propiedad IA',
+                            description: 'Propiedad gestionada desde el Panel de Control.',
+                            price: '$0',
+                            location: 'Santander, CO'
+                          }])
+                          .select('id')
+                          .single();
+                        
+                        if (createError) throw createError;
+                        prop = newProp;
+                      }
                       
                       const path = `videos/video_${Date.now()}.mp4`;
                       const { error: uploadError } = await supabase.storage.from('propiedades').upload(path, videoBlob);
                       if (uploadError) throw uploadError;
                       
                       const url = `${supabaseUrl}/storage/v1/object/public/propiedades/${path}`;
-                      const { error: updateError } = await supabase.from('properties').update({ video_url: url }).eq('id', prop.id);
+                      const { error: updateError } = await supabase.from('properties').update({ video_url: url }).eq('id', prop!.id);
                       if (updateError) throw updateError;
 
-                      alert("🚀 ¡VIDEO PUBLICADO EN LA WEB PRINCIPAL!");
+                      alert("🚀 ¡VIDEO PUBLICADO EXITOSAMENTE!");
                       setGeneratedVideoUrl(null);
                     } catch (e: any) { 
                       alert("Error al publicar: " + e.message); 
