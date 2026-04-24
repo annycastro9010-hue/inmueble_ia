@@ -22,6 +22,8 @@ import { supabase, isSupabaseConfigured, supabaseUrl } from "@/lib/supabase";
 import TourViewer from "@/components/TourViewer";
 import { generatePropertyVideo } from "@/lib/video-engine";
 
+const floors = ["1", "2", "3", "Exterior"];
+
 export default function DashboardPage() {
   // Estados de Navegación
   const [activeTab, setActiveTab] = useState<"estudio" | "config">("estudio");
@@ -205,8 +207,6 @@ export default function DashboardPage() {
       setCurrentAction(null);
     }
   };
-
-  const floors = ["1", "2", "3", "Exterior"];
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen bg-[#062b54] text-white font-body selection:bg-hormozi-yellow">
