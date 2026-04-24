@@ -321,28 +321,60 @@ export default function DashboardPage() {
 
       <AnimatePresence>
         {generatedVideoUrl && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[120] bg-black/95 backdrop-blur-3xl flex items-center justify-center p-6">
-            <div className="max-w-md w-full bg-[#062b54] rounded-[3rem] border border-white/10 p-8 space-y-6 relative shadow-2xl">
-              <button onClick={() => { setGeneratedVideoUrl(null); setVideoBlob(null); }} className="absolute top-6 right-6 text-white/30"><X size={24}/></button>
-              <h3 className="text-2xl font-black uppercase italic tracking-tighter">Video Generado</h3>
-              <div className="aspect-[9/16] bg-black rounded-[2rem] overflow-hidden shadow-2xl"><video src={generatedVideoUrl} controls autoPlay loop className="w-full h-full object-contain" /></div>
-              <div className="grid grid-cols-2 gap-4">
-                <button onClick={() => { const a = document.createElement("a"); a.href = generatedVideoUrl; a.download = "video.mp4"; a.click(); }} className="py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest">Descargar</button>
-                <button onClick={async () => {
-                  if (!videoBlob) return;
-                  setIsProcessing(true);
-                  try {
-                    const { data: prop } = await supabase.from('properties').select('id').limit(1).single();
-                    if (!prop) throw new Error("No hay propiedad");
-                    const path = `videos/video_${Date.now()}.mp4`;
-                    await supabase.storage.from('propiedades').upload(path, videoBlob);
-                    const url = `${supabaseUrl}/storage/v1/object/public/propiedades/${path}`;
-                    await supabase.from('properties').update({ video_url: url }).eq('id', prop.id);
-                    alert("🚀 PUBLICADO");
-                    setGeneratedVideoUrl(null);
-                  } catch (e: any) { alert("Error: " + e.message); }
-                  finally { setIsProcessing(false); }
-                }} className="py-4 bg-hormozi-yellow text-black rounded-2xl text-[10px] font-black uppercase tracking-widest">🚀 Publicar</button>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[120] bg-black/95 backdrop-blur-3xl flex items-center justify-center p-4">
+            <div className="max-w-md w-full max-h-[95vh] overflow-y-auto bg-[#062b54] rounded-[2.5rem] md:rounded-[3rem] border border-white/10 p-6 md:p-10 space-y-6 relative shadow-2xl custom-scrollbar">
+              <button onClick={() => { setGeneratedVideoUrl(null); setVideoBlob(null); }} className="absolute top-6 right-6 text-white/30 hover:text-white transition-colors z-50">
+                <X size={28}/>
+              </button>
+              
+              <div className="space-y-1">
+                <h3 className="text-2xl font-black uppercase italic tracking-tighter text-white">Video Generado</h3>
+                <p className="text-white/30 text-[9px] font-bold uppercase tracking-widest">Listo para compartir</p>
+              </div>
+
+              <div className="aspect-[9/16] max-h-[55vh] mx-auto bg-black rounded-[2rem] overflow-hidden shadow-2xl ring-1 ring-white/10">
+                <video src={generatedVideoUrl} controls autoPlay loop className="w-full h-full object-contain" />
+              </div>
+
+              <div className="flex flex-col gap-3 pt-2">
+                <button 
+                  onClick={async () => {
+                    if (!videoBlob) return;
+                    setIsProcessing(true);
+                    setCurrentAction("Publicando video...");
+                    try {
+                      // Obtenemos la primera propiedad para asignarle el video
+                      const { data: prop } = await supabase.from('properties').select('id').limit(1).single();
+                      if (!prop) throw new Error("No hay propiedad configurada");
+                      
+                      const path = `videos/video_${Date.now()}.mp4`;
+                      const { error: uploadError } = await supabase.storage.from('propiedades').upload(path, videoBlob);
+                      if (uploadError) throw uploadError;
+                      
+                      const url = `${supabaseUrl}/storage/v1/object/public/propiedades/${path}`;
+                      const { error: updateError } = await supabase.from('properties').update({ video_url: url }).eq('id', prop.id);
+                      if (updateError) throw updateError;
+
+                      alert("🚀 ¡VIDEO PUBLICADO EN LA WEB PRINCIPAL!");
+                      setGeneratedVideoUrl(null);
+                    } catch (e: any) { 
+                      alert("Error al publicar: " + e.message); 
+                    } finally { 
+                      setIsProcessing(false); 
+                      setCurrentAction(null);
+                    }
+                  }} 
+                  className="w-full py-5 bg-hormozi-yellow text-black rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] shadow-xl shadow-hormozi-yellow/20 hover:scale-[1.02] active:scale-95 transition-all"
+                >
+                  🚀 Publicar en Web
+                </button>
+                
+                <button 
+                  onClick={() => { const a = document.createElement("a"); a.href = generatedVideoUrl; a.download = "video_inmueble.mp4"; a.click(); }} 
+                  className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white/70 hover:bg-white/10 transition-all"
+                >
+                  Bajar a mi celular / PC
+                </button>
               </div>
             </div>
           </motion.div>
