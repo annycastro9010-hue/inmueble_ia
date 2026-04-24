@@ -26,7 +26,7 @@ function MagicSlider({ before, after }: { before: string; after: string }) {
   return (
     <div 
       ref={containerRef}
-      className="relative w-full aspect-video rounded-[2rem] overflow-hidden cursor-ew-resize border-2 border-white/10 group"
+      className="relative w-full aspect-video rounded-[3rem] overflow-hidden cursor-ew-resize border-2 border-white/10 group shadow-2xl"
       onMouseMove={handleMove}
       onTouchMove={handleMove}
     >
@@ -39,7 +39,7 @@ function MagicSlider({ before, after }: { before: string; after: string }) {
       </div>
       <div className="absolute inset-0 pointer-events-none" style={{ left: `${sliderPos}%` }}>
         <div className="h-full w-0.5 bg-white shadow-xl relative">
-          <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-8 h-8 bg-white rounded-full flex items-center justify-center text-black shadow-xl">
+          <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-10 h-10 bg-white rounded-full flex items-center justify-center text-black shadow-xl border-4 border-[#062b54]">
              <ArrowLeftRight size={14} />
           </div>
         </div>
@@ -68,26 +68,19 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
   useEffect(() => {
     async function fetchData() {
       try {
-        // Buscamos por ID o por Slug (si el ID contiene el nombre de la propiedad)
         let query = supabase.from('properties').select('*');
-        
-        if (id.length > 20) { // Probablemente un UUID
+        if (id.length > 20) {
             query = query.eq('id', id);
         } else {
-            // Buscamos por slug o título aproximado (fallback)
             query = query.or(`slug.eq.${id},title.ilike.%${id.replace(/-/g, ' ')}%`);
         }
-
         const { data: propData } = await query.maybeSingle();
-        
         if (!propData) {
-            // Intentamos una búsqueda desesperada por ID si el slug falló
             const { data: retry } = await supabase.from('properties').select('*').eq('id', id).maybeSingle();
             if (retry) setProperty(retry);
         } else {
             setProperty(propData);
         }
-
         const actualId = propData?.id || id;
         const { data: mediaData } = await supabase.from("media").select("*").eq("property_id", actualId).order("created_at", { ascending: true });
         setImages(mediaData || []);
@@ -100,12 +93,11 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
     fetchData();
   }, [id]);
 
-  // Auto-Carousel logic
   useEffect(() => {
     if (images.length > 0) {
       const interval = setInterval(() => {
         setAutoCarouselIndex(prev => (prev + 1) % images.length);
-      }, 3500);
+      }, 4000);
       return () => clearInterval(interval);
     }
   }, [images]);
@@ -133,49 +125,76 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
   return (
     <main className="min-h-screen bg-[#062b54] text-white selection:bg-hormozi-yellow selection:text-black">
       
-      {/* ── 1. EL TOUR 360 ES LO PRIMERO (AUTO-PLAY) ── */}
-      <section className="relative h-[70vh] md:h-[85vh] bg-black">
+      {/* ── 1. TICKER (LLAMATIVO) ── */}
+      <div className="bg-hormozi-yellow text-black py-2.5 overflow-hidden whitespace-nowrap sticky top-0 z-[100] border-b-2 border-black/10">
+        <motion.div 
+          initial={{ x: 0 }} 
+          animate={{ x: "-50%" }}
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          className="flex gap-12 items-center"
+        >
+          {[...Array(10)].map((_, i) => (
+            <div key={i} className="flex gap-12 items-center font-black text-[10px] uppercase tracking-[0.3em] italic">
+              <span>Entrega Inmediata</span> <Sparkles size={14} />
+              <span>Créditos se aceptan</span> <CheckCircle size={14} />
+              <span>Sin Intermediarios</span> <Sparkles size={14} />
+              <span>Oportunidad de Inversión</span>
+            </div>
+          ))}
+        </motion.div>
+      </div>
+
+      {/* ── 2. EL TOUR 360 (LIMPIO) ── */}
+      <section className="relative h-[80vh] bg-black overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.8)]">
         <TourViewer scenes={tourScenes} initialSceneId={tourScenes[0]?.id} autoPlay={true} />
         
-        {/* Marcador de Tour */}
-        <div className="absolute top-8 left-8 z-20 pointer-events-none">
-          <div className="flex items-center gap-2 px-4 py-2 bg-black/60 backdrop-blur-xl rounded-full border border-white/10">
-            <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-            <span className="text-[9px] md:text-[11px] font-black uppercase tracking-[0.4em] italic text-hormozi-yellow">Experiencia <span className="text-white">Vivo 360°</span></span>
+        {/* Marcador superior mejorado */}
+        <div className="absolute top-8 left-8 z-20">
+          <div className="flex items-center gap-3 px-4 py-2.5 bg-[#062b54]/80 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl">
+            <div className="w-2 h-2 bg-red-500 rounded-full animate-ping" />
+            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-hormozi-yellow">Vivencia <span className="text-white">Real 360°</span></span>
           </div>
         </div>
 
         {/* Botón Volver */}
         <div className="absolute top-8 right-8 z-30">
-          <Link href="/" className="p-3 bg-black/40 backdrop-blur-md rounded-full hover:bg-black/60 transition-all">
+          <Link href="/" className="p-4 bg-black/40 backdrop-blur-md rounded-2xl hover:bg-black/60 border border-white/5 transition-all">
              <X size={20} />
           </Link>
         </div>
 
         {/* Overlay inferior difuminado */}
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#062b54] to-transparent z-10" />
+        <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-[#062b54] via-[#062b54]/40 to-transparent z-10" />
       </section>
 
-      {/* ── 2. BOTONES DE ACCIÓN RÁPIDA ── */}
-      <div className="relative z-20 -mt-10 px-6 max-w-4xl mx-auto flex flex-col md:flex-row gap-4">
-        <a href={WHATSAPP_URL} target="_blank" className="flex-1 py-6 bg-green-500 text-white font-black rounded-3xl uppercase text-xs tracking-widest shadow-2xl flex items-center justify-center gap-3 hover:scale-[1.03] transition-transform">
-          <MessageCircle size={20} /> Quiero una Cita
-        </a>
-        <button onClick={() => window.scrollTo({ top: 1500, behavior: 'smooth' })} className="flex-1 py-6 bg-white text-black font-black rounded-3xl uppercase text-xs tracking-widest shadow-2xl flex items-center justify-center gap-3 hover:scale-[1.03] transition-transform">
-          <Play size={20} /> Ver Video Cinematic
-        </button>
+      {/* ── 3. BOTONES DE ACCIÓN (CON AIRE) ── */}
+      <div className="relative z-30 -mt-16 px-6 max-w-5xl mx-auto space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <a href={WHATSAPP_URL} target="_blank" className="relative group overflow-hidden py-7 bg-green-500 text-white font-black rounded-3xl uppercase text-[11px] tracking-widest shadow-[0_20px_50px_rgba(34,197,94,0.3)] flex items-center justify-center gap-4 hover:scale-[1.02] active:scale-[0.98] transition-all">
+            <div className="absolute inset-0 bg-white/20 -translate-x-full group-hover:translate-x-0 skew-x-12 transition-transform duration-500" />
+            <MessageCircle size={22} /> ¡Quiero conocerla ya!
+          </a>
+          <button 
+            onClick={() => document.getElementById('seccion-video')?.scrollIntoView({ behavior: 'smooth' })} 
+            className="py-7 bg-white text-black font-black rounded-3xl uppercase text-[11px] tracking-widest shadow-[0_20px_50px_rgba(255,255,255,0.1)] flex items-center justify-center gap-4 hover:bg-hormozi-yellow transition-all"
+          >
+            <Play size={22} fill="currentColor" /> Ver Video Recorrido
+          </button>
+        </div>
       </div>
 
-      <div className="px-6 md:px-12 max-w-[1400px] mx-auto py-16 space-y-32">
+      <div className="px-6 md:px-12 max-w-[1400px] mx-auto py-24 space-y-40 pb-40">
         
-        {/* ── 3. VIDEO REEL (AUTO-PLAY) ── */}
+        {/* ── 4. VIDEO REEL (AUTO-PLAY) ── */}
         {property.video_url && (
-          <section className="space-y-8">
-             <div className="flex items-center gap-4">
-               <div className="h-0.5 w-12 bg-hormozi-yellow" />
-               <h2 className="text-xl md:text-3xl font-black uppercase italic tracking-tighter">Video <span className="text-hormozi-yellow">Reel de Venta</span></h2>
+          <section id="seccion-video" className="space-y-10">
+             <div className="text-center space-y-3">
+               <div className="text-hormozi-yellow text-[10px] font-black uppercase tracking-[0.4em]">Experiencia Cinematic</div>
+               <h2 className="text-4xl md:text-7xl font-black uppercase italic tracking-tighter leading-none">
+                 Venta en <span className="text-hormozi-yellow">Movimiento</span>
+               </h2>
              </div>
-             <div className="aspect-video rounded-[3rem] overflow-hidden border-2 border-white/10 shadow-2xl bg-black">
+             <div className="aspect-video max-w-6xl mx-auto rounded-[4rem] overflow-hidden border-4 border-white/5 shadow-[0_60px_100px_rgba(0,0,0,0.6)] bg-black">
                 <video 
                   src={property.video_url} 
                   autoPlay loop muted playsInline
@@ -185,106 +204,100 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
           </section>
         )}
 
-        {/* ── 4. CARRUSEL AUTOMÁTICO DE FOTOS ── */}
-        <section className="space-y-8">
-           <div className="flex items-center gap-4">
-             <div className="h-0.5 w-12 bg-hormozi-yellow" />
-             <h2 className="text-xl md:text-3xl font-black uppercase italic tracking-tighter">Explora los <span className="text-hormozi-yellow">Espacios</span></h2>
-           </div>
+        {/* ── 5. CARRUSEL AUTOMÁTICO ── */}
+        <section className="space-y-12">
+            <div className="flex flex-col md:flex-row justify-between items-end gap-6">
+              <div className="space-y-4">
+                 <h2 className="text-4xl md:text-7xl font-black uppercase italic tracking-tighter leading-none">Álbum <span className="text-hormozi-yellow">Pro</span></h2>
+                 <p className="text-white/30 text-xs font-bold uppercase tracking-widest">Las fotos cambian automáticamente para ti</p>
+              </div>
+              <div className="hidden md:flex gap-2">
+                 {images.map((_, i) => (
+                    <div key={i} className={`h-1 rounded-full transition-all duration-700 ${i === autoCarouselIndex ? 'w-10 bg-hormozi-yellow' : 'w-4 bg-white/10'}`} />
+                 ))}
+              </div>
+            </div>
            
-           <div className="relative aspect-[16/9] md:aspect-[21/9] rounded-[3rem] overflow-hidden border border-white/10 bg-black/20 group">
+           <div className="relative aspect-[16/9] md:aspect-[21/9] rounded-[4rem] overflow-hidden border-2 border-white/10 bg-black/20 group">
               <AnimatePresence mode="wait">
                 <motion.img
                   key={autoCarouselIndex}
-                  initial={{ opacity: 0, x: 50 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -50 }}
-                  transition={{ duration: 0.8 }}
+                  initial={{ opacity: 0, scale: 1.1 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 1.2, ease: "easeOut" }}
                   src={images[autoCarouselIndex]?.url}
                   className="w-full h-full object-cover cursor-pointer"
                   onClick={() => { setCurrentPhoto(autoCarouselIndex); setLightboxOpen(true); }}
                 />
               </AnimatePresence>
-              
-              {/* Controles del carrusel */}
-              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2">
-                 {images.map((_, idx) => (
-                    <div 
-                      key={idx} 
-                      className={`h-1.5 rounded-full transition-all duration-500 ${idx === autoCarouselIndex ? 'w-8 bg-hormozi-yellow' : 'w-2 bg-white/20'}`}
-                    />
-                 ))}
-              </div>
            </div>
 
-           {/* Galería de miniaturas (Individuales) */}
-           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {images.slice(0, 8).map((img, i) => (
-                <div 
+           {/* Individuales */}
+           <div className="flex overflow-x-auto gap-4 pb-4 no-scrollbar">
+              {images.map((img, i) => (
+                <motion.div 
                   key={i} 
-                  className={`aspect-video rounded-3xl overflow-hidden border-2 transition-all cursor-pointer ${i === autoCarouselIndex ? 'border-hormozi-yellow scale-95' : 'border-white/5 opacity-40 hover:opacity-100'}`}
+                  whileHover={{ y: -5 }}
+                  className={`flex-shrink-0 w-48 md:w-64 aspect-video rounded-[2rem] overflow-hidden border-2 transition-all cursor-pointer ${i === autoCarouselIndex ? 'border-hormozi-yellow shadow-2xl scale-[0.98]' : 'border-white/5 opacity-50'}`}
                   onClick={() => setAutoCarouselIndex(i)}
                 >
                   <img src={img.url} className="w-full h-full object-cover" />
-                </div>
+                </motion.div>
               ))}
            </div>
         </section>
 
-        {/* ── 5. INFORMACIÓN, TITULO Y MAGIA ── */}
-        <section className="grid grid-cols-1 lg:grid-cols-5 gap-20 items-start">
-           <div className="lg:col-span-3 space-y-12">
-              <div className="space-y-4">
-                 <div className="flex items-center gap-2 text-hormozi-yellow font-black uppercase tracking-widest text-[10px]">
-                    <MapPin size={16} /> {property.location}
+        {/* ── 6. FICHA TÉCNICA Y MAGIA ── */}
+        <section className="grid grid-cols-1 lg:grid-cols-12 gap-16 md:gap-24 items-start">
+           <div className="lg:col-span-7 space-y-12">
+              <div className="space-y-6">
+                 <div className="inline-flex items-center gap-3 px-5 py-2 bg-hormozi-yellow/10 text-hormozi-yellow rounded-full border border-hormozi-yellow/20">
+                    <MapPin size={18} /> <span className="font-black text-[11px] uppercase tracking-widest">{property.location}</span>
                  </div>
-                 <h1 className="text-5xl md:text-8xl font-black uppercase italic tracking-tighter leading-none">
+                 <h1 className="text-6xl md:text-[8rem] font-extrabold uppercase italic tracking-tighter leading-[0.8]">
                     {property.title}
                  </h1>
-                 <p className="text-xl md:text-2xl text-white/60 leading-relaxed max-w-4xl pt-4">
+                 <p className="text-xl md:text-3xl text-white/70 leading-relaxed font-medium">
                     {property.description}
                  </p>
               </div>
 
-              {/* Ficha técnica simple */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {/* Specs */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                 {[
-                  { ic: <BedDouble />, val: "3", l: "Habs" },
-                  { ic: <Bath />, val: "2", l: "Baños" },
-                  { ic: <Square />, val: "125", l: "m²" },
-                  { ic: <Car />, val: "1", l: "Garaje" }
+                  { ic: <BedDouble size={28} />, val: "3", l: "Cuartos" },
+                  { ic: <Bath size={28} />, val: "2", l: "Baños" },
+                  { ic: <Square size={28} />, val: "125", l: "m² Área" },
+                  { ic: <Car size={28} />, val: "1", l: "Garaje" }
                 ].map((s, i) => (
-                  <div key={i} className="bg-white/5 p-8 rounded-[2.5rem] border border-white/5 text-center">
-                    <div className="text-hormozi-yellow flex justify-center mb-2">{s.ic}</div>
-                    <div className="text-2xl font-black italic">{s.val}</div>
-                    <div className="text-[10px] uppercase font-bold opacity-30">{s.l}</div>
+                  <div key={i} className="bg-white/5 p-10 rounded-[3rem] border border-white/5 flex flex-col items-center">
+                    <div className="text-hormozi-yellow mb-4">{s.ic}</div>
+                    <div className="text-3xl font-black italic mb-1">{s.val}</div>
+                    <div className="text-[10px] uppercase font-bold text-white/30 tracking-widest">{s.l}</div>
                   </div>
                 ))}
               </div>
            </div>
 
-           <div className="lg:col-span-2 space-y-8">
-              <div className="bg-white/5 p-12 rounded-[3.5rem] border border-white/10 shadow-2xl">
-                 <div className="text-white/40 font-black uppercase tracking-widest text-[10px] mb-2 text-center">Inversión Final</div>
-                 <div className="text-5xl md:text-6xl font-black italic tracking-tighter text-hormozi-yellow text-center">
+           <div className="lg:col-span-5 space-y-10 lg:sticky lg:top-32">
+              <div className="bg-white p-12 md:p-16 rounded-[4rem] shadow-[0_50px_100px_rgba(0,0,0,0.5)]">
+                 <div className="text-black/40 font-black uppercase tracking-widest text-[10px] mb-4">Inversión para Vivir</div>
+                 <div className="text-6xl md:text-8xl font-black italic tracking-tighter text-black leading-none mb-10">
                    ${property.price?.toLocaleString()}
                  </div>
-                 <div className="mt-8 h-px bg-white/10 w-full" />
-                 <div className="mt-8 space-y-4">
-                    <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] italic text-white/50">
-                       <CheckCircle size={14} className="text-green-500" /> Entrega Inmediata
-                    </div>
-                    <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] italic text-white/50">
-                       <CheckCircle size={14} className="text-green-500" /> Documentos al día
-                    </div>
-                 </div>
+                 <div className="h-px bg-black/10 w-full mb-10" />
+                 <a href={WHATSAPP_URL} target="_blank" className="w-full py-7 bg-[#062b54] text-white flex items-center justify-center gap-4 rounded-[2rem] font-black uppercase text-xs tracking-[0.2em] hover:bg-black transition-all">
+                    Agendar ahora <ChevronRight size={20}/>
+                 </a>
               </div>
 
-              {/* Magia IA en lateral */}
+              {/* Slider IA mejor integrado */}
               {stagedImg && originalImg && (
-                <div className="space-y-4">
-                   <div className="text-[10px] font-black uppercase tracking-widest text-hormozi-yellow px-4 flex items-center gap-2">
-                      <Sparkles size={12}/> Potencial con IA
+                <div className="bg-[#062b54] p-8 rounded-[4rem] border border-white/10 space-y-6 shadow-2xl">
+                   <div className="flex items-center justify-between px-2">
+                     <span className="text-[10px] font-black uppercase tracking-widest text-hormozi-yellow">Visión IA</span>
+                     <span className="text-[9px] font-bold text-white/30 uppercase tracking-widest">Desliza para amueblar</span>
                    </div>
                    <MagicSlider before={originalImg.url} after={stagedImg.url} />
                 </div>
@@ -299,11 +312,11 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
         {lightboxOpen && (
           <motion.div 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[500] bg-black/98 flex items-center justify-center p-4"
+            className="fixed inset-0 z-[500] bg-black/98 flex items-center justify-center p-6"
             onClick={() => setLightboxOpen(false)}
           >
-            <img src={images[currentPhoto].url} className="max-h-full max-w-full rounded-2xl" />
-            <button className="absolute top-10 right-10 p-6 text-white"><X size={40}/></button>
+            <img src={images[currentPhoto].url} className="max-h-full max-w-full rounded-3xl shadow-2xl border border-white/10" />
+            <button className="absolute top-10 right-10 p-6 text-white bg-white/10 rounded-full"><X size={32}/></button>
           </motion.div>
         )}
       </AnimatePresence>
