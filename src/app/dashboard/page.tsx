@@ -23,8 +23,7 @@ interface AIResultModal {
 }
 
 export default function DashboardPage() {
-  const [activeTab, setActiveTab] = useState<"inmuebles" | "estudio" | "config" | "leads">("inmuebles");
-  const [leads, setLeads] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<"inmuebles" | "estudio" | "config">("inmuebles");
   const [activePropertyId, setActivePropertyId] = useState<string | null>(null);
   const [allProperties, setAllProperties] = useState<any[]>([]);
   const [projectName, setProjectName] = useState("");
@@ -71,10 +70,6 @@ export default function DashboardPage() {
 
     const { data: mediaData } = await supabase.from("media").select("*").eq("property_id", id).order("created_at", { ascending: true });
     setImages(mediaData || []);
-
-    const { data: leadsData } = await supabase.from("leads").select("*").eq("property_id", id).order("created_at", { ascending: false });
-    setLeads(leadsData || []);
-    
     setLoading(false);
   };
 
@@ -361,15 +356,12 @@ export default function DashboardPage() {
 
           {activePropertyId && (
             <>
-              <div className="text-[9px] font-black uppercase text-white/30 tracking-[0.3em] mt-4 mb-2 px-5">Inmueble Activo</div>
               <button onClick={() => setActiveTab("estudio")} className={`flex items-center gap-3 px-5 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all w-full ${activeTab === "estudio" ? "bg-white/10 text-hormozi-yellow shadow-inner" : "text-white/30 hover:text-white hover:bg-white/5"}`}>
-                <Wand2 size={18} /> Estudio IA
+                <LayoutDashboard size={18} /> Estudio Fotografías
               </button>
-              <button onClick={() => setActiveTab("leads")} className={`flex items-center gap-3 px-5 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all w-full ${activeTab === "leads" ? "bg-white/10 text-hormozi-yellow shadow-inner" : "text-white/30 hover:text-white hover:bg-white/5"}`}>
-                <LayoutDashboard size={18} /> Clientes / Leads
-              </button>
+              
               <button onClick={() => setActiveTab("config")} className={`flex items-center gap-3 px-5 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all w-full ${activeTab === "config" ? "bg-white/10 text-hormozi-yellow shadow-inner" : "text-white/30 hover:text-white hover:bg-white/5"}`}>
-                <Settings size={18} /> Configuración
+                <Settings size={18} /> Configuración Web
               </button>
             </>
           )}
@@ -481,61 +473,6 @@ export default function DashboardPage() {
                 )}
               </div>
             </div>
-          ) : activeTab === "leads" ? (
-             <div className="space-y-8">
-                <div className="flex justify-between items-center">
-                   <h2 className="text-3xl font-black uppercase italic tracking-tighter text-hormozi-yellow">Clientes Interesados</h2>
-                   <div className="text-[9px] font-black uppercase tracking-widest text-white/40">{leads.length} Leads Registrados</div>
-                </div>
-
-                <div className="bg-black/40 rounded-[3rem] border border-white/5 overflow-hidden">
-                   <table className="w-full text-left">
-                      <thead>
-                         <tr className="border-b border-white/5 text-[9px] font-black uppercase tracking-widest text-white/30">
-                            <th className="px-8 py-6">Fecha</th>
-                            <th className="px-8 py-6">Cliente</th>
-                            <th className="px-8 py-6">WhatsApp</th>
-                            <th className="px-8 py-6">Inmueble</th>
-                            <th className="px-8 py-6">Acción</th>
-                         </tr>
-                      </thead>
-                      <tbody className="divide-y divide-white/5">
-                         {leads.map((lead) => (
-                            <tr key={lead.id} className="hover:bg-white/5 transition-colors group">
-                               <td className="px-8 py-6 text-xs text-white/40">{new Date(lead.created_at).toLocaleDateString()}</td>
-                               <td className="px-8 py-6">
-                                  <div className="font-bold flex items-center gap-2">
-                                     <div className="w-8 h-8 rounded-full bg-hormozi-yellow/20 flex items-center justify-center text-hormozi-yellow text-[10px]">{lead.client_name?.charAt(0).toUpperCase()}</div>
-                                     {lead.client_name}
-                                  </div>
-                               </td>
-                               <td className="px-8 py-6 font-mono text-sm text-hormozi-yellow underline">
-                                  <a href={`https://wa.me/${lead.phone?.replace(/[^0-9]/g, '')}`} target="_blank">{lead.phone}</a>
-                               </td>
-                               <td className="px-8 py-6 text-xs text-white/60 font-bold">{projectName}</td>
-                               <td className="px-8 py-6">
-                                  <button onClick={async () => {
-                                     if(confirm("¿Borrar lead?")) {
-                                        await supabase.from("leads").delete().eq("id", lead.id);
-                                        setLeads(leads.filter(l => l.id !== lead.id));
-                                     }
-                                  }} className="p-2 bg-red-500/10 text-red-500 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                                     <Trash2 size={14}/>
-                                  </button>
-                               </td>
-                            </tr>
-                         ))}
-                         {leads.length === 0 && (
-                            <tr>
-                               <td colSpan={5} className="px-8 py-20 text-center text-white/20 font-black uppercase tracking-widest text-[10px]">
-                                  No hay clientes registrados todavía. <br/> Cuando alguien llene el formulario aparecerá aquí.
-                               </td>
-                            </tr>
-                         )}
-                      </tbody>
-                   </table>
-                </div>
-             </div>
           ) : activeTab === "estudio" ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {images.map((img) => (
