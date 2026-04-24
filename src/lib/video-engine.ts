@@ -46,13 +46,17 @@ export async function generatePropertyVideo(assets: PropertyVideoAssets): Promis
       await ff.writeFile(`img${i}.jpg`, data);
     }
 
-    // 2. Descargar fuente para drawtext
-    console.log("Descargando fuente Inter-Bold.ttf...");
+    // 2. Descargar fuente para drawtext (Usando CDN con CORS permitido)
+    console.log("Descargando fuente Inter-Bold.ttf via CDN...");
+    let hasFont = false;
     try {
-      const fontData = await fetchFile('https://github.com/google/fonts/raw/main/ofl/inter/static/Inter-Bold.ttf');
+      // jsdelivr permite CORS para archivos de GitHub
+      const fontData = await fetchFile('https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/inter/static/Inter-Bold.ttf');
       await ff.writeFile('font.ttf', fontData);
+      hasFont = true;
+      console.log("Fuente cargada con éxito.");
     } catch (fontErr) {
-      console.warn("No se pudo cargar la fuente, el video podría no tener texto.");
+      console.warn("No se pudo cargar la fuente debido a CORS o red. El video se generará sin texto para evitar fallos.");
     }
 
     const numImgs = assets.imageUrls.length;
@@ -71,27 +75,30 @@ export async function generatePropertyVideo(assets: PropertyVideoAssets): Promis
     
     for (let i = 0; i < numImgs; i++) {
       const zoomExpr = `zoom+0.002`;
-      // Simplificando zoompan y asegurando formato vertical
       filterComplex += `[${i}:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,zoompan=z='${zoomExpr}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=${Math.round(durationPerImg * 25)}:s=1080x1920,setsar=1[v${i}];`;
     }
 
     // Concatenation
     let concatInputs = '';
     for (let i = 0; i < numImgs; i++) concatInputs += `[v${i}]`;
-    filterComplex += `${concatInputs}concat=n=${numImgs}:v=1:a=0[v_base];`;
+    filterComplex += `${concatInputs}concat=n=${numImgs}:v=1:a=0[v_base]`;
 
-    // Viral Subtitles (Escaping single quotes for safety)
-    const cleanTitle = assets.title.toUpperCase().replace(/'/g, "");
-    const cleanPrice = assets.price.toUpperCase().replace(/'/g, "");
-    
-    // Eliminamos 'fontfile' porque causa error si no existe físicamente en el FS virtual
-    // AHORA LO AGREGAMOS porque ya lo descargamos arriba como font.ttf
-    filterComplex += `[v_base]drawtext=text='${cleanTitle}':fontfile='font.ttf':fontcolor=yellow:fontsize=80:x=(w-text_w)/2:y=(h-text_h)/2-100:borderw=5:bordercolor=black,`;
-    filterComplex += `drawtext=text='${cleanPrice}':fontfile='font.ttf':fontcolor=white:fontsize=60:x=(w-text_w)/2:y=(h-text_h)/2+50:borderw=3:bordercolor=black[v_final]`;
+    // Viral Subtitles (Only if font was loaded)
+    let finalLabel = '[v_base]';
+    if (hasFont) {
+        const cleanTitle = assets.title.toUpperCase().replace(/'/g, "");
+        const cleanPrice = assets.price.toUpperCase().replace(/'/g, "");
+        filterComplex += `;${finalLabel}drawtext=text='${cleanTitle}':fontfile='font.ttf':fontcolor=yellow:fontsize=80:x=(w-text_w)/2:y=(h-text_h)/2-100:borderw=5:bordercolor=black,`;
+        filterComplex += `drawtext=text='${cleanPrice}':fontfile='font.ttf':fontcolor=white:fontsize=60:x=(w-text_w)/2:y=(h-text_h)/2+50:borderw=3:bordercolor=black[v_final]`;
+        finalLabel = '[v_final]';
+    } else {
+        filterComplex += `[v_base]null[v_final]`; // Fallback sin texto
+        finalLabel = '[v_final]';
+    }
 
     command.push(
       '-filter_complex', filterComplex,
-      '-map', '[v_final]',
+      '-map', finalLabel,
       '-c:v', 'libx264',
       '-pix_fmt', 'yuv420p',
       '-preset', 'ultrafast',
