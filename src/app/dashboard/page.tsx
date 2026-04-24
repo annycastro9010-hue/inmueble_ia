@@ -285,24 +285,28 @@ export default function DashboardPage() {
 
         const newStatus = type === "clean" ? "cleaned" : "staged";
 
-        // Guardar en Supabase
-        await supabase.from("media")
-          .update({ status: newStatus, url: finalUrl })
-          .eq("id", id);
+        // Insertar como nueva versión en lugar de sobrescribir para el slider del antes/después
+        const { data: newData, error: insertErr } = await supabase.from("media")
+          .insert([{ 
+            url: finalUrl, 
+            status: newStatus, 
+            floor: targetImage.floor, 
+            room_type: targetImage.room_type, 
+            property_id: activePropertyId 
+          }])
+          .select().single();
 
-        // Actualizar lista local
-        setImages(prev => prev.map(img =>
-          img.id === id ? { ...img, url: finalUrl, status: newStatus } : img
-        ));
-
-        // Mostrar modal antes/después
-        setSliderPos(50);
-        setAiResult({
-          beforeUrl,
-          afterUrl: finalUrl,
-          imageId: id,
-          type
-        });
+        if (newData) {
+          setImages(prev => [...prev, newData]);
+          // Mostrar modal antes/después para feedback inmediato
+          setSliderPos(50);
+          setAiResult({
+            beforeUrl,
+            afterUrl: finalUrl,
+            imageId: newData.id,
+            type
+          });
+        }
       } else {
         throw new Error("La IA no devolvió ninguna imagen. Revisa que GOOGLE_AI_STUDIO_API_KEY esté configurada.");
       }
