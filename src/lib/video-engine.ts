@@ -91,21 +91,23 @@ export async function generatePropertyVideo(assets: PropertyVideoAssets): Promis
     } catch (e) {}
 
     const numImgs = assets.imageUrls.length;
-    const totalDuration = 12; // Acortamos a 12s para que sea más dinámico y rápido
+    const totalDuration = 12; 
     const durationPerImg = totalDuration / numImgs;
+    const fps = 25;
 
     const command: string[] = [];
 
-    // Inputs
+    // Inputs (Tratamos de ser más agresivos con el corte de tiempo)
     for (let i = 0; i < numImgs; i++) {
       command.push('-loop', '1', '-t', durationPerImg.toFixed(2), '-i', `img${i}.jpg`);
     }
 
-    // Filter Complex (Simplificado al máximo para velocidad)
+    // Filter Complex: Zoompan + Trim estricto
     let filterComplex = '';
     for (let i = 0; i < numImgs; i++) {
-      // Zoom muy suave. s=720x1280 coincide con el canvas previo, evitando re-escalado pesado.
-      filterComplex += `[${i}:v]zoompan=z='zoom+0.001':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=${Math.round(durationPerImg * 25)}:s=720x1280,setsar=1[v${i}];`;
+      // Forzamos d a los frames exactos y añadimos trim para que no se pase ni un frame
+      const frames = Math.round(durationPerImg * fps);
+      filterComplex += `[${i}:v]zoompan=z='zoom+0.001':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=${frames}:s=720x1280,trim=duration=${durationPerImg.toFixed(2)},setpts=PTS-STARTPTS,setsar=1[v${i}];`;
     }
 
     let concatInputs = '';
@@ -115,7 +117,8 @@ export async function generatePropertyVideo(assets: PropertyVideoAssets): Promis
     let finalLabel = '[v_base]';
     if (hasFont) {
         const cleanTitle = assets.title.toUpperCase().replace(/'/g, "");
-        filterComplex += `;[v_base]drawtext=text='${cleanTitle}':fontfile='font.ttf':fontcolor=yellow:fontsize=60:x=(w-text_w)/2:y=(h-text_h)/2:borderw=4:bordercolor=black[v_final]`;
+        // Texto más arriba para que se vea en el primer impacto
+        filterComplex += `;[v_base]drawtext=text='${cleanTitle}':fontfile='font.ttf':fontcolor=yellow:fontsize=50:x=(w-text_w)/2:y=200:borderw=4:bordercolor=black[v_final]`;
         finalLabel = '[v_final]';
     }
 
@@ -124,9 +127,10 @@ export async function generatePropertyVideo(assets: PropertyVideoAssets): Promis
       '-map', finalLabel,
       '-c:v', 'libx264',
       '-pix_fmt', 'yuv420p',
-      '-preset', 'ultrafast', // Máxima velocidad
-      '-crf', '32',           // Compresión agresiva para terminar rápido
+      '-preset', 'ultrafast',
+      '-crf', '32',
       '-r', '25',
+      '-t', '12', // Límite total forzado de 12 segundos para evitar el bug de "video infinito"
       'output.mp4'
     );
 

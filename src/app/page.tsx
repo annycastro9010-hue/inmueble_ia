@@ -194,30 +194,29 @@ export default function PropertyPage() {
         </div>
       </section>
 
-      {/* ── VIDEO REEL (Vertical TikTok Style) ── */}
+      {/* ── VIDEO REEL (Vertical TikTok Style) — AHORA EN PRIMER PLANO ── */}
       {/* @ts-ignore */}
       {PROPERTY.videoUrl && (
-        <section className="py-12 md:py-20 px-6 bg-black">
+        <section className="relative z-20 -mt-20 md:-mt-32 px-6">
           <div className="max-w-4xl mx-auto">
-            <div className="flex flex-col md:flex-row items-center gap-8 md:gap-16">
+            <motion.div 
+               initial={{ opacity: 0, scale: 0.9 }}
+               animate={{ opacity: 1, scale: 1 }}
+               className="bg-black/60 backdrop-blur-2xl p-6 md:p-10 rounded-[3rem] border border-white/10 shadow-2xl flex flex-col md:flex-row items-center gap-8"
+            >
               <div className="flex-1 text-center md:text-left space-y-4">
                 <div className="inline-block px-4 py-1.5 bg-hormozi-yellow text-black font-black text-[10px] uppercase tracking-widest rounded-full">
-                  Teaser Viral
+                  Reel de Presentación
                 </div>
-                <h2 className="text-4xl md:text-6xl font-black italic uppercase leading-none italic tracking-tighter">
-                  Mira el Reel <br /> de la Propiedad
+                <h2 className="text-4xl md:text-5xl font-black italic uppercase leading-none tracking-tighter">
+                  Vive la experiencia <br /> <span className="text-hormozi-yellow">en movimiento</span>
                 </h2>
-                <p className="text-white/40 text-sm md:text-base max-w-sm mx-auto md:mx-0">
-                  Un vistazo rápido y dinámico de lo que podría ser tu próximo hogar.
+                <p className="text-white/50 text-xs md:text-sm">
+                  Mira este resumen rápido de la propiedad. Calidad 4K para que no te pierdas ningún detalle.
                 </p>
-                <div className="hidden md:block pt-4">
-                  <a href={WHATSAPP_URL} className="inline-flex items-center gap-3 px-8 py-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all font-bold">
-                    Me interesa este inmueble
-                  </a>
-                </div>
               </div>
               
-              <div className="relative w-full max-w-[320px] aspect-[9/16] rounded-[3rem] overflow-hidden border-[12px] border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+              <div className="relative w-full max-w-[280px] aspect-[9/16] rounded-[2rem] overflow-hidden border-[8px] border-white/20 shadow-2xl group">
                 <video 
                   src={PROPERTY.videoUrl} 
                   controls 
@@ -225,13 +224,13 @@ export default function PropertyPage() {
                   poster={PROPERTY.photos[0]}
                 />
               </div>
-            </div>
+            </motion.div>
           </div>
         </section>
       )}
 
       {/* ── CTA PRINCIPAL (El primer WhatsApp) ── */}
-      <section className="py-12 px-6 md:px-16 bg-black/40">
+      <section className="py-12 px-6 md:px-16">
         <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8 md:gap-6 text-center md:text-left">
           <div>
             <p className="text-white font-black text-xl md:text-2xl tracking-tight">¿Te interesa esta propiedad?</p>
@@ -255,15 +254,6 @@ export default function PropertyPage() {
               <MessageCircle size={20} />
               Agendar Cita
             </motion.a>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => { setShowTour(true); document.getElementById("tour-section")?.scrollIntoView({ behavior: "smooth" }); }}
-              className="flex items-center justify-center gap-3 px-8 md:px-10 py-4 md:py-5 bg-white/5 border border-white/10 hover:bg-white/10 font-black rounded-2xl text-xs md:text-sm uppercase tracking-widest transition-all w-full sm:w-auto shadow-xl"
-            >
-              <Play size={20} className="text-hormozi-yellow" />
-              Tour Virtual
-            </motion.button>
           </div>
         </div>
       </section>
