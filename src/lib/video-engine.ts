@@ -122,7 +122,7 @@ export async function generatePropertyVideo(assets: PropertyVideoAssets): Promis
 
   const data = await ff.readFile('output.mp4');
   console.log('✅ Video generado!');
-  const uint8 = data instanceof Uint8Array ? data : new Uint8Array(data as ArrayBuffer);
+  const uint8 = data instanceof Uint8Array ? data : new Uint8Array((data as unknown as ArrayBuffer));
   return new Blob([uint8], { type: 'video/mp4' });
 }
 
@@ -155,6 +155,6 @@ async function generateSimpleVideo(ff: FFmpeg, numImgs: number, durationPerImg: 
   if (result !== 0) throw new Error(`FFmpeg error en fallback: ${result}`);
 
   const data = await ff.readFile('output_simple.mp4');
-  const uint8 = data instanceof Uint8Array ? data : new Uint8Array(data as ArrayBuffer);
+  const uint8 = data instanceof Uint8Array ? data : new Uint8Array((data as unknown as ArrayBuffer));
   return new Blob([uint8], { type: 'video/mp4' });
 }
