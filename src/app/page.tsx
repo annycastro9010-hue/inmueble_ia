@@ -106,10 +106,10 @@ export default function PropertyPage() {
           className="flex gap-12 items-center"
         >
           {[...Array(10)].map((_, i) => (
-            <div key={i} className="flex gap-12 items-center font-black text-[10px] md:text-[12px] uppercase tracking-[0.4em] italic">
+            <div key={i} className="flex gap-12 items-center font-black text-[11px] md:text-[13px] uppercase tracking-[0.5em] italic">
               <span>Entrega Inmediata</span>
               <span className="w-2 h-2 bg-black rounded-full" />
-              <span>Aplica Subsidios</span>
+              <span>Venta Directa</span>
               <span className="w-2 h-2 bg-black rounded-full" />
               <span>Créditos Aprobados</span>
               <span className="w-2 h-2 bg-black rounded-full" />

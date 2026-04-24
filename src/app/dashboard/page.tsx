@@ -249,25 +249,37 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen bg-[#062b54] text-white font-body">
+  return (
+    <div className="flex flex-col lg:flex-row min-h-screen bg-[#062b54] text-white font-body selection:bg-hormozi-yellow">
 
       {/* ── SIDEBAR ── */}
-      <aside className="lg:w-64 border-b lg:border-b-0 lg:border-r border-white/5 bg-black/40 backdrop-blur-3xl flex flex-col p-6 z-40">
-        <div className="flex items-center gap-3 mb-10">
-          <div className="bg-hormozi-yellow p-1.5 rounded-sm rotate-3"><Home size={20} className="text-black" /></div>
-          <span className="font-black tracking-[0.3em] text-sm uppercase italic">SOTO <span className="text-hormozi-yellow">IA</span></span>
+      <aside className="lg:w-64 border-b lg:border-b-0 lg:border-r border-white/5 bg-black/40 backdrop-blur-3xl flex flex-col p-6 z-40 lg:h-screen lg:sticky lg:top-0">
+        <div className="flex items-center justify-between mb-10">
+          <div className="flex items-center gap-3">
+            <div className="bg-hormozi-yellow p-1.5 rounded-sm rotate-3"><Home size={20} className="text-black" /></div>
+            <span className="font-black tracking-[0.3em] text-sm uppercase italic leading-none">SOTO <span className="text-hormozi-yellow">IA</span></span>
+          </div>
         </div>
+
         <nav className="flex lg:flex-col gap-3 w-full">
-          <button onClick={() => setActiveTab("estudio")} className={`flex items-center gap-3 px-5 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all w-full ${activeTab === "estudio" ? "bg-white/10 text-hormozi-yellow" : "text-white/30 hover:text-white hover:bg-white/5"}`}>
-            <LayoutDashboard size={18} /> Estudio
-          </button>
-          <button onClick={() => setActiveTab("config")} className={`flex items-center gap-3 px-5 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all w-full ${activeTab === "config" ? "bg-white/10 text-hormozi-yellow" : "text-white/30 hover:text-white hover:bg-white/5"}`}>
-            <Settings size={18} /> Configuración
-          </button>
-          <Link href="/" target="_blank" className="mt-auto hidden lg:flex items-center gap-2 px-5 py-4 text-[9px] uppercase font-black text-white/20 hover:text-white transition-all">
-            <ExternalLink size={14}/> Ver mi Web
+          {/* VOLVER - Ahora arriba y destacado */}
+          <Link href="/" className="mb-6 flex items-center gap-3 px-5 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all w-full bg-white text-black hover:bg-hormozi-yellow shadow-xl shadow-white/5">
+            <ArrowLeftRight size={18} /> Volver a Mi Web
           </Link>
+
+          <div className="text-[9px] font-black uppercase text-white/30 tracking-[0.3em] mb-2 px-5">Gestión</div>
+          <button onClick={() => setActiveTab("estudio")} className={`flex items-center gap-3 px-5 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all w-full ${activeTab === "estudio" ? "bg-white/10 text-hormozi-yellow shadow-inner" : "text-white/30 hover:text-white hover:bg-white/5"}`}>
+            <LayoutDashboard size={18} /> Estudio Fotografías
+          </button>
+          
+          <button onClick={() => setActiveTab("config")} className={`flex items-center gap-3 px-5 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all w-full ${activeTab === "config" ? "bg-white/10 text-hormozi-yellow shadow-inner" : "text-white/30 hover:text-white hover:bg-white/5"}`}>
+            <Settings size={18} /> Configuración Web
+          </button>
         </nav>
+
+        <div className="mt-auto pt-6 border-t border-white/5 hidden lg:block">
+           <div className="text-[8px] font-black uppercase tracking-widest text-white/10 text-center">Panel de Control v4.0</div>
+        </div>
       </aside>
 
       {/* ── MAIN ── */}
