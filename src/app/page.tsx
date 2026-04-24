@@ -10,6 +10,8 @@ import { useState, useEffect } from "react";
 import TourViewer from "@/components/TourViewer";
 import { supabase } from "@/lib/supabase";
 
+const MAIN_PROPERTY_ID = '77777777-7777-7777-7777-777777777777';
+
 export default function PropertyPage() {
   const [property, setProperty] = useState<any>(null);
   const [images, setImages] = useState<any[]>([]);
@@ -21,22 +23,21 @@ export default function PropertyPage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        // Obtenemos la última propiedad creada
-        // Obtenemos la propiedad única (la última o la que haya)
+        // Obtenemos la propiedad única (Usando el ID maestro)
         const { data: propData, error: propErr } = await supabase
           .from('properties')
           .select('*')
-          .order('created_at', { ascending: false })
-          .limit(1)
+          .eq('id', MAIN_PROPERTY_ID)
           .maybeSingle();
 
         if (propErr) throw propErr;
         setProperty(propData);
 
-        // Obtenemos todas las imágenes (el dashboard no filtra por property_id)
+        // Obtenemos las imágenes de esta propiedad específica
         const { data: mediaData, error: mediaErr } = await supabase
           .from('media')
           .select('*')
+          .eq('property_id', MAIN_PROPERTY_ID)
           .order('created_at', { ascending: true });
 
         if (mediaErr) throw mediaErr;

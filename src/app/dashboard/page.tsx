@@ -23,6 +23,8 @@ import TourViewer from "@/components/TourViewer";
 import { generatePropertyVideo } from "@/lib/video-engine";
 
 const floors = ["1", "2", "3", "Exterior"];
+// ID Único para sincronización total entre Admin y Web
+const MAIN_PROPERTY_ID = '77777777-7777-7777-7777-777777777777';
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<"estudio" | "config">("estudio");
@@ -52,8 +54,8 @@ export default function DashboardPage() {
     if (error) console.error("Error cargando archivos:", error);
     else if (mediaData) setImages(mediaData);
 
-    // 2. Cargar Datos de la Propiedad
-    const { data: propData } = await supabase.from("properties").select("*").limit(1).single();
+    // 2. Cargar Datos de la Propiedad (Usamos el ID maestro)
+    const { data: propData } = await supabase.from("properties").select("*").eq("id", MAIN_PROPERTY_ID).maybeSingle();
     if (propData) {
       setPropertyId(propData.id);
       setProjectName(propData.title);
@@ -68,18 +70,17 @@ export default function DashboardPage() {
     setCurrentAction("Guardando cambios...");
     try {
       const payload = {
+        id: MAIN_PROPERTY_ID,
         title: projectName,
         price: parseFloat(propertyPrice.replace(/[^0-9.]/g, '')) || 0,
         location: propertyLocation,
         description: propertyDescription
       };
 
-      if (propertyId) {
-        await supabase.from("properties").update(payload).eq("id", propertyId);
-      } else {
-        const { data } = await supabase.from("properties").insert([payload]).select().single();
-        if (data) setPropertyId(data.id);
-      }
+      const { error } = await supabase.from("properties").upsert(payload);
+      if (error) throw error;
+      
+      setPropertyId(MAIN_PROPERTY_ID);
       alert("✅ ¡Información actualizada correctamente!");
     } catch (e: any) {
       alert("Error al guardar: " + e.message);
@@ -438,7 +439,9 @@ export default function DashboardPage() {
                       if (uploadError) throw uploadError;
                       
                       const url = `${supabaseUrl}/storage/v1/object/public/propiedades/${path}`;
-                      const { error: updateError } = await supabase.from('properties').update({ video_url: url }).eq('id', prop!.id);
+                      const { error: updateError } = await supabase.from('properties')
+                        .update({ video_url: url })
+                        .eq('id', MAIN_PROPERTY_ID);
                       if (updateError) throw updateError;
 
                       alert("🚀 ¡VIDEO PUBLICADO EXITOSAMENTE!");
