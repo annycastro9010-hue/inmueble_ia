@@ -192,9 +192,16 @@ export default function DashboardPage() {
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         {floorImages.map((img) => (
                           <div key={img.id} className="glass-luxury rounded-[2.5rem] overflow-hidden border border-white/5">
-                            <div className="aspect-[4/3] relative">
-                              <img src={img.url} className="w-full h-full object-cover" />
-                              <button onClick={() => removeImage(img.id)} className="absolute top-4 right-4 p-3 bg-red-500 text-white rounded-xl"><Trash2 size={16}/></button>
+                            <div className="aspect-[4/3] relative overflow-hidden bg-white/5">
+                              <img 
+                                src={img.url} 
+                                alt="Foto propiedad"
+                                crossOrigin="anonymous"
+                                referrerPolicy="no-referrer"
+                                className="absolute inset-0 w-full h-full object-cover" 
+                                onError={(e: any) => { e.target.style.display = 'none'; }}
+                              />
+                              <button onClick={() => removeImage(img.id)} className="absolute top-4 right-4 p-3 bg-red-500 text-white rounded-xl z-10"><Trash2 size={16}/></button>
                             </div>
                             <div className="p-6 space-y-4">
                               <div className="flex gap-2">
