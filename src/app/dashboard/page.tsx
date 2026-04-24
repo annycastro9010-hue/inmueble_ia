@@ -91,7 +91,7 @@ export default function DashboardPage() {
   };
 
   const handleGenerateVideo = async () => {
-    const validImages = images.filter(img => img.url && img.url.startsWith('http'));
+    const validImages = images.filter(img => img.url);
     if (validImages.length === 0) {
       alert("Error: No hay imágenes válidas para procesar. Sube fotos primero.");
       return;

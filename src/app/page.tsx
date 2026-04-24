@@ -41,7 +41,7 @@ export default function PropertyPage() {
           .order('created_at', { ascending: true });
 
         if (mediaErr) throw mediaErr;
-        setImages((mediaData || []).filter((m: any) => m.url && m.url.startsWith('http')));
+        setImages(mediaData || []);
       } catch (err) {
         console.error("Error cargando datos dinámicos:", err);
       } finally {
@@ -124,6 +124,7 @@ export default function PropertyPage() {
               muted 
               playsInline
               preload="auto"
+              crossOrigin="anonymous"
               className="w-full h-full object-cover transition-opacity duration-1000"
               onCanPlayThrough={(e) => (e.currentTarget.style.opacity = "1")}
               style={{ opacity: 0 }}
@@ -139,6 +140,7 @@ export default function PropertyPage() {
               <motion.img
                 key={currentPhoto}
                 src={displayPhotos[currentPhoto]}
+                crossOrigin="anonymous"
                 initial={{ opacity: 0, scale: 1.05 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0 }}
@@ -248,6 +250,7 @@ export default function PropertyPage() {
                 <video 
                   src={displayProperty.video_url} 
                   controls 
+                  crossOrigin="anonymous"
                   className="w-full h-full object-cover"
                   poster={displayPhotos[0]}
                 />
@@ -306,6 +309,7 @@ export default function PropertyPage() {
               >
                 <img
                   src={url}
+                  crossOrigin="anonymous"
                   alt={`Foto ${i + 1}`}
                   className="w-full h-full object-cover hover:scale-110 transition-transform duration-700"
                 />
@@ -353,6 +357,7 @@ export default function PropertyPage() {
             >
               <img
                 src={displayPhotos[0]}
+                crossOrigin="anonymous"
                 className="w-full h-full object-cover opacity-40 group-hover:opacity-60 transition-all duration-700 group-hover:scale-105"
                 alt="Preview del tour"
               />

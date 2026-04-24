@@ -30,6 +30,7 @@ function usePanoramicDetection(imageUrl: string) {
   useEffect(() => {
     if (!imageUrl) return;
     const img = new Image();
+    img.crossOrigin = "anonymous";
     img.onload = () => {
       const ratio = img.naturalWidth / img.naturalHeight;
       setIsPanoramic(ratio >= 2.0); // Panorámica si es 2x más ancha que alta
@@ -61,6 +62,7 @@ function SceneDisplay({ scene }: { scene: Scene }) {
       >
         <img
           src={scene.imageUrl}
+          crossOrigin="anonymous"
           className="w-full h-full object-cover brightness-[0.7] group-hover:brightness-[0.85] transition-all duration-1000"
           alt={scene.name}
         />
