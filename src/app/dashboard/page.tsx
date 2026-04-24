@@ -54,20 +54,25 @@ export default function DashboardPage() {
   };
 
   const handleGenerateVideo = async () => {
-    if (images.length === 0) {
-      alert("Primero sube las fotos de la casa (ya limpias o amobladas).");
+    const validImages = images.filter(img => img.url && img.url.startsWith('http'));
+    
+    if (validImages.length === 0) {
+      alert("Error: No hay imágenes válidas para procesar. Sube fotos primero.");
       return;
     }
 
+    console.log("Imágenes a procesar:", validImages.length);
+
     setIsProcessing(true);
-    setCurrentAction("Generando Video Viral...");
+    setCurrentAction("Iniciando Motor de Video...");
     try {
       const videoBlob = await generatePropertyVideo({
-        imageUrls: images.map(img => img.url),
-        title: projectName.split("·")[0].trim(),
+        imageUrls: validImages.map(img => img.url),
+        title: projectName.split("·")[0].trim() || "Propiedad",
         price: "LISTA PARA ESTRENAR"
       });
 
+      console.log("Descargando video...");
       const url = URL.createObjectURL(videoBlob);
       const a = document.createElement("a");
       a.href = url;
@@ -76,9 +81,13 @@ export default function DashboardPage() {
       
       alert("✅ ¡Video Viral descargado con éxito!");
     } catch (error: any) {
-      console.error(error);
-      const msg = error?.message || "Error desconocido";
-      alert("Error al generar el video: " + msg);
+      console.error("DETALLE DEL ERROR:", error);
+      let errorMsg = "Error desconocido";
+      if (typeof error === 'string') errorMsg = error;
+      else if (error && error.message) errorMsg = error.message;
+      else if (error && typeof error === 'object') errorMsg = JSON.stringify(error);
+      
+      alert("⚠️ Error en el motor de video: " + errorMsg + "\n\nRevisa la consola (F12) para más detalles.");
     } finally {
       setIsProcessing(false);
       setCurrentAction(null);
@@ -530,18 +539,22 @@ export default function DashboardPage() {
              <div className="max-w-[1400px] w-full space-y-6 md:space-y-10 flex flex-col h-full md:h-auto overflow-y-auto md:overflow-visible py-12 md:py-0">
                 <div className="shrink-0 aspect-video md:h-auto overflow-hidden rounded-[1.5rem] md:rounded-[3rem]">
                   <TourViewer 
-                    scenes={images.map((img: any) => ({
-                      id: img.id,
-                      name: img.room_type !== "unassigned" ? img.room_type.toUpperCase() : "ESPACIO INTERIOR",
-                      imageUrl: img.url,
-                      hotspots: []
-                    }))}
+                    scenes={images
+                      .filter(img => img.url && img.url.startsWith('http'))
+                      .map((img: any) => ({
+                        id: img.id,
+                        name: img.room_type !== "unassigned" ? img.room_type.toUpperCase() : "ESPACIO INTERIOR",
+                        imageUrl: img.url,
+                        hotspots: []
+                      }))}
                     initialSceneId={images[activeTourIndex]?.id}
                   />
                 </div>
 
                 <div className="flex justify-center gap-4 overflow-x-auto pb-4 scrollbar-none">
-                   {images.map((img, idx) => (
+                   {images
+                     .filter(img => img.url && img.url.startsWith('http'))
+                     .map((img, idx) => (
                      <button 
                         key={img.id}
                         onClick={() => setActiveTourIndex(idx)}

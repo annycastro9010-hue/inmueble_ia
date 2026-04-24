@@ -6,15 +6,21 @@ let ffmpeg: FFmpeg | null = null;
 export async function loadFFmpeg() {
   if (ffmpeg) return ffmpeg;
   
-  ffmpeg = new FFmpeg();
-  
-  const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
-  await ffmpeg.load({
-    coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-    wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
-  });
-  
-  return ffmpeg;
+  console.log("Cargando FFmpeg WASM desde CDN...");
+  try {
+    ffmpeg = new FFmpeg();
+    
+    const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
+    await ffmpeg.load({
+      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+    });
+    console.log("FFmpeg cargado correctamente.");
+    return ffmpeg;
+  } catch (error) {
+    console.error("Falla crítica al cargar FFmpeg:", error);
+    throw new Error("No se pudo cargar el motor FFmpeg. Verifica tu conexión a internet.");
+  }
 }
 
 export interface PropertyVideoAssets {
