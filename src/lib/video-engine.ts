@@ -10,6 +10,11 @@ export async function loadFFmpeg() {
   try {
     ffmpeg = new FFmpeg();
     
+    // Configuramos el logger para ver la salida real de FFmpeg en la consola
+    ffmpeg.on('log', ({ message }) => {
+      console.log("FFMPEG_LOG:", message);
+    });
+
     const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
     await ffmpeg.load({
       coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
@@ -39,6 +44,15 @@ export async function generatePropertyVideo(assets: PropertyVideoAssets): Promis
       console.log(`Descargando imagen ${i}...`);
       const data = await fetchFile(assets.imageUrls[i]);
       await ff.writeFile(`img${i}.jpg`, data);
+    }
+
+    // 2. Descargar fuente para drawtext
+    console.log("Descargando fuente Inter-Bold.ttf...");
+    try {
+      const fontData = await fetchFile('https://github.com/google/fonts/raw/main/ofl/inter/static/Inter-Bold.ttf');
+      await ff.writeFile('font.ttf', fontData);
+    } catch (fontErr) {
+      console.warn("No se pudo cargar la fuente, el video podría no tener texto.");
     }
 
     const numImgs = assets.imageUrls.length;
@@ -71,8 +85,9 @@ export async function generatePropertyVideo(assets: PropertyVideoAssets): Promis
     const cleanPrice = assets.price.toUpperCase().replace(/'/g, "");
     
     // Eliminamos 'fontfile' porque causa error si no existe físicamente en el FS virtual
-    filterComplex += `[v_base]drawtext=text='${cleanTitle}':fontcolor=yellow:fontsize=80:x=(w-text_w)/2:y=(h-text_h)/2-100:borderw=5:bordercolor=black,`;
-    filterComplex += `drawtext=text='${cleanPrice}':fontcolor=white:fontsize=60:x=(w-text_w)/2:y=(h-text_h)/2+50:borderw=3:bordercolor=black[v_final]`;
+    // AHORA LO AGREGAMOS porque ya lo descargamos arriba como font.ttf
+    filterComplex += `[v_base]drawtext=text='${cleanTitle}':fontfile='font.ttf':fontcolor=yellow:fontsize=80:x=(w-text_w)/2:y=(h-text_h)/2-100:borderw=5:bordercolor=black,`;
+    filterComplex += `drawtext=text='${cleanPrice}':fontfile='font.ttf':fontcolor=white:fontsize=60:x=(w-text_w)/2:y=(h-text_h)/2+50:borderw=3:bordercolor=black[v_final]`;
 
     command.push(
       '-filter_complex', filterComplex,
