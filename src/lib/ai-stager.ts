@@ -19,16 +19,16 @@ export async function processPropertyImage({ imageUrl, roomType, mode }: AIProce
   const replicateKey = process.env.REPLICATE_API_TOKEN;
 
   try {
-    // Prompt tipo Firefly
+    // Prompt exacto sugerido por el usuario para máxima fidelidad
     const prompt = mode === "clean"
-      ? "ACT AS ADOBE FIREFLY. REMOVE ALL FURNITURE. DO NOT CHANGE WALLS, WINDOWS, OR DOORS. RETURN ONLY THE EMPTY PHOTOGRAPH."
-      : `ADD MODERN LUXURY FURNITURE FOR A ${roomType.toUpperCase()}. HIGH-END REAL ESTATE STYLE.`;
+      ? "MANTEN LAS PAREDES, SUELOS Y ARQUITECTURA EXACTAMENTE IGUAL. NO DAÑES NADA. ELIMINA TODOS LOS MUEBLES. DEVUELVE SOLO LA FOTOGRAFÍA VACÍA."
+      : `MANTEN LAS PAREDES, TECHOS Y SUELOS EXACTAMENTE IGUAL. NO DAÑES NADA. AMUEBLA ESTA HABITACIÓN CON ESTILO MODERNO Y LUJOSO PARA UN AMBIENTE DE ${roomType.toUpperCase()}. DEVUELVE SOLO LA FOTOGRAFÍA FINAL.`;
 
     // 1. INTENTO RAPIDO CON GOOGLE (Máximo 8 seg)
     if (googleKey) {
       try {
         const base64 = await toBase64(imageUrl);
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=${googleKey}`;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${googleKey}`;
         
         // Timeout manual para Google de 8 segundos para no bloquear la función
         const controller = new AbortController();

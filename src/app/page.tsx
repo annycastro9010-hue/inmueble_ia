@@ -249,8 +249,10 @@ export default function PropertyPage() {
               <div className="relative w-full max-w-[280px] aspect-[9/16] rounded-[2rem] overflow-hidden border-[8px] border-white/20 shadow-2xl group">
                 <video 
                   src={displayProperty.video_url} 
-                  controls 
-                  crossOrigin="anonymous"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
                   className="w-full h-full object-cover"
                   poster={displayPhotos[0]}
                 />
@@ -280,7 +282,7 @@ export default function PropertyPage() {
                 repeat: Infinity,
                 ease: "easeInOut"
               }}
-              className="flex items-center justify-center gap-3 px-8 md:px-10 py-4 md:py-5 bg-green-500 hover:bg-green-400 text-white font-black rounded-2xl text-xs md:text-sm uppercase tracking-widest transition-all hover:scale-110 shadow-2xl shadow-green-500/30 w-full sm:w-auto"
+              className="flex items-center justify-center gap-3 px-8 md:px-10 py-4 md:py-5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-black rounded-2xl text-xs md:text-sm uppercase tracking-widest transition-all hover:scale-110 shadow-2xl shadow-green-500/30 w-full sm:w-auto"
             >
               <MessageCircle size={20} />
               Agendar Cita
@@ -333,7 +335,7 @@ export default function PropertyPage() {
             <div>
               <p className="text-[9px] md:text-[10px] font-black text-white/30 uppercase tracking-[0.3em] md:tracking-[0.5em] mb-3">Recorrido Interactivo</p>
               <h2 className="text-3xl md:text-4xl font-black uppercase italic tracking-tighter">Tour Virtual 360°</h2>
-              <p className="text-white/40 text-xs md:text-sm mt-2">Recorre cada habitación desde tu celular sin salir de casa.</p>
+              <p className="text-white/40 text-xs md:text-sm mt-2">Recorre cada habitación de tu casa desde tu celular.</p>
             </div>
             {!showTour && (
               <button
