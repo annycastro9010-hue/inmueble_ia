@@ -110,7 +110,7 @@ export default function HomePage() {
                 </div>
                 
                 <Link 
-                  href={`/propiedad/${prop.id}`}
+                  href={`/propiedad/${prop.title.toLowerCase().replace(/ /g, '-')}`}
                   className="w-full py-6 bg-white text-black text-center font-black rounded-3xl uppercase text-xs tracking-widest hover:bg-hormozi-yellow transition-all flex items-center justify-center gap-3 group-hover:shadow-[0_10px_40px_rgba(251,204,4,0.2)]"
                 >
                   Ver Tour Virtual <ChevronRight size={18} />

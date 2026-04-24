@@ -339,8 +339,14 @@ export default function DashboardPage() {
 
         <nav className="flex lg:flex-col gap-3 w-full">
           {/* VOLVER - Ahora arriba y destacado */}
-          <Link href="/" className="mb-6 flex items-center gap-3 px-5 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all w-full bg-white text-black hover:bg-hormozi-yellow shadow-xl shadow-white/5">
-            <ArrowLeftRight size={18} /> Ver Web Pública
+          <Link 
+            href={activePropertyId && projectName 
+              ? `/propiedad/${projectName.toLowerCase().replace(/ /g, '-')}` 
+              : "/"} 
+            target="_blank"
+            className="mb-6 flex items-center gap-3 px-5 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all w-full bg-white text-black hover:bg-hormozi-yellow shadow-xl shadow-white/5"
+          >
+            <ArrowLeftRight size={18} /> {activePropertyId ? "Ver en Vivo" : "Ver Web Pública"}
           </Link>
 
           <div className="text-[9px] font-black uppercase text-white/30 tracking-[0.3em] mb-2 px-5">Gestión</div>
@@ -532,6 +538,9 @@ export default function DashboardPage() {
                 <div>
                   <label className="text-[9px] font-black uppercase tracking-widest text-white/40 block mb-2">Título del Anuncio</label>
                   <input value={projectName} onChange={e => setProjectName(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-lg font-bold outline-none focus:border-hormozi-yellow transition-colors" />
+                  <div className="mt-2 text-[8px] text-white/30 uppercase tracking-[0.2em]"> 
+                    Link Público: <span className="text-hormozi-yellow">/propiedad/{projectName.toLowerCase().replace(/ /g, '-')}</span>
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
