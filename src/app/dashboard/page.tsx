@@ -91,10 +91,32 @@ export default function DashboardPage() {
     setCurrentAction(null);
   };
 
-  const removeImage = async (id: string) => {
-    if (!confirm("¿Seguro que quieres borrar esta foto?")) return;
-    const { error } = await supabase.from("media").delete().eq("id", id);
-    if (!error) setImages(prev => prev.filter(img => img.id !== id));
+  const removeImage = async (id: string, url: string) => {
+    if (!confirm("¿Seguro que quieres borrar esta foto? Esto no se puede deshacer.")) return;
+    
+    setIsProcessing(true);
+    setCurrentAction("Eliminando archivo...");
+    
+    try {
+      // 1. Borrar de la base de datos
+      const { error } = await supabase.from("media").delete().eq("id", id);
+      if (error) throw error;
+
+      // 2. Intentar extraer el path para borrar del storage (opcional pero limpio)
+      // El formato suele ser .../public/propiedades/uploads/nombre.jpg
+      const pathParts = url.split('/propiedades/');
+      if (pathParts.length > 1) {
+        const filePath = pathParts[1];
+        await supabase.storage.from("propiedades").remove([filePath]);
+      }
+
+      setImages(prev => prev.filter(img => img.id !== id));
+    } catch (error: any) {
+      alert("No se pudo eliminar: " + error.message);
+    } finally {
+      setIsProcessing(false);
+      setCurrentAction(null);
+    }
   };
 
   const processAI = async (id: string, type: "clean" | "stage") => {
@@ -202,7 +224,13 @@ export default function DashboardPage() {
                                 onError={(e: any) => { e.target.style.display = 'none'; }}
                               />
                               <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
-                              <button onClick={() => removeImage(img.id)} className="absolute top-4 right-4 p-3 bg-red-500/90 text-white rounded-xl z-10 hover:bg-red-400 transition-colors"><Trash2 size={16}/></button>
+                              <button 
+                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); removeImage(img.id, img.url); }} 
+                                className="absolute top-4 right-4 p-2.5 bg-black/40 backdrop-blur-md text-white/50 hover:text-red-500 hover:bg-white rounded-xl z-10 transition-all border border-white/10"
+                                title="Eliminar rápidamente"
+                              >
+                                <Trash2 size={14}/>
+                              </button>
                               {img.status !== 'original' && (
                                 <div className="absolute top-4 left-4 px-3 py-1 bg-hormozi-yellow text-black text-[9px] font-black rounded-full uppercase">{img.status === 'cleaned' ? '✓ Limpia' : '✓ Amueblada'}</div>
                               )}
@@ -216,9 +244,10 @@ export default function DashboardPage() {
                                   <option value="unassigned">¿Qué habitación es?</option><option value="sala">Sala</option><option value="cocina">Cocina</option><option value="principal">Habitación</option><option value="baño">Baño</option>
                                 </select>
                               </div>
-                              <div className="grid grid-cols-2 gap-3">
-                                <button onClick={() => processAI(img.id, "clean")} className="py-3 bg-white/5 border border-white/10 rounded-xl text-[9px] font-black uppercase">Limpiar</button>
-                                <button onClick={() => processAI(img.id, "stage")} className="py-3 bg-white/5 border border-white/10 rounded-xl text-[9px] font-black uppercase">Amueblar</button>
+                              <div className="grid grid-cols-3 gap-2">
+                                <button onClick={() => processAI(img.id, "clean")} className="py-3 bg-white/5 border border-white/10 rounded-xl text-[8px] font-black uppercase hover:bg-white/10 transition-all">Limpiar</button>
+                                <button onClick={() => processAI(img.id, "stage")} className="py-3 bg-white/5 border border-white/10 rounded-xl text-[8px] font-black uppercase hover:bg-white/10 transition-all">Amueblar</button>
+                                <button onClick={() => removeImage(img.id, img.url)} className="py-3 bg-red-500/10 border border-red-500/20 rounded-xl text-[8px] font-black uppercase text-red-500 hover:bg-red-500 hover:text-white transition-all">Borrar</button>
                               </div>
                             </div>
                           </div>
