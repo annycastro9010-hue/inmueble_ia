@@ -307,8 +307,14 @@ export default function DashboardPage() {
 
         {/* Header */}
         <header className="py-5 border-b border-white/5 flex flex-col md:flex-row items-center justify-between px-8 gap-4">
-          <div className="flex items-center gap-2 text-[10px] font-bold text-white/30 uppercase tracking-[0.4em]">
-            <span>EDITOR</span> <ChevronRight size={14} /> <span className="text-white">{projectName}</span>
+          <div className="flex items-center gap-4">
+            {/* Botón Volver - Visible en Móvil aquí, en Desktop en Sidebar */}
+            <Link href="/" className="lg:hidden p-2 bg-white/10 rounded-xl">
+              <ArrowLeftRight size={20} />
+            </Link>
+            <div className="flex items-center gap-2 text-[10px] font-bold text-white/30 uppercase tracking-[0.4em]">
+              <span>EDITOR</span> <ChevronRight size={14} /> <span className="text-white">{projectName}</span>
+            </div>
           </div>
           <div className="flex gap-3 flex-wrap justify-center">
             <button
@@ -318,10 +324,27 @@ export default function DashboardPage() {
             >
               <RefreshCw size={14} /> Mejorar HD
             </button>
-            <button onClick={handleGenerateVideo} className="flex items-center gap-2 px-5 py-2.5 bg-white/5 border border-white/10 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-white/10 transition-all">
+            <button 
+              onClick={() => {
+                if (images.length === 0) return alert("Sube al menos una foto primero.");
+                // Si ya hay un video (podemos chequearlo con el estado del proyecto)
+                // Por ahora usamos una confirmación simple
+                if (confirm("¿Generar nuevo video? Esto reemplazará el video actual de la propiedad.")) {
+                  handleGenerateVideo();
+                }
+              }} 
+              className="flex items-center gap-2 px-5 py-2.5 bg-white/5 border border-white/10 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-white/10 transition-all"
+            >
               <Video size={14} className="text-hormozi-yellow" /> Video
             </button>
-            <button onClick={() => setIsPreviewOpen(true)} className="px-6 py-2.5 bg-hormozi-yellow text-black font-black uppercase text-[9px] tracking-widest rounded-xl hover:scale-105 transition-all">
+            <button 
+              onClick={() => {
+                if (confirm("Deseas abrir el editor de Tour 360?")) {
+                  setIsPreviewOpen(true);
+                }
+              }} 
+              className="px-6 py-2.5 bg-hormozi-yellow text-black font-black uppercase text-[9px] tracking-widest rounded-xl hover:scale-105 transition-all"
+            >
               Tour 360
             </button>
           </div>
