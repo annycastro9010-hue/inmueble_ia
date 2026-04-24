@@ -34,43 +34,64 @@ export interface PropertyVideoAssets {
   price: string;
 }
 
+// Función auxiliar para redimensionar imágenes antes de pasarlas a FFmpeg (esto acelera FFmpeg exponencialmente)
+async function getOptimizedImageData(url: string): Promise<Uint8Array> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      // Resolución optimizada para Reels/Shorts pero más ligera (720x1280)
+      canvas.width = 720;
+      canvas.height = 1280;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return reject("No se pudo obtener contexto de canvas");
+
+      // Cubrir el canvas con la imagen (object-fit: cover)
+      const scale = Math.max(canvas.width / img.width, canvas.height / img.height);
+      const x = (canvas.width - img.width * scale) / 2;
+      const y = (canvas.height - img.height * scale) / 2;
+      ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+
+      canvas.toBlob((blob) => {
+        if (!blob) return reject("Fallo al crear blob");
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(new Uint8Array(reader.result as ArrayBuffer));
+        reader.readAsArrayBuffer(blob);
+      }, 'image/jpeg', 0.8); // Calidad 0.8 para ahorrar peso
+    };
+    img.onerror = () => reject("Error cargando imagen para optimización");
+    img.src = url;
+  });
+}
+
 export async function generatePropertyVideo(assets: PropertyVideoAssets): Promise<Blob> {
-  console.log("Iniciando generación de video...", assets);
+  console.log("🚀 Iniciando motor optimizado...");
   const ff = await loadFFmpeg();
   
   try {
-    // 1. Write images to virtual FS
+    // 1. Optimizar y escribir imágenes (Ahorra mucho tiempo de CPU en FFmpeg)
     for (let i = 0; i < assets.imageUrls.length; i++) {
-      console.log(`Descargando imagen ${i}...`);
-      const data = await fetchFile(assets.imageUrls[i]);
+      console.log(`⚡ Optimizando imagen ${i+1}/${assets.imageUrls.length}...`);
+      const data = await getOptimizedImageData(assets.imageUrls[i]);
       await ff.writeFile(`img${i}.jpg`, data);
     }
 
-    // 2. Descargar fuente para drawtext (Usando CDN con CORS permitido)
-    console.log("Descargando fuente Inter-Bold.ttf via CDN...");
+    // 2. Intentar descargar fuente
     let hasFont = false;
     try {
-      // Usamos fetch directamente para validar la respuesta antes de pasarla a FFmpeg
-      const response = await fetch('https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/inter/static/Inter-Bold.ttf');
+      const response = await fetch('https://cdn.jsdelivr.net/gh/googlefonts/inter@master/docs/font-files/Inter-Bold.ttf');
       if (response.ok) {
         const fontBuffer = await response.arrayBuffer();
-        // Verificación básica de que es un archivo font (no HTML de error)
         if (fontBuffer.byteLength > 1000) { 
           await ff.writeFile('font.ttf', new Uint8Array(fontBuffer));
           hasFont = true;
-          console.log("Fuente cargada con éxito.");
-        } else {
-          console.warn("La fuente descargada es demasiado pequeña o inválida.");
         }
-      } else {
-        console.warn(`Error de red al bajar fuente: ${response.status}`);
       }
-    } catch (fontErr) {
-      console.warn("Falla de red al cargar la fuente:", fontErr);
-    }
+    } catch (e) {}
 
     const numImgs = assets.imageUrls.length;
-    const totalDuration = 15; // Viral 15-sec teaser
+    const totalDuration = 12; // Acortamos a 12s para que sea más dinámico y rápido
     const durationPerImg = totalDuration / numImgs;
 
     const command: string[] = [];
@@ -80,26 +101,21 @@ export async function generatePropertyVideo(assets: PropertyVideoAssets): Promis
       command.push('-loop', '1', '-t', durationPerImg.toFixed(2), '-i', `img${i}.jpg`);
     }
 
-    // Filter Complex for Hormozi Style
+    // Filter Complex (Simplificado al máximo para velocidad)
     let filterComplex = '';
-    
     for (let i = 0; i < numImgs; i++) {
-      const zoomExpr = `zoom+0.002`;
-      filterComplex += `[${i}:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,zoompan=z='${zoomExpr}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=${Math.round(durationPerImg * 25)}:s=1080x1920,setsar=1[v${i}];`;
+      // Zoom muy suave. s=720x1280 coincide con el canvas previo, evitando re-escalado pesado.
+      filterComplex += `[${i}:v]zoompan=z='zoom+0.001':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=${Math.round(durationPerImg * 25)}:s=720x1280,setsar=1[v${i}];`;
     }
 
-    // Concatenation
     let concatInputs = '';
     for (let i = 0; i < numImgs; i++) concatInputs += `[v${i}]`;
     filterComplex += `${concatInputs}concat=n=${numImgs}:v=1:a=0[v_base]`;
 
-    // Viral Subtitles (Only if font was loaded)
     let finalLabel = '[v_base]';
     if (hasFont) {
         const cleanTitle = assets.title.toUpperCase().replace(/'/g, "");
-        const cleanPrice = assets.price.toUpperCase().replace(/'/g, "");
-        filterComplex += `;[v_base]drawtext=text='${cleanTitle}':fontfile='font.ttf':fontcolor=yellow:fontsize=80:x=(w-text_w)/2:y=(h-text_h)/2-100:borderw=5:bordercolor=black,`;
-        filterComplex += `drawtext=text='${cleanPrice}':fontfile='font.ttf':fontcolor=white:fontsize=60:x=(w-text_w)/2:y=(h-text_h)/2+50:borderw=3:bordercolor=black[v_final]`;
+        filterComplex += `;[v_base]drawtext=text='${cleanTitle}':fontfile='font.ttf':fontcolor=yellow:fontsize=60:x=(w-text_w)/2:y=(h-text_h)/2:borderw=4:bordercolor=black[v_final]`;
         finalLabel = '[v_final]';
     }
 
@@ -108,24 +124,21 @@ export async function generatePropertyVideo(assets: PropertyVideoAssets): Promis
       '-map', finalLabel,
       '-c:v', 'libx264',
       '-pix_fmt', 'yuv420p',
-      '-preset', 'ultrafast',
-      '-crf', '28',
+      '-preset', 'ultrafast', // Máxima velocidad
+      '-crf', '32',           // Compresión agresiva para terminar rápido
       '-r', '25',
       'output.mp4'
     );
 
-    console.log("Ejecutando FFmpeg...");
+    console.log("🎬 Ejecutando renderizado final...");
     const result = await ff.exec(command);
     
-    if (result !== 0) {
-      throw new Error(`FFmpeg falló con código ${result}. Revisa los logs de la consola.`);
-    }
+    if (result !== 0) throw new Error(`FFmpeg error ${result}`);
     
     const data = await ff.readFile('output.mp4');
-    console.log("Video generado con éxito.");
     return new Blob([(data as any).buffer], { type: 'video/mp4' });
   } catch (err: any) {
-    console.error("Error en generatePropertyVideo:", err);
-    throw new Error(err.message || "Error desconocido al procesar el video");
+    console.error(err);
+    throw new Error(err.message || "Fallo en el renderizado");
   }
 }
