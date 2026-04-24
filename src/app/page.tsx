@@ -113,28 +113,24 @@ export default function PropertyPage() {
         </div>
       </nav>
 
-      {/* ── TOUR VIRTUAL (AHORA DE PRIMERAS) ── */}
-      <section id="tour-section" className="relative pt-32 pb-20 px-6 md:px-16 overflow-hidden">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 text-center md:text-left">
-            <div>
-              <p className="text-[9px] md:text-[10px] font-black text-hormozi-yellow uppercase tracking-[0.5em] mb-4">Experiencia Inmersiva</p>
-              <h2 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter leading-none">Recorrido <br/><span className="text-hormozi-yellow">Virtual 360°</span></h2>
-              <p className="text-white/40 text-sm md:text-base mt-4 max-w-xl">La casa se presenta sola. Disfruta de este recorrido automático por cada rincón de tu próximo hogar.</p>
-            </div>
-            {!showTour && (
-              <button
-                onClick={() => setShowTour(true)}
-                className="btn-luxury bg-hormozi-yellow text-black px-10 py-6"
-              >
-                <Play size={22} className="fill-current" /> CONFIGURANDO TOUR...
-              </button>
-            )}
-          </div>
-
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+      {/* ── TOUR VIRTUAL (IMPACTO DIRECTO) ── */}
+      <section id="tour-section" className="relative pt-24 pb-12 px-0 md:px-0 overflow-hidden">
+        <div className="w-full max-w-7xl mx-auto px-4 md:px-6">
+          
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }} 
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1 }}
+            className="mb-8"
+          >
             <TourViewer scenes={tourScenes} initialSceneId={tourScenes[0]?.id} autoPlay={true} />
           </motion.div>
+
+          {/* Frase compacta abajo */}
+          <div className="text-center md:text-left px-6">
+            <h2 className="text-2xl md:text-3xl font-black uppercase italic tracking-tighter">Tu próximo hogar, <span className="text-hormozi-yellow">en un vistazo.</span></h2>
+            <p className="text-white/40 text-[9px] uppercase tracking-[0.3em] mt-2">Recorrido automático · Toca para interactuar</p>
+          </div>
         </div>
       </section>
 
