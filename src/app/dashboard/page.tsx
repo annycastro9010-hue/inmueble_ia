@@ -191,8 +191,8 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen bg-[#062b54] text-white font-body selection:bg-hormozi-yellow">
-      <aside className="fixed bottom-0 left-0 w-full lg:relative lg:w-72 border-t lg:border-t-0 lg:border-r border-white/5 bg-black/40 backdrop-blur-3xl flex lg:flex-col p-4 lg:p-8 z-40 transition-all">
-        <div className="hidden lg:flex items-center gap-3 mb-12">
+      <aside className="fixed bottom-0 left-0 w-full lg:relative lg:w-64 border-t lg:border-t-0 lg:border-r border-white/5 bg-black/40 backdrop-blur-3xl flex lg:flex-col p-4 lg:p-6 z-40 transition-all">
+        <div className="hidden lg:flex items-center gap-3 mb-6">
           <div className="bg-hormozi-yellow p-1.5 rounded-sm rotate-3">
             <Home size={20} className="text-black" />
           </div>
