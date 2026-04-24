@@ -57,6 +57,7 @@ A 5 minutos del centro comercial Cabecera y colegios cercanos.`,
       hotspots: [{ x: 50, y: 80, targetSceneId: "sala", label: "Volver a Sala" }],
     },
   ],
+  videoUrl: "", // ← Agrega aquí la URL del video generado cuando lo subas a Supabase
 };
 
 // ============================================================
@@ -192,6 +193,42 @@ export default function PropertyPage() {
           </motion.div>
         </div>
       </section>
+
+      {/* ── VIDEO REEL (Vertical TikTok Style) ── */}
+      {/* @ts-ignore */}
+      {PROPERTY.videoUrl && (
+        <section className="py-12 md:py-20 px-6 bg-black">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex flex-col md:flex-row items-center gap-8 md:gap-16">
+              <div className="flex-1 text-center md:text-left space-y-4">
+                <div className="inline-block px-4 py-1.5 bg-hormozi-yellow text-black font-black text-[10px] uppercase tracking-widest rounded-full">
+                  Teaser Viral
+                </div>
+                <h2 className="text-4xl md:text-6xl font-black italic uppercase leading-none italic tracking-tighter">
+                  Mira el Reel <br /> de la Propiedad
+                </h2>
+                <p className="text-white/40 text-sm md:text-base max-w-sm mx-auto md:mx-0">
+                  Un vistazo rápido y dinámico de lo que podría ser tu próximo hogar.
+                </p>
+                <div className="hidden md:block pt-4">
+                  <a href={WHATSAPP_URL} className="inline-flex items-center gap-3 px-8 py-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all font-bold">
+                    Me interesa este inmueble
+                  </a>
+                </div>
+              </div>
+              
+              <div className="relative w-full max-w-[320px] aspect-[9/16] rounded-[3rem] overflow-hidden border-[12px] border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+                <video 
+                  src={PROPERTY.videoUrl} 
+                  controls 
+                  className="w-full h-full object-cover"
+                  poster={PROPERTY.photos[0]}
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ── CTA PRINCIPAL (El primer WhatsApp) ── */}
       <section className="py-12 px-6 md:px-16 bg-black/40">
