@@ -422,7 +422,7 @@ export default function DashboardPage() {
             <div className="max-w-6xl mx-auto">
               <div className="flex justify-between items-center mb-8">
                 <h2 className="text-3xl font-black uppercase italic tracking-tighter">Mis <span className="text-hormozi-yellow">Inmuebles</span></h2>
-                <button onClick={createNewProject} className="px-8 py-4 bg-hormozi-yellow text-black font-black uppercase text-xs tracking-widest rounded-2xl hover:scale-105 transition-all shadow-xl shadow-hormozi-yellow/20">
+                <button onClick={createNewProperty} className="px-8 py-4 bg-hormozi-yellow text-black font-black uppercase text-xs tracking-widest rounded-2xl hover:scale-105 transition-all shadow-xl shadow-hormozi-yellow/20">
                   + Crear Nuevo Inmueble
                 </button>
               </div>
@@ -458,7 +458,7 @@ export default function DashboardPage() {
                 {allProperties.length === 0 && (
                   <div className="col-span-full py-20 text-center border-2 border-dashed border-white/5 rounded-[3rem]">
                     <div className="text-white/20 font-black uppercase tracking-widest text-sm mb-2">No tienes inmuebles todavía</div>
-                    <button onClick={createNewProject} className="text-hormozi-yellow font-bold uppercase text-[10px] tracking-widest hover:underline">Haga clic aquí para empezar</button>
+                    <button onClick={createNewProperty} className="text-hormozi-yellow font-bold uppercase text-[10px] tracking-widest hover:underline">Haga clic aquí para empezar</button>
                   </div>
                 )}
               </div>
