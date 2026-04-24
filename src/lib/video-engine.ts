@@ -41,36 +41,34 @@ async function getOptimizedImageData(url: string): Promise<Uint8Array> {
     img.crossOrigin = "anonymous";
     img.onload = () => {
       const canvas = document.createElement('canvas');
-      // Resolución optimizada para Reels/Shorts pero más ligera (720x1280)
-      canvas.width = 720;
-      canvas.height = 1280;
+      const targetHeight = 1280;
+      // Mantenemos la relación de aspecto para permitir el paneo lateral si es panorámica
+      const scale = targetHeight / img.height;
+      canvas.width = img.width * scale;
+      canvas.height = targetHeight;
+      
       const ctx = canvas.getContext('2d');
-      if (!ctx) return reject("No se pudo obtener contexto de canvas");
-
-      // Cubrir el canvas con la imagen (object-fit: cover)
-      const scale = Math.max(canvas.width / img.width, canvas.height / img.height);
-      const x = (canvas.width - img.width * scale) / 2;
-      const y = (canvas.height - img.height * scale) / 2;
-      ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+      if (!ctx) return reject("No canvas context");
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
       canvas.toBlob((blob) => {
-        if (!blob) return reject("Fallo al crear blob");
+        if (!blob) return reject("Blob failure");
         const reader = new FileReader();
         reader.onloadend = () => resolve(new Uint8Array(reader.result as ArrayBuffer));
         reader.readAsArrayBuffer(blob);
-      }, 'image/jpeg', 0.8); // Calidad 0.8 para ahorrar peso
+      }, 'image/jpeg', 0.85);
     };
-    img.onerror = () => reject("Error cargando imagen para optimización");
+    img.onerror = () => reject("Error loading image");
     img.src = url;
   });
 }
 
 export async function generatePropertyVideo(assets: PropertyVideoAssets): Promise<Blob> {
-  console.log("🚀 Iniciando motor optimizado...");
+  console.log("🚀 Iniciando motor panorámico...");
   const ff = await loadFFmpeg();
   
   try {
-    // 1. Optimizar y escribir imágenes (Ahorra mucho tiempo de CPU en FFmpeg)
+    // 1. Optimizar y escribir imágenes
     for (let i = 0; i < assets.imageUrls.length; i++) {
       console.log(`⚡ Optimizando imagen ${i+1}/${assets.imageUrls.length}...`);
       const data = await getOptimizedImageData(assets.imageUrls[i]);
@@ -97,17 +95,17 @@ export async function generatePropertyVideo(assets: PropertyVideoAssets): Promis
 
     const command: string[] = [];
 
-    // Inputs (Tratamos de ser más agresivos con el corte de tiempo)
+    // Inputs
     for (let i = 0; i < numImgs; i++) {
       command.push('-loop', '1', '-t', durationPerImg.toFixed(2), '-i', `img${i}.jpg`);
     }
 
-    // Filter Complex: Zoompan + Trim estricto
+    // Filter Complex: Paneo horizontal
     let filterComplex = '';
     for (let i = 0; i < numImgs; i++) {
-      // Forzamos d a los frames exactos y añadimos trim para que no se pase ni un frame
       const frames = Math.round(durationPerImg * fps);
-      filterComplex += `[${i}:v]zoompan=z='zoom+0.001':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=${frames}:s=720x1280,trim=duration=${durationPerImg.toFixed(2)},setpts=PTS-STARTPTS,setsar=1[v${i}];`;
+      // Paneo horizontal: si iw > 720, movemos x de 0 al final. Si no, hacemos zoom al centro.
+      filterComplex += `[${i}:v]zoompan=z='1.1':x='if(gt(iw,720),(iw-720)*on/${frames},iw/2-(iw/zoom/2))':y='ih/2-(ih/zoom/2)':d=${frames}:s=720x1280,trim=duration=${durationPerImg.toFixed(2)},setpts=PTS-STARTPTS,setsar=1[v${i}];`;
     }
 
     let concatInputs = '';
@@ -117,7 +115,6 @@ export async function generatePropertyVideo(assets: PropertyVideoAssets): Promis
     let finalLabel = '[v_base]';
     if (hasFont) {
         const cleanTitle = assets.title.toUpperCase().replace(/'/g, "");
-        // Texto más arriba para que se vea en el primer impacto
         filterComplex += `;[v_base]drawtext=text='${cleanTitle}':fontfile='font.ttf':fontcolor=yellow:fontsize=50:x=(w-text_w)/2:y=200:borderw=4:bordercolor=black[v_final]`;
         finalLabel = '[v_final]';
     }
@@ -128,13 +125,13 @@ export async function generatePropertyVideo(assets: PropertyVideoAssets): Promis
       '-c:v', 'libx264',
       '-pix_fmt', 'yuv420p',
       '-preset', 'ultrafast',
-      '-crf', '32',
+      '-crf', '28',
       '-r', '25',
-      '-t', '12', // Límite total forzado de 12 segundos para evitar el bug de "video infinito"
+      '-t', '12',
       'output.mp4'
     );
 
-    console.log("🎬 Ejecutando renderizado final...");
+    console.log("🎬 Renderizando efecto panorámico...");
     const result = await ff.exec(command);
     
     if (result !== 0) throw new Error(`FFmpeg error ${result}`);
