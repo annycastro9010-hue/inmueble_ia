@@ -36,6 +36,8 @@ export default function DashboardPage() {
   // Estados de UI
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [activeTourIndex, setActiveTourIndex] = useState(0);
+  const [generatedVideoUrl, setGeneratedVideoUrl] = useState<string | null>(null);
+  const [videoBlob, setVideoBlob] = useState<Blob | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Cargar imágenes de Supabase al inicio
@@ -72,14 +74,12 @@ export default function DashboardPage() {
         price: "LISTA PARA ESTRENAR"
       });
 
-      console.log("Descargando video...");
-      const url = URL.createObjectURL(videoBlob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `Video_SotoIA_${Date.now()}.mp4`;
-      a.click();
+      const videoUrl = URL.createObjectURL(videoBlob);
+      setGeneratedVideoUrl(videoUrl);
+      setVideoBlob(videoBlob);
       
-      alert("✅ ¡Video Viral descargado con éxito!");
+      setCurrentAction(null);
+      alert("🎯 ¡Video Generado! Revisa la vista previa para publicarlo.");
     } catch (error: any) {
       console.error("DETALLE DEL ERROR:", error);
       let errorMsg = "Error desconocido";
@@ -510,16 +510,14 @@ export default function DashboardPage() {
                         <span className="text-xs font-bold text-white">WASM Localmente Cargado</span>
                       </div>
                       <div className="w-3 h-3 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
-                    </div>
                   </div>
-                </div>
               </div>
             </motion.div>
           )}
         </div>
       </main>
 
-      {/* Visor de Tour Virtual (Actualizado para permitir interacción) */}
+      {/* Visor de Tour Virtual */}
       <AnimatePresence>
         {isPreviewOpen && images.length > 0 && (
           <motion.div 
@@ -568,6 +566,86 @@ export default function DashboardPage() {
                    ))}
                 </div>
              </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal de Vista Previa de Video y Publicación */}
+      <AnimatePresence>
+        {generatedVideoUrl && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[120] bg-black/95 backdrop-blur-3xl flex items-center justify-center p-6"
+          >
+            <div className="max-w-md w-full bg-[#062b54] rounded-[3rem] border border-white/10 overflow-hidden shadow-2xl relative">
+              <button 
+                onClick={() => {
+                  setGeneratedVideoUrl(null);
+                  setVideoBlob(null);
+                }}
+                className="absolute top-6 right-6 text-white/30 hover:text-white z-20"
+              >
+                <X size={24} />
+              </button>
+
+              <div className="p-8 space-y-6">
+                <div className="space-y-2">
+                  <h3 className="text-2xl font-black uppercase italic tracking-tighter">Video Generado</h3>
+                  <p className="text-white/40 text-[10px] uppercase font-bold tracking-widest">Vista previa del reel inmobiliario</p>
+                </div>
+
+                <div className="aspect-[9/16] bg-black rounded-[2rem] overflow-hidden border border-white/5 shadow-2xl">
+                   <video src={generatedVideoUrl} controls autoPlay loop className="w-full h-full object-contain" />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 pt-4">
+                   <button 
+                     onClick={() => {
+                       const a = document.createElement("a");
+                       a.href = generatedVideoUrl;
+                       a.download = `Propiedad_${Date.now()}.mp4`;
+                       a.click();
+                     }}
+                     className="py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all"
+                   >
+                     Descargar
+                   </button>
+                   <button 
+                     onClick={async () => {
+                       if (!videoBlob) return;
+                       setIsProcessing(true);
+                       setCurrentAction("Publicando en la Landing...");
+                       
+                       try {
+                         const { data: prop, error: pErr } = await supabase.from('properties').select('id').limit(1).single();
+                         if (pErr || !prop) throw new Error("Asegúrate de haber configurado la propiedad en 'Config'.");
+
+                         const fileName = `video_${Date.now()}.mp4`;
+                         const filePath = `videos/${fileName}`;
+
+                         const { error: upErr } = await supabase.storage.from('propiedades').upload(filePath, videoBlob);
+                         if (upErr) throw upErr;
+
+                         const videoPublicUrl = `${supabaseUrl}/storage/v1/object/public/propiedades/${filePath}`;
+                         const { error: updErr } = await supabase.from('properties').update({ video_url: videoPublicUrl }).eq('id', prop.id);
+                         if (updErr) throw updErr;
+
+                         alert("🚀 ¡VIDEO PUBLICADO EN LA LANDING!");
+                         setGeneratedVideoUrl(null);
+                       } catch (e: any) {
+                         alert("Error: " + e.message);
+                       } finally {
+                         setIsProcessing(false);
+                         setCurrentAction(null);
+                       }
+                     }}
+                     className="py-4 bg-hormozi-yellow text-black rounded-2xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-[0_10px_30px_rgba(255,255,0,0.2)]"
+                   >
+                     🚀 Publicar
+                   </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

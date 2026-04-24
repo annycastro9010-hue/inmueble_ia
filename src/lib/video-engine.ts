@@ -103,9 +103,19 @@ export async function generatePropertyVideo(assets: PropertyVideoAssets): Promis
     // Filter Complex: Paneo horizontal
     let filterComplex = '';
     for (let i = 0; i < numImgs; i++) {
-      const frames = Math.round(durationPerImg * fps);
-      // Paneo cinemático suave: reducimos la velocidad del zoom y ajustamos el paneo x perfectamente
-      filterComplex += `[${i}:v]zoompan=z='1.05':x='if(gt(iw,720),(iw-720)*on/${frames},iw/2-(iw/zoom/2))':y='ih/2-(ih/zoom/2)':d=${frames}:s=720x1280,trim=duration=${durationPerImg.toFixed(2)},setpts=PTS-STARTPTS,setsar=1[v${i}];`;
+        const frames = Math.round(durationPerImg * fps);
+        const imgLabel = `${i}:v`;
+        
+        // Capa de FONDO: Borrosa y cubre todo el 720x1280
+        filterComplex += `[${imgLabel}]scale=720:1280:force_original_aspect_ratio=increase,crop=720:1280,boxblur=20:10[bg${i}];`;
+        
+        // Capa de FRENTE: Mantiene su proporción, se centra y hace el paneo suave
+        // Si iw > 720, hacemos el paneo. Si no, solo zoom suave.
+        filterComplex += `[${imgLabel}]scale=-1:1280[fg${i}_scaled];`;
+        filterComplex += `[bg${i}][fg${i}_scaled]overlay=x='if(gt(w,720), -(w-720)*on/${frames}, (720-w)/2)':y=0:shortest=1[v${i}_raw];`;
+        
+        // Aseguramos el tamaño final y el tiempo
+        filterComplex += `[v${i}_raw]scale=720x1280,trim=duration=${durationPerImg.toFixed(2)},setpts=PTS-STARTPTS[v${i}];`;
     }
 
     let concatInputs = '';
@@ -115,7 +125,7 @@ export async function generatePropertyVideo(assets: PropertyVideoAssets): Promis
     let finalLabel = '[v_base]';
     if (hasFont) {
         const cleanTitle = assets.title.toUpperCase().replace(/'/g, "");
-        filterComplex += `;[v_base]drawtext=text='${cleanTitle}':fontfile='font.ttf':fontcolor=white:fontsize=40:x=(w-text_w)/2:y=h-180:borderw=2:bordercolor=black:shadowcolor=black:shadowx=2:shadowy=2[v_final]`;
+        filterComplex += `;[v_base]drawtext=text='${cleanTitle}':fontfile='font.ttf':fontcolor=white:fontsize=45:x=(w-text_w)/2:y=h-250:borderw=2:bordercolor=black:shadowcolor=black:shadowx=2:shadowy=2[v_final]`;
         finalLabel = '[v_final]';
     }
 
@@ -125,13 +135,13 @@ export async function generatePropertyVideo(assets: PropertyVideoAssets): Promis
       '-c:v', 'libx264',
       '-pix_fmt', 'yuv420p',
       '-preset', 'ultrafast',
-      '-crf', '22', // Calidad premium
+      '-crf', '24', 
       '-r', '25',
-      '-t', '24',   // Duración extendida
+      '-t', '24', 
       'output.mp4'
     );
 
-    console.log("🎬 Renderizando efecto panorámico...");
+    console.log("🎬 Renderizando video cinematográfico con fondo difuminado...");
     const result = await ff.exec(command);
     
     if (result !== 0) throw new Error(`FFmpeg error ${result}`);
