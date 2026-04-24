@@ -1,31 +1,18 @@
 import { FFmpeg } from '@ffmpeg/ffmpeg';
-import { fetchFile, toBlobURL } from '@ffmpeg/util';
+import { toBlobURL } from '@ffmpeg/util';
 
 let ffmpeg: FFmpeg | null = null;
 
 export async function loadFFmpeg() {
   if (ffmpeg) return ffmpeg;
-  
-  console.log("Cargando FFmpeg WASM desde CDN...");
-  try {
-    ffmpeg = new FFmpeg();
-    
-    // Configuramos el logger para ver la salida real de FFmpeg en la consola
-    ffmpeg.on('log', ({ message }) => {
-      console.log("FFMPEG_LOG:", message);
-    });
-
-    const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
-    await ffmpeg.load({
-      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
-    });
-    console.log("FFmpeg cargado correctamente.");
-    return ffmpeg;
-  } catch (error) {
-    console.error("Falla crítica al cargar FFmpeg:", error);
-    throw new Error("No se pudo cargar el motor FFmpeg. Verifica tu conexión a internet.");
-  }
+  ffmpeg = new FFmpeg();
+  ffmpeg.on('log', ({ message }) => console.log('FFMPEG:', message));
+  const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
+  await ffmpeg.load({
+    coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+    wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+  });
+  return ffmpeg;
 }
 
 export interface PropertyVideoAssets {
@@ -34,122 +21,138 @@ export interface PropertyVideoAssets {
   price: string;
 }
 
-// Función auxiliar para redimensionar imágenes antes de pasarlas a FFmpeg (esto acelera FFmpeg exponencialmente)
-async function getOptimizedImageData(url: string): Promise<Uint8Array> {
+// Resizes and pre-processes each image into a fixed 720x1280 JPEG using Canvas
+async function processImageForVideo(url: string): Promise<Uint8Array> {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.crossOrigin = "anonymous";
+    img.crossOrigin = 'anonymous';
     img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const targetHeight = 1280;
-      // Mantenemos la relación de aspecto para permitir el paneo lateral si es panorámica
-      const scale = targetHeight / img.height;
-      canvas.width = img.width * scale;
-      canvas.height = targetHeight;
-      
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return reject("No canvas context");
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      const OUT_W = 720;
+      const OUT_H = 1280;
 
-      canvas.toBlob((blob) => {
-        if (!blob) return reject("Blob failure");
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(new Uint8Array(reader.result as ArrayBuffer));
-        reader.readAsArrayBuffer(blob);
+      const canvas = document.createElement('canvas');
+      canvas.width = OUT_W;
+      canvas.height = OUT_H;
+      const ctx = canvas.getContext('2d')!;
+
+      // --- BLURRED BACKGROUND ---
+      // Scale image to cover full 720x1280
+      const coverScale = Math.max(OUT_W / img.width, OUT_H / img.height);
+      const bgW = img.width * coverScale;
+      const bgH = img.height * coverScale;
+      const bgX = (OUT_W - bgW) / 2;
+      const bgY = (OUT_H - bgH) / 2;
+
+      ctx.filter = 'blur(18px) brightness(0.5)';
+      ctx.drawImage(img, bgX, bgY, bgW, bgH);
+      ctx.filter = 'none';
+
+      // --- FOREGROUND: maintain aspect ratio, centered ---
+      // Height = 560px so wide panoramic images show wide and rooms look spacious
+      const FG_H = 560;
+      const fgScale = FG_H / img.height;
+      const fgW = img.width * fgScale;
+      const fgX = (OUT_W - fgW) / 2;
+      const fgY = (OUT_H - FG_H) / 2;
+
+      ctx.drawImage(img, fgX, fgY, fgW, FG_H);
+
+      canvas.toBlob(blob => {
+        if (!blob) return reject('Blob failed');
+        blob.arrayBuffer().then(buf => resolve(new Uint8Array(buf)));
       }, 'image/jpeg', 0.85);
     };
-    img.onerror = () => reject("Error loading image");
+    img.onerror = () => reject('Image load failed: ' + url);
     img.src = url;
   });
 }
 
 export async function generatePropertyVideo(assets: PropertyVideoAssets): Promise<Blob> {
-  console.log("🚀 Iniciando motor panorámico...");
+  console.log('🎬 Iniciando generación de video...');
   const ff = await loadFFmpeg();
-  
-  try {
-    // 1. Optimizar y escribir imágenes
-    for (let i = 0; i < assets.imageUrls.length; i++) {
-      console.log(`⚡ Optimizando imagen ${i+1}/${assets.imageUrls.length}...`);
-      const data = await getOptimizedImageData(assets.imageUrls[i]);
-      await ff.writeFile(`img${i}.jpg`, data);
-    }
 
-    // 2. Intentar descargar fuente
-    let hasFont = false;
-    try {
-      const response = await fetch('https://cdn.jsdelivr.net/gh/googlefonts/inter@master/docs/font-files/Inter-Bold.ttf');
-      if (response.ok) {
-        const fontBuffer = await response.arrayBuffer();
-        if (fontBuffer.byteLength > 1000) { 
-          await ff.writeFile('font.ttf', new Uint8Array(fontBuffer));
-          hasFont = true;
-        }
-      }
-    } catch (e) {}
+  const numImgs = assets.imageUrls.length;
+  const totalDuration = Math.min(numImgs * 3, 30); // max 30s
+  const durationPerImg = totalDuration / numImgs;
 
-    const numImgs = assets.imageUrls.length;
-    const totalDuration = 24; // Aumentamos a 24s para suavidad extrema
-    const durationPerImg = totalDuration / numImgs;
-    const fps = 25;
-
-    const command: string[] = [];
-
-    // Inputs
-    for (let i = 0; i < numImgs; i++) {
-      command.push('-loop', '1', '-t', durationPerImg.toFixed(2), '-i', `img${i}.jpg`);
-    }
-
-    // Filter Complex: Paneo horizontal
-    let filterComplex = '';
-    for (let i = 0; i < numImgs; i++) {
-        const frames = Math.round(durationPerImg * fps);
-        const imgLabel = `${i}:v`;
-        
-        // Capa de FONDO: Borrosa y cubre todo el 720x1280
-        filterComplex += `[${imgLabel}]scale=720:1280:force_original_aspect_ratio=increase,crop=720:1280,boxblur=20:10[bg${i}];`;
-        
-        // Capa de FRENTE: No la estiramos a toda la altura para que no parezca un tubo.
-        // La hacemos de 600px de alto (más o menos la mitad de la pantalla) y que se mueva horizontalmente.
-        filterComplex += `[${imgLabel}]scale=-1:600[fg${i}_scaled];`;
-        filterComplex += `[bg${i}][fg${i}_scaled]overlay=x='if(gt(w,720), -(w-720)*on/${frames}, (720-w)/2)':y=(1280-600)/2:shortest=1[v${i}_raw];`;
-        
-        // Aseguramos el tamaño final y el tiempo
-        filterComplex += `[v${i}_raw]scale=720x1280,trim=duration=${durationPerImg.toFixed(2)},setpts=PTS-STARTPTS[v${i}];`;
-    }
-
-    let concatInputs = '';
-    for (let i = 0; i < numImgs; i++) concatInputs += `[v${i}]`;
-    filterComplex += `${concatInputs}concat=n=${numImgs}:v=1:a=0[v_base]`;
-
-    let finalLabel = '[v_base]';
-    if (hasFont) {
-        const cleanTitle = assets.title.toUpperCase().replace(/'/g, "");
-        filterComplex += `;[v_base]drawtext=text='${cleanTitle}':fontfile='font.ttf':fontcolor=white:fontsize=45:x=(w-text_w)/2:y=h-250:borderw=2:bordercolor=black:shadowcolor=black:shadowx=2:shadowy=2[v_final]`;
-        finalLabel = '[v_final]';
-    }
-
-    command.push(
-      '-filter_complex', filterComplex,
-      '-map', finalLabel,
-      '-c:v', 'libx264',
-      '-pix_fmt', 'yuv420p',
-      '-preset', 'ultrafast',
-      '-crf', '24', 
-      '-r', '25',
-      '-t', '24', 
-      'output.mp4'
-    );
-
-    console.log("🎬 Renderizando video cinematográfico con fondo difuminado...");
-    const result = await ff.exec(command);
-    
-    if (result !== 0) throw new Error(`FFmpeg error ${result}`);
-    
-    const data = await ff.readFile('output.mp4');
-    return new Blob([(data as any).buffer], { type: 'video/mp4' });
-  } catch (err: any) {
-    console.error(err);
-    throw new Error(err.message || "Fallo en el renderizado");
+  // 1. Pre-process images on Canvas: apply blur bg + centered fg — NO complex FFmpeg filters needed
+  for (let i = 0; i < numImgs; i++) {
+    console.log(`🖼️ Procesando imagen ${i + 1}/${numImgs}...`);
+    const data = await processImageForVideo(assets.imageUrls[i]);
+    await ff.writeFile(`img${i}.jpg`, data);
   }
+
+  // 2. Build simple FFmpeg command — just concat pre-processed images
+  const command: string[] = [];
+
+  for (let i = 0; i < numImgs; i++) {
+    command.push('-loop', '1', '-t', durationPerImg.toFixed(2), '-i', `img${i}.jpg`);
+  }
+
+  // Simple concat filter — images are already 720x1280 from canvas
+  let filterComplex = '';
+  for (let i = 0; i < numImgs; i++) {
+    // Add slow zoom to each image
+    const frames = Math.round(durationPerImg * 25);
+    filterComplex += `[${i}:v]zoompan=z='min(zoom+0.0004,1.05)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=${frames}:s=720x1280:fps=25[v${i}];`;
+  }
+
+  let concatInputs = '';
+  for (let i = 0; i < numImgs; i++) concatInputs += `[v${i}]`;
+  filterComplex += `${concatInputs}concat=n=${numImgs}:v=1:a=0[vout]`;
+
+  command.push(
+    '-filter_complex', filterComplex,
+    '-map', '[vout]',
+    '-c:v', 'libx264',
+    '-pix_fmt', 'yuv420p',
+    '-preset', 'ultrafast',
+    '-crf', '26',
+    '-r', '25',
+    'output.mp4'
+  );
+
+  console.log('⚙️ Ejecutando FFmpeg...');
+  const result = await ff.exec(command);
+  if (result !== 0) {
+    // Retry without zoompan (simpler fallback)
+    console.warn('zoompan falló, intentando con concat simple...');
+    return generateSimpleVideo(ff, numImgs, durationPerImg, assets.title);
+  }
+
+  const data = await ff.readFile('output.mp4');
+  console.log('✅ Video generado!');
+  return new Blob([(data as Uint8Array).buffer], { type: 'video/mp4' });
+}
+
+async function generateSimpleVideo(ff: FFmpeg, numImgs: number, durationPerImg: number, title: string): Promise<Blob> {
+  const command: string[] = [];
+  for (let i = 0; i < numImgs; i++) {
+    command.push('-loop', '1', '-t', durationPerImg.toFixed(2), '-i', `img${i}.jpg`);
+  }
+
+  let filterComplex = '';
+  let concatInputs = '';
+  for (let i = 0; i < numImgs; i++) {
+    filterComplex += `[${i}:v]scale=720:1280:force_original_aspect_ratio=disable,setsar=1[v${i}];`;
+    concatInputs += `[v${i}]`;
+  }
+  filterComplex += `${concatInputs}concat=n=${numImgs}:v=1:a=0[vout]`;
+
+  command.push(
+    '-filter_complex', filterComplex,
+    '-map', '[vout]',
+    '-c:v', 'libx264',
+    '-pix_fmt', 'yuv420p',
+    '-preset', 'ultrafast',
+    '-crf', '28',
+    '-r', '25',
+    'output_simple.mp4'
+  );
+
+  const result = await ff.exec(command);
+  if (result !== 0) throw new Error(`FFmpeg error en fallback: ${result}`);
+
+  const data = await ff.readFile('output_simple.mp4');
+  return new Blob([(data as Uint8Array).buffer], { type: 'video/mp4' });
 }
