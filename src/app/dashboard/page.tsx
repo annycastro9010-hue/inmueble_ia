@@ -77,7 +77,8 @@ export default function DashboardPage() {
       alert("✅ ¡Video Viral descargado con éxito!");
     } catch (error: any) {
       console.error(error);
-      alert("Error al generar el video: " + error.message);
+      const msg = error?.message || "Error desconocido";
+      alert("Error al generar el video: " + msg);
     } finally {
       setIsProcessing(false);
       setCurrentAction(null);
