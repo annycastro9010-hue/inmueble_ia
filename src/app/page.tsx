@@ -22,12 +22,13 @@ export default function PropertyPage() {
     async function fetchData() {
       try {
         // Obtenemos la última propiedad creada
+        // Obtenemos la propiedad única (la última o la que haya)
         const { data: propData, error: propErr } = await supabase
           .from('properties')
           .select('*')
           .order('created_at', { ascending: false })
           .limit(1)
-          .single();
+          .maybeSingle();
 
         if (propErr) throw propErr;
         setProperty(propData);
@@ -114,16 +115,17 @@ export default function PropertyPage() {
       {/* ── HERO DYNAMIC (Video or Photos) ── */}
       <section className="relative h-screen w-full overflow-hidden bg-black">
         {displayProperty.video_url ? (
-          <div className="absolute inset-0 w-full h-full">
+          <div className="absolute inset-0 w-full h-full bg-black">
             <video 
+              key={displayProperty.video_url}
               src={displayProperty.video_url} 
               autoPlay 
               loop 
               muted 
               playsInline
-              className="w-full h-full object-cover opacity-60"
+              className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#062b54] via-transparent to-black/40" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#062b54] via-transparent to-black/20" />
           </div>
         ) : (
           <>
@@ -166,23 +168,22 @@ export default function PropertyPage() {
 
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
               <div className="max-w-3xl">
-                <h1 className="text-4xl sm:text-5xl md:text-8xl font-black uppercase italic tracking-tighter leading-[0.9] mb-4">
+                <h1 className={`font-black uppercase italic tracking-tighter leading-[0.9] mb-4 transition-all ${displayProperty.video_url ? 'text-3xl sm:text-4xl md:text-6xl text-white/90 drop-shadow-2xl' : 'text-4xl sm:text-5xl md:text-8xl text-white'}`}>
                   {displayProperty.title}
                 </h1>
                 <div className="flex items-center gap-4">
                   <div className="px-3 py-1 bg-hormozi-yellow text-black font-black text-[10px] uppercase tracking-widest rounded-full">
                     Garantizado
                   </div>
-                  <p className="text-white/50 text-[10px] md:text-xs uppercase tracking-[0.2em]">Última unidad disponible</p>
+                  <p className="text-white/50 text-[10px] md:text-xs uppercase tracking-[0.2em]">Exclusividad IA</p>
                 </div>
               </div>
 
-              <div className="md:text-right shrink-0 bg-black/40 backdrop-blur-xl p-6 md:p-8 rounded-[2rem] border border-white/10 self-start md:self-auto">
+              <div className={`md:text-right shrink-0 backdrop-blur-xl p-6 md:p-8 rounded-[2rem] border border-white/10 self-start md:self-auto transition-all ${displayProperty.video_url ? 'bg-black/20' : 'bg-black/40'}`}>
                 <p className="text-[9px] md:text-[10px] font-black text-white/30 uppercase tracking-widest mb-1">Inversión</p>
-                <p className="text-3xl md:text-6xl font-black text-hormozi-yellow tracking-tighter">
+                <p className="text-3xl md:text-5xl font-black text-hormozi-yellow tracking-tighter">
                   {typeof displayProperty.price === 'number' ? `$${displayProperty.price.toLocaleString()}` : displayProperty.price}
                 </p>
-                <p className="text-[10px] text-white/40 mt-2">Escritura inmediata · Única oportunidad</p>
               </div>
             </div>
           </motion.div>
