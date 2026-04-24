@@ -113,6 +113,33 @@ export default function PropertyPage() {
         </div>
       </nav>
 
+      {/* ── TOUR VIRTUAL (AHORA DE PRIMERAS) ── */}
+      <section id="tour-section" className="relative pt-32 pb-20 px-6 md:px-16 overflow-hidden">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 text-center md:text-left">
+            <div>
+              <p className="text-[9px] md:text-[10px] font-black text-hormozi-yellow uppercase tracking-[0.5em] mb-4">Experiencia Inmersiva</p>
+              <h2 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter leading-none">Recorrido <br/><span className="text-hormozi-yellow">Virtual 360°</span></h2>
+              <p className="text-white/40 text-sm md:text-base mt-4 max-w-xl">La casa se presenta sola. Disfruta de este recorrido automático por cada rincón de tu próximo hogar.</p>
+            </div>
+            {!showTour && (
+              <button
+                onClick={() => setShowTour(true)}
+                className="btn-luxury bg-hormozi-yellow text-black px-10 py-6"
+              >
+                <Play size={22} className="fill-current" /> CONFIGURANDO TOUR...
+              </button>
+            )}
+          </div>
+
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <TourViewer scenes={tourScenes} initialSceneId={tourScenes[0]?.id} autoPlay={true} />
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ── EL RESTO DE SECCIONES ── */}
+
       {/* ── HERO DYNAMIC (Video or Photos) ── */}
       <section className="relative h-screen w-full overflow-hidden bg-black">
         {displayProperty.video_url ? (

@@ -198,7 +198,7 @@ export default function DashboardPage() {
           </div>
           <span className="font-black tracking-[0.3em] text-sm uppercase italic">SOTO <span className="text-hormozi-yellow">IA</span></span>
         </div>
-        <nav className="flex-1 flex lg:flex-col gap-2 w-full justify-around lg:justify-start">
+        <nav className="flex-1 flex lg:flex-col gap-4 w-full justify-around lg:justify-start">
           <button onClick={() => setActiveTab("estudio")} className={`flex flex-col lg:flex-row items-center gap-2 lg:gap-4 flex-1 lg:w-full px-4 lg:px-5 py-3 lg:py-4 rounded-xl font-bold text-[10px] lg:text-xs uppercase tracking-widest transition-all ${activeTab === "estudio" ? "bg-white/10 text-hormozi-yellow shadow-lg shadow-black/20" : "text-white/30 hover:text-white hover:bg-white/5"}`}>
             <LayoutDashboard size={18} />
             <span>Estudio</span>

@@ -47,7 +47,11 @@ export async function processPropertyImage({ imageUrl, roomType, mode }: AIProce
 
         if (response.ok) {
           const result = await response.json();
-          const imgData = result.candidates?.[0]?.content?.parts?.find((p: any) => p.inline_data)?.inline_data?.data;
+          // Buscar específicamente el DATA de la imagen, ignorar cualquier texto de Gemini
+          const parts = result.candidates?.[0]?.content?.parts || [];
+          const part = parts.find((p: any) => p.inline_data);
+          const imgData = part?.inline_data?.data;
+          
           if (imgData) return { outputUrl: `data:image/jpeg;base64,${imgData}`, status: "succeeded" };
         }
       } catch (e) {

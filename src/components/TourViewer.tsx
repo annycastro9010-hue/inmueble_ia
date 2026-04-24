@@ -21,6 +21,7 @@ export interface Scene {
 interface TourViewerProps {
   scenes: Scene[];
   initialSceneId?: string;
+  autoPlay?: boolean;
 }
 
 // Hook para detectar si una imagen es panorámica (ratio > 2:1)
@@ -83,7 +84,7 @@ function SceneDisplay({ scene }: { scene: Scene }) {
   );
 }
 
-export default function TourViewer({ scenes, initialSceneId }: TourViewerProps) {
+export default function TourViewer({ scenes, initialSceneId, autoPlay }: TourViewerProps) {
   const [currentSceneId, setCurrentSceneId] = useState(initialSceneId || scenes[0]?.id);
   const [showSurvey, setShowSurvey] = useState(false);
   const [surveyStep, setSurveyStep] = useState(0);
@@ -106,6 +107,19 @@ export default function TourViewer({ scenes, initialSceneId }: TourViewerProps) 
       setSurveyStep(0);
     }
   };
+
+  // Efecto de AutoPlay
+  useEffect(() => {
+    if (!autoPlay || scenes.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentSceneId((prev) => {
+        const idx = scenes.findIndex((s) => s.id === prev);
+        const nextIdx = (idx + 1) % scenes.length;
+        return scenes[nextIdx].id;
+      });
+    }, 6000); // Cambia cada 6 segundos
+    return () => clearInterval(interval);
+  }, [autoPlay, scenes]);
 
   const goToScene = (id: string) => setCurrentSceneId(id);
 
