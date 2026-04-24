@@ -50,13 +50,23 @@ export async function generatePropertyVideo(assets: PropertyVideoAssets): Promis
     console.log("Descargando fuente Inter-Bold.ttf via CDN...");
     let hasFont = false;
     try {
-      // jsdelivr permite CORS para archivos de GitHub
-      const fontData = await fetchFile('https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/inter/static/Inter-Bold.ttf');
-      await ff.writeFile('font.ttf', fontData);
-      hasFont = true;
-      console.log("Fuente cargada con éxito.");
+      // Usamos fetch directamente para validar la respuesta antes de pasarla a FFmpeg
+      const response = await fetch('https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/inter/static/Inter-Bold.ttf');
+      if (response.ok) {
+        const fontBuffer = await response.arrayBuffer();
+        // Verificación básica de que es un archivo font (no HTML de error)
+        if (fontBuffer.byteLength > 1000) { 
+          await ff.writeFile('font.ttf', new Uint8Array(fontBuffer));
+          hasFont = true;
+          console.log("Fuente cargada con éxito.");
+        } else {
+          console.warn("La fuente descargada es demasiado pequeña o inválida.");
+        }
+      } else {
+        console.warn(`Error de red al bajar fuente: ${response.status}`);
+      }
     } catch (fontErr) {
-      console.warn("No se pudo cargar la fuente debido a CORS o red. El video se generará sin texto para evitar fallos.");
+      console.warn("Falla de red al cargar la fuente:", fontErr);
     }
 
     const numImgs = assets.imageUrls.length;
@@ -88,11 +98,8 @@ export async function generatePropertyVideo(assets: PropertyVideoAssets): Promis
     if (hasFont) {
         const cleanTitle = assets.title.toUpperCase().replace(/'/g, "");
         const cleanPrice = assets.price.toUpperCase().replace(/'/g, "");
-        filterComplex += `;${finalLabel}drawtext=text='${cleanTitle}':fontfile='font.ttf':fontcolor=yellow:fontsize=80:x=(w-text_w)/2:y=(h-text_h)/2-100:borderw=5:bordercolor=black,`;
+        filterComplex += `;[v_base]drawtext=text='${cleanTitle}':fontfile='font.ttf':fontcolor=yellow:fontsize=80:x=(w-text_w)/2:y=(h-text_h)/2-100:borderw=5:bordercolor=black,`;
         filterComplex += `drawtext=text='${cleanPrice}':fontfile='font.ttf':fontcolor=white:fontsize=60:x=(w-text_w)/2:y=(h-text_h)/2+50:borderw=3:bordercolor=black[v_final]`;
-        finalLabel = '[v_final]';
-    } else {
-        filterComplex += `[v_base]null[v_final]`; // Fallback sin texto
         finalLabel = '[v_final]';
     }
 
