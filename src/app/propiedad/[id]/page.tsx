@@ -141,14 +141,6 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
     }
   };
 
-  if (loading) return (
-    <div className="min-h-screen bg-[#062b54] flex items-center justify-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-hormozi-yellow"></div>
-    </div>
-  );
-
-  if (!property) return null;
-
   // Filtrar para mostrar la mejor calidad por habitación en el tour (Memoized)
   const bestImages = useMemo(() => {
     return images.reduce((acc: any[], current) => {
@@ -175,8 +167,17 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
     }));
   }, [bestImages]);
 
-  const stagedImg = images.find(img => img.status === 'staged');
-  const originalImg = images.find(img => img.status === 'original' || img.status === 'enhanced');
+  const stagedImg = useMemo(() => images.find(img => img.status === 'staged'), [images]);
+  const originalImg = useMemo(() => images.find(img => img.status === 'original' || img.status === 'enhanced'), [images]);
+
+  if (loading) return (
+    <div className="min-h-screen bg-[#062b54] flex items-center justify-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-hormozi-yellow"></div>
+    </div>
+  );
+
+  if (!property) return null;
+
 
   return (
     <main className="min-h-screen bg-[#062b54] text-white selection:bg-hormozi-yellow selection:text-black font-body">
