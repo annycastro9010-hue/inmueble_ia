@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect, useRef, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import TourViewer from "@/components/TourViewer";
 import { supabase } from "@/lib/supabase";
 
@@ -59,6 +60,7 @@ function ArrowLeftRight({ size }: { size: number }) {
 
 export default function PropertyDynamicPage({ params }: { params: { id: string } }) {
   const { id } = params;
+  const router = useRouter();
   const [property, setProperty] = useState<any>(null);
   const [images, setImages] = useState<any[]>([]);
   const [currentPhoto, setCurrentPhoto] = useState(0);
@@ -84,9 +86,17 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
         const { data: propData } = await query.maybeSingle();
         if (!propData) {
             const { data: retry } = await supabase.from('properties').select('*').eq('id', id).maybeSingle();
-            if (retry) setProperty(retry);
+            if (retry) {
+              setProperty(retry);
+              if (retry.slug && id !== retry.slug) {
+                router.replace(`/propiedad/${retry.slug}`);
+              }
+            }
         } else {
             setProperty(propData);
+            if (propData.slug && id !== propData.slug) {
+              router.replace(`/propiedad/${propData.slug}`);
+            }
         }
         const actualId = propData?.id || id;
         
@@ -130,7 +140,7 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
       setSentSuccess(true);
       setTimeout(() => {
         const text = `¡Hola! Soy ${leadForm.name}. Vi la propiedad "${property.title}" y quiero agendar una visita.`;
-        window.open(`https://wa.me/573001234567?text=${encodeURIComponent(text)}`, '_blank');
+        window.open(`https://wa.me/573004341768?text=${encodeURIComponent(text)}`, '_blank');
         setShowCRMModal(false);
         setSentSuccess(false);
         setIsSending(false);
@@ -257,7 +267,7 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
         {/* ── 5. GALERÍA INTELIGENTE ── */}
         <section className="space-y-16">
             <div className="flex flex-col md:flex-row justify-between items-end gap-8">
-              <h2 className="text-5xl md:text-8xl font-black uppercase italic tracking-tighter leading-[0.9]">Álbum <span className="text-hormozi-yellow">HD</span></h2>
+              <h2 className="text-4xl md:text-8xl font-black uppercase italic tracking-tighter leading-[0.9]">Álbum <span className="text-hormozi-yellow">HD</span></h2>
               <div className="hidden md:flex gap-3 mb-4">
                  {images.map((_, i) => (
                     <div key={i} className={`h-2 rounded-full transition-all duration-1000 ${i === autoCarouselIndex ? 'w-12 bg-hormozi-yellow shadow-[0_0_15px_#facc15]' : 'w-4 bg-white/10'}`} />
@@ -286,7 +296,7 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
                  <div className="inline-flex items-center gap-4 px-6 py-3 bg-hormozi-yellow/10 text-hormozi-yellow rounded-full border-2 border-hormozi-yellow/20">
                     <MapPin size={22} /> <span className="font-black text-[12px] uppercase tracking-widest italic">{property.location}</span>
                  </div>
-                 <h1 className="text-7xl md:text-[10rem] font-extrabold uppercase italic tracking-tighter leading-[0.8] mb-8">{property.title}</h1>
+                 <h1 className="text-5xl md:text-[clamp(4rem,10vw,10rem)] font-extrabold uppercase italic tracking-tighter leading-[0.8] mb-8 break-words">{property.title}</h1>
                  <p className="text-2xl md:text-4xl text-white/50 leading-relaxed font-semibold italic">{property.description}</p>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
@@ -307,7 +317,7 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
            <div className="lg:col-span-5 space-y-12 lg:sticky lg:top-40">
               <div className="bg-white p-14 md:p-20 rounded-[5rem] shadow-[0_80px_150px_-30px_rgba(0,0,0,0.4)]">
                  <div className="text-black/30 font-black uppercase tracking-[0.4em] text-[11px] mb-6 italic">Inversión Patrimonial</div>
-                 <div className="text-7xl md:text-9xl font-black italic tracking-tighter text-black leading-none mb-12">${property.price?.toLocaleString()}</div>
+                 <div className="text-5xl md:text-8xl lg:text-9xl font-black italic tracking-tighter text-black leading-none mb-12 break-all">${property.price?.toLocaleString()}</div>
                  <button onClick={() => setShowCRMModal(true)} className="w-full py-9 bg-[#062b54] text-white flex items-center justify-center gap-5 rounded-[2.5rem] font-black uppercase text-[11px] tracking-[0.3em] hover:bg-black hover:scale-[1.02] transition-all shadow-xl">
                     Solicitar Agenda <ChevronRight size={20}/>
                  </button>
