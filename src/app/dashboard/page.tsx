@@ -510,7 +510,9 @@ export default function DashboardPage() {
                         <span className="text-xs font-bold text-white">WASM Localmente Cargado</span>
                       </div>
                       <div className="w-3 h-3 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
+                    </div>
                   </div>
+                </div>
               </div>
             </motion.div>
           )}
