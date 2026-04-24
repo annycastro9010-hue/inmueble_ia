@@ -186,15 +186,15 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
       <div className="bg-hormozi-yellow text-black py-2.5 overflow-hidden whitespace-nowrap sticky top-0 z-[100] border-b-2 border-black/10">
         <motion.div 
           initial={{ x: 0 }} animate={{ x: "-50%" }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
           className="flex gap-12 items-center"
         >
-          {[...Array(10)].map((_, i) => (
-            <div key={i} className="flex gap-12 items-center font-black text-[10px] uppercase tracking-[0.3em] italic">
-              <span>Entrega Inmediata</span> <Sparkles size={14} />
-              <span>Créditos se aceptan</span> <CheckCircle size={14} />
-              <span>Sin Intermediarios</span> <Sparkles size={14} />
-              <span>Alta Valorización</span>
+          {[...Array(15)].map((_, i) => (
+            <div key={i} className="flex gap-12 items-center font-black text-[12px] uppercase tracking-[0.3em] italic">
+              <span className="text-black/40">Entrega Inmediata</span> <Sparkles size={14} />
+              <span className="text-black">{property.title}</span> <CheckCircle size={14} />
+              <span className="text-black/40">Créditos se aceptan</span> <Sparkles size={14} />
+              <span className="text-black">Oportunidad Única</span>
             </div>
           ))}
         </motion.div>
@@ -208,7 +208,7 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
         <div className="absolute top-8 left-8 z-20 flex flex-col gap-2">
           <div className="flex items-center gap-3 px-4 py-2 bg-[#062b54]/80 backdrop-blur-xl rounded-2xl border border-white/10">
             <div className="w-2 h-2 bg-red-500 rounded-full animate-ping" />
-            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-hormozi-yellow italic">Modo <span className="text-white">Autoventa activo</span></span>
+            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-hormozi-yellow italic">Visitando <span className="text-white">{property.title}</span></span>
           </div>
         </div>
 

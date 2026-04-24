@@ -377,6 +377,20 @@ export default function DashboardPage() {
               <button onClick={() => setActiveTab("config")} className={`flex items-center gap-3 px-5 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all w-full ${activeTab === "config" ? "bg-white/10 text-hormozi-yellow shadow-inner" : "text-white/30 hover:text-white hover:bg-white/5"}`}>
                 <Settings size={18} /> Configuración
               </button>
+              
+              <div className="mt-8 p-6 bg-hormozi-yellow/5 rounded-3xl border border-hormozi-yellow/10">
+                <div className="text-[8px] font-black uppercase text-hormozi-yellow/40 tracking-widest mb-3">Link Directo</div>
+                <div className="text-[10px] font-mono text-white/50 break-all bg-black/20 p-3 rounded-xl mb-4">
+                  /propiedad/{propertySlug || activePropertyId}
+                </div>
+                <Link 
+                  href={`/propiedad/${propertySlug || activePropertyId}`}
+                  target="_blank"
+                  className="block text-center py-3 bg-hormozi-yellow text-black font-black text-[10px] uppercase tracking-widest rounded-xl hover:scale-105 transition-all"
+                >
+                  Abrir Web
+                </Link>
+              </div>
             </>
           )}
         </nav>
@@ -489,10 +503,29 @@ export default function DashboardPage() {
             </div>
           ) : activeTab === "leads" ? (
              <div className="max-w-6xl mx-auto space-y-8">
-                <div className="flex justify-between items-center">
-                   <h2 className="text-3xl font-black uppercase italic tracking-tighter text-hormozi-yellow">Clientes Interesados</h2>
-                   <div className="px-4 py-2 bg-white/5 rounded-full text-[9px] font-black uppercase tracking-widest text-white/40 border border-white/5">{leads.length} Registros</div>
-                </div>
+                 <div className="flex justify-between items-center">
+                    <h2 className="text-3xl font-black uppercase italic tracking-tighter text-hormozi-yellow">Clientes Interesados</h2>
+                    <div className="flex gap-4">
+                      <button 
+                         onClick={async () => {
+                           const name = prompt("Nombre del cliente:");
+                           const phone = prompt("WhatsApp:");
+                           if(!name || !phone) return;
+                           const { data } = await supabase.from("leads").insert([{
+                             property_id: activePropertyId,
+                             client_name: name,
+                             phone: phone,
+                             interest_level: 5
+                           }]).select().single();
+                           if(data) setLeads([data, ...leads]);
+                         }}
+                         className="px-6 py-3 bg-white text-black rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-hormozi-yellow transition-all"
+                      >
+                        + Agregar Manualmente
+                      </button>
+                      <div className="px-4 py-2 bg-white/5 rounded-full text-[9px] font-black uppercase tracking-widest text-white/40 border border-white/5">{leads.length} Registros</div>
+                    </div>
+                 </div>
 
                 <div className="bg-black/40 rounded-[3rem] border border-white/5 overflow-hidden shadow-2xl">
                    <table className="w-full text-left">
@@ -500,9 +533,10 @@ export default function DashboardPage() {
                          <tr className="border-b border-white/5 text-[9px] font-black uppercase tracking-widest text-white/20 bg-white/5">
                             <th className="px-8 py-6 uppercase italic">Fecha</th>
                             <th className="px-8 py-6 uppercase italic">Nombre del Cliente</th>
-                            <th className="px-8 py-6 uppercase italic">WhatsApp</th>
-                            <th className="px-8 py-6">Estado</th>
-                            <th className="px-8 py-6">Control</th>
+                             <th className="px-8 py-6 uppercase italic">WhatsApp</th>
+                             <th className="px-8 py-6">Calificación</th>
+                             <th className="px-8 py-6 uppercase italic">Observaciones / Nota</th>
+                             <th className="px-8 py-6">Control</th>
                          </tr>
                       </thead>
                       <tbody className="divide-y divide-white/5">
@@ -521,7 +555,22 @@ export default function DashboardPage() {
                                   </a>
                                </td>
                                <td className="px-8 py-6">
-                                  <span className="px-3 py-1 bg-green-500/10 text-green-500 rounded-full text-[9px] font-black uppercase tracking-widest">Nuevo Lead</span>
+                                  <div className="flex gap-1 text-hormozi-yellow">
+                                    {[...Array(5)].map((_, i) => (
+                                      <Sparkles key={i} size={10} fill={i < (lead.interest_level || 5) ? "currentColor" : "none"} className={i < (lead.interest_level || 5) ? "" : "opacity-20"} />
+                                    ))}
+                                  </div>
+                               </td>
+                               <td className="px-8 py-6">
+                                  <input 
+                                    type="text" 
+                                    placeholder="Añadir nota..."
+                                    defaultValue={lead.notes || ""}
+                                    className="bg-transparent border-none text-xs text-white/50 focus:ring-0 w-full italic"
+                                    onBlur={async (e) => {
+                                      await supabase.from("leads").update({ notes: e.target.value }).eq("id", lead.id);
+                                    }}
+                                  />
                                </td>
                                <td className="px-8 py-6">
                                   <button onClick={async () => {
