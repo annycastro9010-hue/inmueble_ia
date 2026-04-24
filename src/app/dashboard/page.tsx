@@ -252,7 +252,17 @@ export default function DashboardPage() {
             <button onClick={() => setIsPreviewOpen(false)} className="absolute top-10 right-10 text-white/30 hover:text-white uppercase font-black text-[10px] tracking-widest flex items-center gap-3">Cerrar <X size={20} /></button>
             <div className="max-w-[1400px] w-full flex flex-col gap-10">
               <div className="aspect-video rounded-[3rem] overflow-hidden">
-                <TourViewer scenes={images.filter(img => img.url && img.url.startsWith('http')).map((img: any) => ({ id: img.id, name: img.room_type.toUpperCase(), imageUrl: img.url, hotspots: [] }))} initialSceneId={images[activeTourIndex]?.id} />
+                <TourViewer 
+                  scenes={images
+                    .filter(img => img.url && img.url.startsWith('http'))
+                    .map((img: any) => ({ 
+                      id: img.id, 
+                      name: img.room_type && img.room_type !== 'unassigned' ? img.room_type.toUpperCase() : 'AMBIENTE', 
+                      imageUrl: img.url, 
+                      hotspots: [] 
+                    }))} 
+                  initialSceneId={images[0]?.id} 
+                />
               </div>
             </div>
           </motion.div>

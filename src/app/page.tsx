@@ -32,15 +32,14 @@ export default function PropertyPage() {
         if (propErr) throw propErr;
         setProperty(propData);
 
-        // Obtenemos sus imágenes
+        // Obtenemos todas las imágenes (el dashboard no filtra por property_id)
         const { data: mediaData, error: mediaErr } = await supabase
           .from('media')
           .select('*')
-          .eq('property_id', propData.id)
           .order('created_at', { ascending: true });
 
         if (mediaErr) throw mediaErr;
-        setImages(mediaData.filter(m => m.url && m.url.startsWith('http')));
+        setImages((mediaData || []).filter((m: any) => m.url && m.url.startsWith('http')));
       } catch (err) {
         console.error("Error cargando datos dinámicos:", err);
       } finally {
