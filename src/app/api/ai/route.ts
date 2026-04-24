@@ -1,13 +1,7 @@
 import { NextResponse } from 'next/server';
 import { processPropertyImage } from '@/lib/ai-stager';
 
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '10mb', // Aumentar límite para manejar imágenes base64 si es necesario
-    },
-  },
-};
+
 
 export async function POST(request: Request) {
   try {
