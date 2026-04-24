@@ -96,9 +96,30 @@ export default function PropertyPage() {
 
   return (
     <main className="min-h-screen bg-[#062b54] text-white font-body selection:bg-hormozi-yellow selection:text-black">
+      
+      {/* ── TICKER: ENTREGA INMEDIATA (MARQUEE) ── */}
+      <div className="bg-hormozi-yellow text-black py-2 overflow-hidden whitespace-nowrap border-b border-black/10 relative z-[60]">
+        <motion.div 
+          initial={{ x: 0 }}
+          animate={{ x: "-50%" }}
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          className="flex gap-12 items-center"
+        >
+          {[...Array(10)].map((_, i) => (
+            <div key={i} className="flex gap-12 items-center font-black text-[10px] md:text-[12px] uppercase tracking-[0.4em] italic">
+              <span>Entrega Inmediata</span>
+              <span className="w-2 h-2 bg-black rounded-full" />
+              <span>Aplica Subsidios</span>
+              <span className="w-2 h-2 bg-black rounded-full" />
+              <span>Créditos Aprobados</span>
+              <span className="w-2 h-2 bg-black rounded-full" />
+            </div>
+          ))}
+        </motion.div>
+      </div>
 
       {/* ── NAV ── */}
-      <nav className="fixed top-0 w-full z-50 px-6 md:px-12 py-4 flex justify-between items-center bg-black/30 backdrop-blur-md border-b border-white/5">
+      <nav className="fixed top-10 w-full z-50 px-6 md:px-12 py-4 flex justify-between items-center bg-black/30 backdrop-blur-md border-b border-white/5">
         <div className="flex items-center gap-2">
           <div className="p-1.5 bg-hormozi-yellow rounded-sm rotate-3">
             <Home size={16} className="text-black" />
