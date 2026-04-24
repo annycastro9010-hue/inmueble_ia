@@ -64,7 +64,7 @@ function SceneDisplay({ scene }: { scene: Scene }) {
         <img
           src={scene.imageUrl}
           crossOrigin="anonymous"
-          className="w-full h-full object-cover brightness-[0.7] group-hover:brightness-[0.85] transition-all duration-1000"
+          className="w-full h-full object-cover transition-all duration-1000"
           alt={scene.name}
         />
       </motion.div>
