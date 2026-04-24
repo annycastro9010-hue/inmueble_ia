@@ -119,61 +119,79 @@ export default function PropertyPage() {
         </div>
       </nav>
 
-      {/* ── SECCIÓN 1: HERO — TOUR 360 A PANTALLA COMPLETA ── */}
-      <section className="relative bg-black overflow-hidden">
-        {/* Tour ocupa todo el viewport */}
-        <div className="w-full" style={{ paddingTop: '56.25%', position: 'relative' }}>
+      {/* ── SECCIÓN 1: HERO — TOUR 360 LIMPID (SIN TEXTO ENCIMA) ── */}
+      <section className="relative bg-black overflow-hidden pt-16">
+        {/* Tour ocupa el ancho completo, limpio y sin estorbos */}
+        <div className="w-full relative shadow-inner" style={{ aspectRatio: '21/9', minHeight: '400px' }}>
           <div className="absolute inset-0">
             <TourViewer scenes={tourScenes} initialSceneId={tourScenes[0]?.id} autoPlay={true} />
           </div>
-        </div>
-
-        {/* Overlay de info encima del tour */}
-        <div className="absolute inset-0 pointer-events-none">
-          {/* Gradiente inferior */}
-          <div className="absolute bottom-0 left-0 right-0 h-2/3 bg-gradient-to-t from-[#062b54] via-[#062b54]/60 to-transparent" />
-        </div>
-
-        {/* Contenido sobre el gradiente */}
-        <div className="absolute bottom-0 left-0 right-0 px-6 md:px-16 pb-10 pointer-events-none">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex items-center gap-2 text-hormozi-yellow font-black uppercase tracking-[0.3em] text-[10px] mb-3">
-              <MapPin size={12} /> {displayProperty.location}
+          {/* Overlay sutil solo en los bordes para profundidad */}
+          <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-black/20 via-transparent to-black/20" />
+          
+          <div className="absolute bottom-6 left-6 md:left-12 pointer-events-none">
+            <div className="flex items-center gap-2 px-4 py-2 bg-black/60 backdrop-blur-xl rounded-full border border-white/10 text-hormozi-yellow font-black uppercase tracking-[0.3em] text-[8px] md:text-[10px]">
+              <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" /> EN VIVO: TOUR VIRTUAL 360°
             </div>
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-black uppercase italic tracking-tighter leading-[0.9] mb-2">
-              {displayProperty.title}
-            </h1>
-            <p className="text-3xl md:text-4xl font-black text-hormozi-yellow italic tracking-tighter">
-              {formattedPrice}
-            </p>
           </div>
         </div>
       </section>
 
-      {/* ── CTA BOTONES — debajo del hero, bien organizados ── */}
-      <section className="bg-[#062b54] px-6 md:px-16 py-8 border-b border-white/5">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row gap-4 justify-center items-center">
-          {/* Botón WhatsApp — principal */}
+      {/* ── SECCIÓN 1.5: INFO PRINCIPAL (TÍTULO Y PRECIO) — Con mucho espacio ── */}
+      <section className="bg-[#062b54] pt-12 pb-6 px-6 md:px-16 border-b border-white/5">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-8">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-hormozi-yellow/60 font-black uppercase tracking-[0.4em] text-[10px]">
+              <MapPin size={14} className="text-hormozi-yellow" /> {displayProperty.location}
+            </div>
+            <h1 className="text-4xl md:text-7xl lg:text-8xl font-black uppercase italic tracking-tighter leading-[0.8] text-white">
+              {displayProperty.title}
+            </h1>
+            <div className="h-2 w-24 bg-hormozi-yellow rounded-full" />
+          </div>
+          <div className="bg-white/5 backdrop-blur-xl p-8 rounded-[3rem] border border-white/10 flex flex-col items-center md:items-end group hover:border-hormozi-yellow/50 transition-all duration-500">
+             <span className="text-[10px] font-black uppercase tracking-[0.5em] text-white/30 mb-2">Precio de Venta</span>
+             <p className="text-4xl md:text-6xl font-black text-hormozi-yellow italic tracking-tighter drop-shadow-[0_0_15px_rgba(251,204,4,0.3)]">
+               {formattedPrice}
+             </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA BOTONES — debajo del hero, dinámicos ── */}
+      <section className="bg-[#062b54] px-6 md:px-16 py-12">
+        <div className="max-w-4xl mx-auto flex flex-col sm:flex-row gap-6 justify-center items-center">
+          {/* Botón WhatsApp — DINÁMICO */}
           <motion.a
             href={WHATSAPP_URL}
             target="_blank"
-            animate={{ scale: [1, 1.03, 1] }}
-            transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
-            className="flex items-center justify-center gap-3 w-full sm:w-auto sm:min-w-[280px] px-10 py-5 bg-green-500 text-white font-black rounded-2xl text-sm uppercase tracking-wider shadow-2xl shadow-green-500/30 hover:bg-green-400 transition-colors"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            animate={{ 
+              scale: [1, 1.05, 1],
+              boxShadow: [
+                "0 0 0px rgba(34, 197, 94, 0)",
+                "0 0 40px rgba(34, 197, 94, 0.4)",
+                "0 0 0px rgba(34, 197, 94, 0)"
+              ]
+            }}
+            transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+            className="flex items-center justify-center gap-4 w-full sm:w-auto sm:min-w-[320px] px-12 py-7 bg-green-500 text-white font-black rounded-[2.5rem] text-base uppercase tracking-widest shadow-2xl shadow-green-500/20 hover:bg-green-400 transition-colors relative group overflow-hidden"
           >
-            <MessageCircle size={20} />
-            Quiero Agendar una Cita
+            <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+            <MessageCircle size={24} className="group-hover:rotate-12 transition-transform" />
+            <span>Agendar mi Visita</span>
           </motion.a>
 
-          {/* Botón Tour 360 */}
+          {/* Botón Tour 360 Full Screen */}
           <motion.button
             onClick={() => setShowTour(true)}
-            animate={{ boxShadow: ["0 0 0px rgba(255,255,255,0)", "0 0 30px rgba(255,255,255,0.15)", "0 0 0px rgba(255,255,255,0)"] }}
-            transition={{ repeat: Infinity, duration: 3 }}
-            className="flex items-center justify-center gap-3 w-full sm:w-auto sm:min-w-[280px] px-10 py-5 bg-white text-black font-black rounded-2xl text-sm uppercase tracking-wider hover:bg-hormozi-yellow transition-colors"
+            whileHover={{ scale: 1.05, backgroundColor: "#fbcc04", color: "#000" }}
+            whileTap={{ scale: 0.95 }}
+            className="flex items-center justify-center gap-4 w-full sm:w-auto sm:min-w-[320px] px-12 py-7 bg-white/5 border border-white/20 text-white font-black rounded-[2.5rem] text-base uppercase tracking-widest transition-all relative group"
           >
-            <Play size={18} className="fill-black" />
-            Ver Tour Virtual 360°
+            <Play size={22} className="fill-white group-hover:fill-black group-hover:scale-110 transition-all" />
+            <span>Experiencia 360°</span>
           </motion.button>
         </div>
       </section>
