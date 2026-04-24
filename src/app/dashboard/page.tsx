@@ -168,9 +168,15 @@ export default function DashboardPage() {
       <main className="flex-1 flex flex-col min-h-0 relative pb-24 lg:pb-0 scrollable-container">
         <AnimatePresence>
           {isProcessing && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-50 bg-black/60 backdrop-blur-md flex flex-col items-center justify-center">
-              <div className="w-16 h-16 border-4 border-hormozi-yellow border-t-transparent rounded-full animate-spin mb-6" />
-              <p className="text-xl font-black italic uppercase tracking-tighter animate-pulse">{currentAction}</p>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] bg-[#062b54]/80 backdrop-blur-xl flex flex-col items-center justify-center pointer-events-none">
+              <div className="relative">
+                <div className="w-24 h-24 border-4 border-white/5 border-t-hormozi-yellow rounded-full animate-spin mb-8" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-12 h-12 border-2 border-white/10 border-b-hormozi-yellow rounded-full animate-spin-reverse" />
+                </div>
+              </div>
+              <p className="text-2xl font-black italic uppercase tracking-[0.2em] text-white animate-pulse">{currentAction}</p>
+              <p className="mt-4 text-white/40 text-[10px] font-bold uppercase tracking-widest">Esto tardará unos segundos...</p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -277,20 +283,35 @@ export default function DashboardPage() {
 
       <AnimatePresence>
         {isPreviewOpen && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] bg-black/98 backdrop-blur-3xl flex items-center justify-center p-12">
-            <button onClick={() => setIsPreviewOpen(false)} className="absolute top-10 right-10 text-white/30 hover:text-white uppercase font-black text-[10px] tracking-widest flex items-center gap-3">Cerrar <X size={20} /></button>
-            <div className="max-w-[1400px] w-full flex flex-col gap-10">
-              <div className="aspect-video rounded-[3rem] overflow-hidden">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] bg-black/98 backdrop-blur-3xl flex items-center justify-center p-4 md:p-12">
+            <button onClick={() => setIsPreviewOpen(false)} className="absolute top-6 right-6 md:top-10 md:right-10 text-white/30 hover:text-white uppercase font-black text-[10px] tracking-widest flex items-center gap-3 z-50">Cerrar <X size={20} /></button>
+            <div className="max-w-[1400px] w-full flex flex-col gap-6 md:gap-10">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                <h3 className="text-2xl font-black uppercase italic tracking-tighter">Previsualización Tour 360</h3>
+                <button 
+                  onClick={() => { alert("🚀 ¡TOUR PUBLICADO! Los cambios ya se ven en la página principal."); setIsPreviewOpen(false); }}
+                  className="px-10 py-4 bg-hormozi-yellow text-black font-black uppercase text-[10px] tracking-widest rounded-2xl hover:scale-105 transition-all shadow-xl shadow-hormozi-yellow/20"
+                >
+                  🚀 Mandar a Página Principal
+                </button>
+              </div>
+              <div className="aspect-video rounded-[2rem] md:rounded-[3rem] overflow-hidden border border-white/10 shadow-2xl bg-black">
                 <TourViewer 
                   scenes={images
                     .filter(img => img.url && img.url.startsWith('http'))
+                    .sort((a, b) => {
+                      // Ordenar por Piso y luego por tipo
+                      const floorOrder = (f: string) => f === 'Exterior' ? 0 : parseInt(f);
+                      if (floorOrder(a.floor) !== floorOrder(b.floor)) return floorOrder(a.floor) - floorOrder(b.floor);
+                      return (a.room_type || '').localeCompare(b.room_type || '');
+                    })
                     .map((img: any) => ({ 
                       id: img.id, 
-                      name: img.room_type && img.room_type !== 'unassigned' ? img.room_type.toUpperCase() : 'AMBIENTE', 
+                      name: img.room_type && img.room_type !== 'unassigned' ? `${img.floor === 'Exterior' ? 'EXT.' : 'PISO ' + img.floor} - ${img.room_type.toUpperCase()}` : 'AMBIENTE', 
                       imageUrl: img.url, 
                       hotspots: [] 
                     }))} 
-                  initialSceneId={images[0]?.id} 
+                  initialSceneId={images.find(i => i.floor === 'Exterior')?.id || images[0]?.id} 
                 />
               </div>
             </div>
