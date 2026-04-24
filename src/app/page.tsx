@@ -119,13 +119,18 @@ export default function PropertyPage() {
           <div className="absolute inset-0 w-full h-full bg-black">
             <video 
               key={displayProperty.video_url}
-              src={displayProperty.video_url} 
               autoPlay 
               loop 
               muted 
               playsInline
-              className="w-full h-full object-cover"
-            />
+              preload="auto"
+              className="w-full h-full object-cover transition-opacity duration-1000"
+              onCanPlayThrough={(e) => (e.currentTarget.style.opacity = "1")}
+              style={{ opacity: 0 }}
+            >
+              <source src={displayProperty.video_url} type="video/mp4" />
+              Tu navegador no soporta videos.
+            </video>
             <div className="absolute inset-0 bg-gradient-to-t from-[#062b54] via-transparent to-black/20" />
           </div>
         ) : (
