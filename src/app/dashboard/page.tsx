@@ -704,7 +704,7 @@ export default function DashboardPage() {
                 const path = `v_${Date.now()}.mp4`;
                 await supabase.storage.from('propiedades').upload(path, videoBlob!);
                 const url = `${supabaseUrl}/storage/v1/object/public/propiedades/${path}`;
-                await supabase.from('properties').update({ video_url: url }).eq('id', MAIN_PROPERTY_ID);
+                await supabase.from('properties').update({ video_url: url }).eq('id', activePropertyId);
                 alert("🚀 ¡Video publicado!");
                 setGeneratedVideoUrl(null);
                 setIsProcessing(false);
