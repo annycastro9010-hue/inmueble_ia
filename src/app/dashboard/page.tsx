@@ -192,16 +192,20 @@ export default function DashboardPage() {
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         {floorImages.map((img) => (
                           <div key={img.id} className="glass-luxury rounded-[2.5rem] overflow-hidden border border-white/5">
-                            <div className="aspect-[4/3] relative overflow-hidden bg-white/5">
+                            <div className="aspect-video relative overflow-hidden bg-[#041f3a] rounded-t-[2.5rem]">
                               <img 
                                 src={img.url} 
                                 alt="Foto propiedad"
                                 crossOrigin="anonymous"
                                 referrerPolicy="no-referrer"
-                                className="absolute inset-0 w-full h-full object-cover" 
+                                className="absolute inset-0 w-full h-full object-cover object-center" 
                                 onError={(e: any) => { e.target.style.display = 'none'; }}
                               />
-                              <button onClick={() => removeImage(img.id)} className="absolute top-4 right-4 p-3 bg-red-500 text-white rounded-xl z-10"><Trash2 size={16}/></button>
+                              <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
+                              <button onClick={() => removeImage(img.id)} className="absolute top-4 right-4 p-3 bg-red-500/90 text-white rounded-xl z-10 hover:bg-red-400 transition-colors"><Trash2 size={16}/></button>
+                              {img.status !== 'original' && (
+                                <div className="absolute top-4 left-4 px-3 py-1 bg-hormozi-yellow text-black text-[9px] font-black rounded-full uppercase">{img.status === 'cleaned' ? '✓ Limpia' : '✓ Amueblada'}</div>
+                              )}
                             </div>
                             <div className="p-6 space-y-4">
                               <div className="flex gap-2">
