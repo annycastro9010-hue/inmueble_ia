@@ -13,7 +13,7 @@ import { generatePropertyVideo } from "@/lib/video-engine";
 import { autoEnhanceImage } from "@/lib/image-enhancer";
 import Link from "next/link";
 
-const MAIN_PROPERTY_ID = '77777777-7777-7777-7777-777777777777';
+// Removed hardcoded MASTER_ID to support multi-property dynamic routing
 
 interface AIResultModal {
   beforeUrl: string;
@@ -23,49 +23,82 @@ interface AIResultModal {
 }
 
 export default function DashboardPage() {
-  const [activeTab, setActiveTab] = useState<"estudio" | "config">("estudio");
-  const [projectName, setProjectName] = useState("Cargando...");
+  const [activeTab, setActiveTab] = useState<"inmuebles" | "estudio" | "config">("inmuebles");
+  const [activePropertyId, setActivePropertyId] = useState<string | null>(null);
+  const [allProperties, setAllProperties] = useState<any[]>([]);
+  const [projectName, setProjectName] = useState("");
   const [images, setImages] = useState<any[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentAction, setCurrentAction] = useState<string | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [generatedVideoUrl, setGeneratedVideoUrl] = useState<string | null>(null);
-  const [videoBlob, setVideoBlob] = useState<Blob | null>(null);
   const [aiResult, setAiResult] = useState<AIResultModal | null>(null);
-  const [sliderPos, setSliderPos] = useState(50); // posición del slider antes/después (%)
+  const [sliderPos, setSliderPos] = useState(50);
 
   const [propertyPrice, setPropertyPrice] = useState("0");
   const [propertyLocation, setPropertyLocation] = useState("");
   const [propertyDescription, setPropertyDescription] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => { fetchMedia(); }, []);
+  useEffect(() => {
+    fetchProperties();
+  }, []);
 
-  const fetchMedia = async () => {
-    const { data: mediaData } = await supabase.from("media").select("*").order("created_at", { ascending: true });
-    if (mediaData) setImages(mediaData);
+  const fetchProperties = async () => {
+    setLoading(true);
+    const { data } = await supabase.from("properties").select("*").order("created_at", { ascending: false });
+    if (data) setAllProperties(data);
+    setLoading(false);
+  };
 
-    const { data: propData } = await supabase.from("properties").select("*").eq("id", MAIN_PROPERTY_ID).maybeSingle();
+  const selectProperty = async (id: string) => {
+    setActivePropertyId(id);
+    setActiveTab("estudio");
+    setLoading(true);
+    
+    const { data: propData } = await supabase.from("properties").select("*").eq("id", id).maybeSingle();
     if (propData) {
       setProjectName(propData.title);
       setPropertyPrice(propData.price?.toString() || "0");
       setPropertyLocation(propData.location || "");
       setPropertyDescription(propData.description || "");
     }
+
+    const { data: mediaData } = await supabase.from("media").select("*").eq("property_id", id).order("created_at", { ascending: true });
+    setImages(mediaData || []);
+    setLoading(false);
+  };
+
+  const createNewProperty = async () => {
+    const title = prompt("Introduce el nombre del nuevo inmueble:");
+    if (!title) return;
+
+    const { data, error } = await supabase.from("properties").insert({
+      title,
+      price: 0,
+      location: "Sin ubicación",
+      description: "Nueva descripción",
+      status: "draft"
+    }).select().single();
+
+    if (error) return alert("Error: " + error.message);
+    setAllProperties([data, ...allProperties]);
+    selectProperty(data.id);
   };
 
   const handleSaveProperty = async () => {
+    if (!activePropertyId) return;
     setIsProcessing(true);
     setCurrentAction("Guardando cambios...");
     try {
-      await supabase.from("properties").upsert({
-        id: MAIN_PROPERTY_ID,
+      await supabase.from("properties").update({
         title: projectName,
         price: parseFloat(propertyPrice.replace(/[^0-9.]/g, '')) || 0,
         location: propertyLocation,
         description: propertyDescription
-      });
+      }).eq("id", activePropertyId);
       alert("✅ ¡Información actualizada!");
+      fetchProperties();
     } catch (e: any) {
       alert("Error: " + e.message);
     } finally {
@@ -127,7 +160,7 @@ export default function DashboardPage() {
       if (!uploadError) {
         const publicUrl = `${supabaseUrl}/storage/v1/object/public/propiedades/uploads/${fileName}`;
         const { data } = await supabase.from("media")
-          .insert([{ url: publicUrl, floor: targetFloor, room_type: "unassigned", status: enhancedStatus, property_id: MAIN_PROPERTY_ID }])
+          .insert([{ url: publicUrl, floor: targetFloor, room_type: "unassigned", status: enhancedStatus, property_id: activePropertyId }])
           .select().single();
         if (data) setImages(prev => [...prev, data]);
       }
@@ -284,17 +317,25 @@ export default function DashboardPage() {
         <nav className="flex lg:flex-col gap-3 w-full">
           {/* VOLVER - Ahora arriba y destacado */}
           <Link href="/" className="mb-6 flex items-center gap-3 px-5 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all w-full bg-white text-black hover:bg-hormozi-yellow shadow-xl shadow-white/5">
-            <ArrowLeftRight size={18} /> Volver a Mi Web
+            <ArrowLeftRight size={18} /> Ver Web Pública
           </Link>
 
           <div className="text-[9px] font-black uppercase text-white/30 tracking-[0.3em] mb-2 px-5">Gestión</div>
-          <button onClick={() => setActiveTab("estudio")} className={`flex items-center gap-3 px-5 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all w-full ${activeTab === "estudio" ? "bg-white/10 text-hormozi-yellow shadow-inner" : "text-white/30 hover:text-white hover:bg-white/5"}`}>
-            <LayoutDashboard size={18} /> Estudio Fotografías
+          <button onClick={() => setActiveTab("inmuebles")} className={`flex items-center gap-3 px-5 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all w-full ${activeTab === "inmuebles" ? "bg-white/10 text-hormozi-yellow shadow-inner" : "text-white/30 hover:text-white hover:bg-white/5"}`}>
+            <Home size={18} /> Mis Inmuebles
           </button>
-          
-          <button onClick={() => setActiveTab("config")} className={`flex items-center gap-3 px-5 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all w-full ${activeTab === "config" ? "bg-white/10 text-hormozi-yellow shadow-inner" : "text-white/30 hover:text-white hover:bg-white/5"}`}>
-            <Settings size={18} /> Configuración Web
-          </button>
+
+          {activePropertyId && (
+            <>
+              <button onClick={() => setActiveTab("estudio")} className={`flex items-center gap-3 px-5 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all w-full ${activeTab === "estudio" ? "bg-white/10 text-hormozi-yellow shadow-inner" : "text-white/30 hover:text-white hover:bg-white/5"}`}>
+                <LayoutDashboard size={18} /> Estudio Fotografías
+              </button>
+              
+              <button onClick={() => setActiveTab("config")} className={`flex items-center gap-3 px-5 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all w-full ${activeTab === "config" ? "bg-white/10 text-hormozi-yellow shadow-inner" : "text-white/30 hover:text-white hover:bg-white/5"}`}>
+                <Settings size={18} /> Configuración Web
+              </button>
+            </>
+          )}
         </nav>
 
         <div className="mt-auto pt-6 border-t border-white/5 hidden lg:block">
@@ -351,8 +392,59 @@ export default function DashboardPage() {
         </header>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-8">
-          {activeTab === "estudio" ? (
+        <div className="flex-1 overflow-y-auto p-8 relative">
+          {loading && (
+            <div className="absolute inset-0 z-10 bg-[#062b54]/40 backdrop-blur-sm flex items-center justify-center">
+              <div className="w-12 h-12 border-4 border-t-hormozi-yellow border-white/10 rounded-full animate-spin" />
+            </div>
+          )}
+
+          {activeTab === "inmuebles" ? (
+            <div className="max-w-6xl mx-auto">
+              <div className="flex justify-between items-center mb-8">
+                <h2 className="text-3xl font-black uppercase italic tracking-tighter">Mis <span className="text-hormozi-yellow">Inmuebles</span></h2>
+                <button onClick={createNewProject} className="px-8 py-4 bg-hormozi-yellow text-black font-black uppercase text-xs tracking-widest rounded-2xl hover:scale-105 transition-all shadow-xl shadow-hormozi-yellow/20">
+                  + Crear Nuevo Inmueble
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {allProperties.map(prop => (
+                  <motion.div 
+                    key={prop.id}
+                    whileHover={{ y: -5 }}
+                    onClick={() => selectProperty(prop.id)}
+                    className="bg-black/40 border border-white/5 rounded-[2.5rem] p-8 cursor-pointer hover:border-hormozi-yellow/50 transition-all group relative overflow-hidden"
+                  >
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-hormozi-yellow/5 blur-3xl rounded-full" />
+                    <div className="relative z-10">
+                      <div className="text-[10px] font-black uppercase text-hormozi-yellow/60 tracking-widest mb-2 flex items-center gap-2">
+                        <MapPin size={12}/> {prop.location || 'Sin ubicación'}
+                      </div>
+                      <h3 className="text-xl font-black uppercase italic tracking-tight mb-4 group-hover:text-hormozi-yellow transition-colors leading-none">
+                        {prop.title}
+                      </h3>
+                      <div className="flex justify-between items-end">
+                        <div className="text-2xl font-black text-white/90 italic tracking-tighter">
+                          ${prop.price?.toLocaleString() || '0'}
+                        </div>
+                        <div className="p-3 bg-white/5 rounded-2xl group-hover:bg-hormozi-yellow group-hover:text-black transition-all">
+                          <ChevronRight size={20}/>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+
+                {allProperties.length === 0 && (
+                  <div className="col-span-full py-20 text-center border-2 border-dashed border-white/5 rounded-[3rem]">
+                    <div className="text-white/20 font-black uppercase tracking-widest text-sm mb-2">No tienes inmuebles todavía</div>
+                    <button onClick={createNewProject} className="text-hormozi-yellow font-bold uppercase text-[10px] tracking-widest hover:underline">Haga clic aquí para empezar</button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : activeTab === "estudio" ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {images.map((img) => (
                 <motion.div
