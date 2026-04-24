@@ -354,7 +354,7 @@ export default function DashboardPage() {
                           .insert([{ 
                             title: projectName.split("·")[0].trim() || 'Propiedad IA',
                             description: 'Propiedad gestionada desde el Panel de Control.',
-                            price: '$0',
+                            price: 0,
                             location: 'Santander, CO'
                           }])
                           .select('id')
