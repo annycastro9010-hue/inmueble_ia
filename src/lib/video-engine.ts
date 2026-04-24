@@ -109,10 +109,10 @@ export async function generatePropertyVideo(assets: PropertyVideoAssets): Promis
         // Capa de FONDO: Borrosa y cubre todo el 720x1280
         filterComplex += `[${imgLabel}]scale=720:1280:force_original_aspect_ratio=increase,crop=720:1280,boxblur=20:10[bg${i}];`;
         
-        // Capa de FRENTE: Mantiene su proporción, se centra y hace el paneo suave
-        // Si iw > 720, hacemos el paneo. Si no, solo zoom suave.
-        filterComplex += `[${imgLabel}]scale=-1:1280[fg${i}_scaled];`;
-        filterComplex += `[bg${i}][fg${i}_scaled]overlay=x='if(gt(w,720), -(w-720)*on/${frames}, (720-w)/2)':y=0:shortest=1[v${i}_raw];`;
+        // Capa de FRENTE: No la estiramos a toda la altura para que no parezca un tubo.
+        // La hacemos de 600px de alto (más o menos la mitad de la pantalla) y que se mueva horizontalmente.
+        filterComplex += `[${imgLabel}]scale=-1:600[fg${i}_scaled];`;
+        filterComplex += `[bg${i}][fg${i}_scaled]overlay=x='if(gt(w,720), -(w-720)*on/${frames}, (720-w)/2)':y=(1280-600)/2:shortest=1[v${i}_raw];`;
         
         // Aseguramos el tamaño final y el tiempo
         filterComplex += `[v${i}_raw]scale=720x1280,trim=duration=${durationPerImg.toFixed(2)},setpts=PTS-STARTPTS[v${i}];`;

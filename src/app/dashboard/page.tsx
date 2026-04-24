@@ -79,7 +79,7 @@ export default function DashboardPage() {
       setVideoBlob(videoBlob);
       
       setCurrentAction(null);
-      alert("🎯 ¡Video Generado! Revisa la vista previa para publicarlo.");
+      setIsProcessing(false); // Liberar antes de mostrar el modal
     } catch (error: any) {
       console.error("DETALLE DEL ERROR:", error);
       let errorMsg = "Error desconocido";
@@ -519,7 +519,7 @@ export default function DashboardPage() {
 
       {/* Visor de Tour Virtual */}
       <AnimatePresence>
-        {isPreviewOpen && images.length > 0 && (
+        {isPreviewOpen && (
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
