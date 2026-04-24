@@ -210,23 +210,43 @@ export default function DashboardPage() {
       if (result.error) throw new Error(result.error);
 
       if (result.outputUrl) {
+        let finalUrl = result.outputUrl;
+
+        // Si la IA devuelve Base64 (Gemini), lo subimos a Supabase Storage
+        // para tener una URL real y estable para futuros procesos (como amoblar tras limpiar)
+        if (finalUrl.startsWith('data:')) {
+          const blob = await (await fetch(finalUrl)).blob();
+          const fileName = `ai_${type}_${Date.now()}.jpg`;
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from("media")
+            .upload(fileName, blob, { contentType: 'image/jpeg' });
+
+          if (uploadError) throw new Error(`Error subiendo resultado IA: ${uploadError.message}`);
+
+          const { data: { publicUrl } } = supabase.storage
+            .from("media")
+            .getPublicUrl(fileName);
+          
+          finalUrl = publicUrl;
+        }
+
         const newStatus = type === "clean" ? "cleaned" : "staged";
 
         // Guardar en Supabase
         await supabase.from("media")
-          .update({ status: newStatus, url: result.outputUrl })
+          .update({ status: newStatus, url: finalUrl })
           .eq("id", id);
 
         // Actualizar lista local
         setImages(prev => prev.map(img =>
-          img.id === id ? { ...img, url: result.outputUrl, status: newStatus } : img
+          img.id === id ? { ...img, url: finalUrl, status: newStatus } : img
         ));
 
         // Mostrar modal antes/después
         setSliderPos(50);
         setAiResult({
           beforeUrl,
-          afterUrl: result.outputUrl,
+          afterUrl: finalUrl,
           imageId: id,
           type
         });

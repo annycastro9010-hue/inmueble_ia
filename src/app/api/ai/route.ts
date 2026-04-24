@@ -1,9 +1,23 @@
 import { NextResponse } from 'next/server';
 import { processPropertyImage } from '@/lib/ai-stager';
 
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '10mb', // Aumentar límite para manejar imágenes base64 si es necesario
+    },
+  },
+};
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    
+    // Validar que tengamos una URL
+    if (!body.imageUrl) {
+      return NextResponse.json({ error: 'Falta la URL de la imagen' }, { status: 400 });
+    }
+
     const result = await processPropertyImage(body);
     return NextResponse.json(result);
   } catch (error: any) {
