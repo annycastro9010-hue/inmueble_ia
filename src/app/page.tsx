@@ -57,10 +57,10 @@ export default function PropertyPage() {
 
   // Fallback si no hay datos
   const displayProperty = property || {
-    title: "Sin Título",
-    address: "Ubicación pendiente",
-    price: "Consultar",
-    description: "Carga tus fotos en el panel de administración"
+    title: "Mansión Santander",
+    location: "Bucaramanga, Santander",
+    price: 0,
+    description: "Carga tus fotos y genera tu video desde el panel de administración para ver el contenido real aquí."
   };
 
   const displayPhotos = images.length > 0 ? images.map(img => img.url) : [
@@ -161,7 +161,7 @@ export default function PropertyPage() {
           >
             <div className="flex items-center gap-2 text-[9px] md:text-[10px] font-black text-hormozi-yellow uppercase tracking-[0.3em] md:tracking-[0.5em] mb-4">
               <MapPin size={12} />
-              <span className="truncate">{displayProperty.address}</span>
+              <span className="truncate">{displayProperty.location}</span>
             </div>
 
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">

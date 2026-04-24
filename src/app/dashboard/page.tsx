@@ -35,14 +35,58 @@ export default function DashboardPage() {
   const [activeTourIndex, setActiveTourIndex] = useState(0);
   const [generatedVideoUrl, setGeneratedVideoUrl] = useState<string | null>(null);
   const [videoBlob, setVideoBlob] = useState<Blob | null>(null);
+  
+  // Estados para la propiedad actual
+  const [propertyId, setPropertyId] = useState<string | null>(null);
+  const [propertyPrice, setPropertyPrice] = useState("0");
+  const [propertyLocation, setPropertyLocation] = useState("");
+  const [propertyDescription, setPropertyDescription] = useState("");
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { fetchMedia(); }, []);
 
   const fetchMedia = async () => {
-    const { data, error } = await supabase.from("media").select("*").order("created_at", { ascending: true });
+    // 1. Cargar Imágenes
+    const { data: mediaData, error } = await supabase.from("media").select("*").order("created_at", { ascending: true });
     if (error) console.error("Error cargando archivos:", error);
-    else if (data) setImages(data);
+    else if (mediaData) setImages(mediaData);
+
+    // 2. Cargar Datos de la Propiedad
+    const { data: propData } = await supabase.from("properties").select("*").limit(1).single();
+    if (propData) {
+      setPropertyId(propData.id);
+      setProjectName(propData.title);
+      setPropertyPrice(propData.price?.toString() || "0");
+      setPropertyLocation(propData.location || "");
+      setPropertyDescription(propData.description || "");
+    }
+  };
+
+  const handleSaveProperty = async () => {
+    setIsProcessing(true);
+    setCurrentAction("Guardando cambios...");
+    try {
+      const payload = {
+        title: projectName,
+        price: parseFloat(propertyPrice.replace(/[^0-9.]/g, '')) || 0,
+        location: propertyLocation,
+        description: propertyDescription
+      };
+
+      if (propertyId) {
+        await supabase.from("properties").update(payload).eq("id", propertyId);
+      } else {
+        const { data } = await supabase.from("properties").insert([payload]).select().single();
+        if (data) setPropertyId(data.id);
+      }
+      alert("✅ ¡Información actualizada correctamente!");
+    } catch (e: any) {
+      alert("Error al guardar: " + e.message);
+    } finally {
+      setIsProcessing(false);
+      setCurrentAction(null);
+    }
   };
 
   const handleGenerateVideo = async () => {
@@ -269,12 +313,37 @@ export default function DashboardPage() {
               </div>
             )
           ) : (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-2xl mx-auto space-y-12">
-              <h2 className="text-4xl font-black uppercase italic tracking-tighter">Configuración</h2>
-              <div className="glass-luxury p-8 rounded-3xl border border-white/10 space-y-6">
-                <label className="block text-[10px] font-black uppercase tracking-widest text-white/30">Nombre del Proyecto</label>
-                <input type="text" value={projectName} onChange={(e) => setProjectName(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 text-xl font-bold" />
-                <button onClick={() => alert("Guardado")} className="px-8 py-4 bg-white text-black rounded-2xl font-black uppercase text-[10px]">Guardar</button>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl mx-auto pb-20">
+              <h2 className="text-4xl font-black uppercase italic tracking-tighter mb-8 text-hormozi-yellow">Configuración del Inmueble</h2>
+              <div className="glass-luxury p-8 md:p-12 rounded-[3rem] border border-white/10 space-y-10 shadow-2xl">
+                
+                <div className="space-y-4">
+                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Título del Anuncio</label>
+                  <input type="text" value={projectName} onChange={(e) => setProjectName(e.target.value)} placeholder="Ej: Mansión Los Alamos" className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 text-xl font-bold focus:border-hormozi-yellow transition-all outline-none" />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                    <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Precio (Solo números)</label>
+                    <input type="text" value={propertyPrice} onChange={(e) => setPropertyPrice(e.target.value)} placeholder="1200000" className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 text-xl font-bold focus:border-hormozi-yellow transition-all outline-none text-hormozi-yellow" />
+                  </div>
+                  <div className="space-y-4">
+                    <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Ubicación / Ciudad</label>
+                    <input type="text" value={propertyLocation} onChange={(e) => setPropertyLocation(e.target.value)} placeholder="Bucaramanga, Santander" className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 text-xl font-bold focus:border-hormozi-yellow transition-all outline-none" />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Descripción de la Propiedad</label>
+                  <textarea rows={5} value={propertyDescription} onChange={(e) => setPropertyDescription(e.target.value)} placeholder="Describe los mejores atributos de la casa..." className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 text-sm font-medium focus:border-hormozi-yellow transition-all outline-none resize-none" />
+                </div>
+
+                <button 
+                  onClick={handleSaveProperty} 
+                  className="w-full md:w-auto px-12 py-5 bg-white text-black rounded-2xl font-black uppercase text-[11px] tracking-widest hover:scale-105 transition-all shadow-xl"
+                >
+                  Guardar Cambios
+                </button>
               </div>
             </motion.div>
           )}
