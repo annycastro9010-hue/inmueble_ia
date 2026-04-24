@@ -302,7 +302,6 @@ export default function DashboardPage() {
   };
 
   return (
-  return (
     <div className="flex flex-col lg:flex-row min-h-screen bg-[#062b54] text-white font-body selection:bg-hormozi-yellow">
 
       {/* ── SIDEBAR ── */}
