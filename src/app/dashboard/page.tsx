@@ -33,12 +33,16 @@ export default function DashboardPage() {
   const [currentAction, setCurrentAction] = useState<string | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [aiResult, setAiResult] = useState<AIResultModal | null>(null);
+  const [generatedVideoUrl, setGeneratedVideoUrl] = useState<string | null>(null);
+  const [videoBlob, setVideoBlob] = useState<Blob | null>(null);
   const [sliderPos, setSliderPos] = useState(50);
 
   const [propertyPrice, setPropertyPrice] = useState("0");
   const [propertyLocation, setPropertyLocation] = useState("");
   const [propertyDescription, setPropertyDescription] = useState("");
   const [loading, setLoading] = useState(true);
+
+  const formattedPrice = (parseFloat(propertyPrice?.toString().replace(/[^0-9.]/g, '') || "0")).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
 
   useEffect(() => {
     fetchProperties();
@@ -116,10 +120,26 @@ export default function DashboardPage() {
       const blob = await generatePropertyVideo({
         imageUrls: validImages.map(img => img.url),
         title: projectName,
-        price: "OPORTUNIDAD ÚNICA"
+        price: formattedPrice || "OPORTUNIDAD ÚNICA"
       });
-      setGeneratedVideoUrl(URL.createObjectURL(blob));
+      
+      const vUrl = URL.createObjectURL(blob);
+      setGeneratedVideoUrl(vUrl);
       setVideoBlob(blob);
+
+      // Subir video a Supabase
+      setCurrentAction("Guardando video en la nube...");
+      const videoFileName = `video_${activePropertyId}_${Date.now()}.mp4`;
+      const { error: uploadErr } = await supabase.storage
+        .from("propiedades")
+        .upload(`videos/${videoFileName}`, blob, { contentType: 'video/mp4' });
+
+      if (!uploadErr) {
+        const publicVideoUrl = `${supabaseUrl}/storage/v1/object/public/propiedades/videos/${videoFileName}`;
+        await supabase.from("properties").update({ video_url: publicVideoUrl }).eq("id", activePropertyId);
+        alert("✅ ¡Video generado y guardado!");
+      }
+
     } catch (error: any) {
       alert("Error: " + error.message);
     } finally {
