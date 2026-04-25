@@ -141,7 +141,7 @@ export default function TourViewer({ scenes, initialSceneId, autoPlay }: TourVie
   return (
     <div
       ref={viewerRef}
-      className="relative w-full h-[400px] md:h-[650px] bg-black rounded-[2rem] md:rounded-[3rem] overflow-hidden border border-white/10 group shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)]"
+      className="relative w-full h-full bg-black rounded-[2rem] md:rounded-[3rem] overflow-hidden border border-white/10 group shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)]"
     >
       {/* Escena con Ken Burns Adaptativo */}
       <AnimatePresence mode="wait">

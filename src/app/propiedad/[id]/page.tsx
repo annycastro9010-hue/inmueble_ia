@@ -230,58 +230,60 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
     <main className="min-h-screen bg-[#062b54] text-white selection:bg-hormozi-yellow selection:text-black font-body">
       
       {/* ── 1. TICKER ── */}
-      <div className="bg-hormozi-yellow text-black py-2.5 overflow-hidden whitespace-nowrap sticky top-0 z-[100] border-b-2 border-black/10">
+      <div className="bg-hormozi-yellow text-black py-2 md:py-3 overflow-hidden whitespace-nowrap sticky top-0 z-[100] border-b-2 border-black/10">
         <motion.div 
           initial={{ x: 0 }} animate={{ x: "-50%" }}
           transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-          className="flex gap-12 items-center"
+          className="flex gap-8 md:gap-12 items-center"
         >
           {[...Array(15)].map((_, i) => (
-            <div key={i} className="flex gap-12 items-center font-black text-[12px] uppercase tracking-[0.3em] italic">
-              <span className="text-black/40">Entrega Inmediata</span> <Sparkles size={14} />
-              <span className="text-black">{property.title}</span> <CheckCircle size={14} />
-              <span className="text-black/40">Créditos se aceptan</span> <Sparkles size={14} />
-              <span className="text-black">Oportunidad Única</span>
+            <div key={i} className="flex gap-8 md:gap-12 items-center font-black text-[10px] md:text-[12px] uppercase tracking-[0.2em] md:tracking-[0.3em] italic">
+              <span className="text-black/40 whitespace-nowrap">Entrega Inmediata</span> <Sparkles size={12} />
+              <span className="text-black whitespace-nowrap">{property.title}</span> <CheckCircle size={12} />
+              <span className="text-black/40 whitespace-nowrap">Créditos aceptados</span> <Sparkles size={12} />
             </div>
           ))}
         </motion.div>
       </div>
 
       {/* ── 2. EL TOUR 360 (Automático y Ordenado) ── */}
-      <section className="relative h-[85vh] bg-black overflow-hidden shadow-2xl">
+      <section className="relative h-[70vh] md:h-[85vh] bg-black overflow-hidden shadow-2xl">
         <TourViewer scenes={tourScenes} initialSceneId={tourScenes[0]?.id} autoPlay={true} />
         
         {/* Marcadores de Calidad de Vida */}
-        <div className="absolute top-8 left-8 z-20 flex flex-col gap-2">
-          <div className="flex items-center gap-3 px-4 py-2 bg-[#062b54]/80 backdrop-blur-xl rounded-2xl border border-white/10">
+        <div className="absolute top-6 left-6 md:top-8 md:left-8 z-20 flex flex-col gap-2">
+          <div className="flex items-center gap-3 px-3 py-1.5 md:px-4 md:py-2 bg-[#062b54]/80 backdrop-blur-xl rounded-xl md:rounded-2xl border border-white/10">
             <div className="w-2 h-2 bg-red-500 rounded-full animate-ping" />
-            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-hormozi-yellow italic">Visitando <span className="text-white">{property.title}</span></span>
+            <span className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] md:tracking-[0.4em] text-hormozi-yellow italic">
+              Visitando <span className="text-white hidden md:inline">{property.title}</span>
+              <span className="text-white md:hidden">En Vivo</span>
+            </span>
           </div>
         </div>
 
-        <div className="absolute top-8 right-8 z-30">
-          <Link href="/" className="p-4 bg-black/40 backdrop-blur-md rounded-2xl hover:bg-black/60 border border-white/5 transition-all block">
-             <X size={20} />
+        <div className="absolute top-6 right-6 md:top-8 md:right-8 z-30">
+          <Link href="/" className="p-3 md:p-4 bg-black/40 backdrop-blur-md rounded-xl md:rounded-2xl hover:bg-black/60 border border-white/5 transition-all block">
+             <X size={18} />
           </Link>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-64 bg-gradient-to-t from-[#062b54] via-[#062b54]/40 to-transparent z-10" />
+        <div className="absolute bottom-0 left-0 right-0 h-32 md:h-64 bg-gradient-to-t from-[#062b54] via-[#062b54]/40 to-transparent z-10" />
       </section>
 
-      {/* ── 3. ZONA DE CONVERSIÓN (Botones que no estorban) ── */}
-      <div className="relative z-30 -mt-20 px-6 max-w-5xl mx-auto">
+      {/* ── 3. ZONA DE CONVERSIÓN ── */}
+      <div className="relative z-30 -mt-10 md:-mt-20 px-6 max-w-5xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <button 
             onClick={() => setShowCRMModal(true)}
-            className="group relative overflow-hidden py-8 bg-green-500 text-white font-black rounded-[2.5rem] uppercase text-[11px] tracking-[0.2em] shadow-[0_25px_60px_-15px_rgba(34,197,94,0.4)] flex items-center justify-center gap-4 hover:scale-[1.03] transition-all"
+            className="group relative overflow-hidden py-6 md:py-8 bg-green-500 text-white font-black rounded-3xl md:rounded-[2.5rem] uppercase text-[10px] md:text-[11px] tracking-[0.2em] shadow-[0_25px_60px_-15px_rgba(34,197,94,0.4)] flex items-center justify-center gap-4 hover:scale-[1.03] transition-all"
           >
             <div className="absolute inset-0 bg-white/20 -translate-x-full group-hover:translate-x-full transform skew-x-12 transition-transform duration-1000" />
-            <MessageCircle size={22} className="animate-bounce" /> Agendar Cita de Venta
+            <MessageCircle size={20} className="animate-bounce" /> Agendar Cita de Venta
           </button>
           <button 
             onClick={() => document.getElementById('seccion-video')?.scrollIntoView({ behavior: 'smooth' })} 
-            className="py-8 bg-white text-black font-black rounded-[2.5rem] uppercase text-[11px] tracking-[0.2em] shadow-[0_25px_60px_-15px_rgba(255,255,255,0.1)] flex items-center justify-center gap-4 hover:bg-hormozi-yellow transition-all"
+            className="py-6 md:py-8 bg-white text-black font-black rounded-3xl md:rounded-[2.5rem] uppercase text-[10px] md:text-[11px] tracking-[0.2em] shadow-[0_25px_60px_-15px_rgba(255,255,255,0.1)] flex items-center justify-center gap-4 hover:bg-hormozi-yellow transition-all"
           >
-            <Play size={22} fill="currentColor" /> Tour Video Cinematográfico
+            <Play size={20} fill="currentColor" /> Tour Video Cinematic
           </button>
         </div>
       </div>
