@@ -77,39 +77,66 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
   useEffect(() => {
     async function fetchData() {
       try {
-        let query = supabase.from('properties').select('*');
-        if (id.length > 20) {
-            query = query.eq('id', id);
-        } else {
-            query = query.or(`slug.eq.${id},title.ilike.%${id.replace(/-/g, ' ')}%`);
-        }
-        const { data: propData } = await query.maybeSingle();
-        if (!propData) {
-            const { data: retry } = await supabase.from('properties').select('*').eq('id', id).maybeSingle();
-            if (retry) {
-              setProperty(retry);
-              if (retry.slug && id !== retry.slug) {
-                router.replace(`/propiedad/${retry.slug}`);
-              }
-            }
-        } else {
-            setProperty(propData);
-            if (propData.slug && id !== propData.slug) {
-              router.replace(`/propiedad/${propData.slug}`);
-            }
-        }
-        const actualId = propData?.id || id;
+        setLoading(true);
+        console.log("Fetching property for ID/Slug:", id);
         
-        // ORDEN LÓGICO: Piso primero, luego creación
-        const { data: mediaData } = await supabase.from("media")
-          .select("*")
-          .eq("property_id", actualId)
-          .order("floor", { ascending: true })
-          .order("created_at", { ascending: true });
-          
-        setImages(mediaData || []);
+        let propData = null;
+
+        // 1. Intentar por UUID si el formato coincide
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+        
+        if (isUUID) {
+            const { data } = await supabase.from('properties').select('*').eq('id', id).maybeSingle();
+            propData = data;
+        }
+
+        // 2. Si no es UUID o no se encontró, intentar por Slug (nuevo campo optimizado)
+        if (!propData) {
+            const { data } = await supabase.from('properties')
+                .select('*')
+                .eq('slug', id)
+                .maybeSingle();
+            propData = data;
+        }
+
+        // 3. Intento por Título (Búsqueda flexible)
+        if (!propData) {
+            const searchTitle = id.replace(/-/g, ' ');
+            const { data } = await supabase.from('properties')
+                .select('*')
+                .or(`title.ilike.%${searchTitle}%,title.ilike.%${id}%`)
+                .maybeSingle();
+            propData = data;
+        }
+
+        // 4. Último recurso: Búsqueda parcial
+        if (!propData) {
+            const parts = id.split('-').filter(p => p.length > 3);
+            if (parts.length > 0) {
+                const { data } = await supabase.from('properties')
+                    .select('*')
+                    .ilike('title', `%${parts[0]}%`)
+                    .maybeSingle();
+                propData = data;
+            }
+        }
+
+        if (propData) {
+            setProperty(propData);
+            
+            // Cargar medios usando el ID real (UUID)
+            const { data: mediaData } = await supabase.from("media")
+              .select("*")
+              .eq("property_id", propData.id)
+              .order("floor", { ascending: true })
+              .order("created_at", { ascending: true });
+              
+            setImages(mediaData || []);
+        } else {
+            console.error("Property not found for:", id);
+        }
       } catch (err) {
-        console.error("Error:", err);
+        console.error("Error fetching project data:", err);
       } finally {
         setLoading(false);
       }
@@ -186,7 +213,16 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
     </div>
   );
 
-  if (!property) return null;
+  if (!property && !loading) return (
+    <div className="min-h-screen bg-[#062b54] flex flex-col items-center justify-center p-10 text-center">
+      <Home size={64} className="text-hormozi-yellow mb-8 animate-pulse" />
+      <h1 className="text-4xl font-black uppercase italic mb-4">Propiedad no encontrada</h1>
+      <p className="text-white/40 mb-12 max-w-md">No pudimos localizar la propiedad con el identificador: <span className="text-white">{id}</span>. Es posible que el enlace haya cambiado.</p>
+      <Link href="/" className="px-12 py-5 bg-white text-black font-black rounded-full uppercase tracking-widest hover:bg-hormozi-yellow transition-all">
+        Volver al Inicio
+      </Link>
+    </div>
+  );
 
 
   return (
