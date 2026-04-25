@@ -41,7 +41,7 @@ function MagicSlider({ before, after }: { before: string; after: string }) {
       </div>
       <div className="absolute inset-0 pointer-events-none" style={{ left: `${sliderPos}%` }}>
         <div className="h-full w-0.5 bg-white shadow-xl relative">
-          <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-10 h-10 bg-white rounded-full flex items-center justify-center text-black shadow-xl border-4 border-[#062b54]">
+          <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-10 h-10 bg-white rounded-full flex items-center justify-center text-black shadow-xl border-4 border-[#0a0a0a]">
              <ArrowLeftRight size={14} />
           </div>
         </div>
@@ -209,13 +209,13 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
   const originalImg = useMemo(() => images.find(img => img.status === 'original' || img.status === 'enhanced'), [images]);
 
   if (loading) return (
-    <div className="min-h-screen bg-[#062b54] flex items-center justify-center">
+    <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
       <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-hormozi-yellow"></div>
     </div>
   );
 
   if (!property && !loading) return (
-    <div className="min-h-screen bg-[#062b54] flex flex-col items-center justify-center p-10 text-center">
+    <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center p-10 text-center">
       <Home size={64} className="text-hormozi-yellow mb-8 animate-pulse" />
       <h1 className="text-4xl font-black uppercase italic mb-4">Propiedad no encontrada</h1>
       <p className="text-white/40 mb-12 max-w-md">No pudimos localizar la propiedad con el identificador: <span className="text-white">{id}</span>. Es posible que el enlace haya cambiado.</p>
@@ -227,7 +227,7 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
 
 
   return (
-    <main className="min-h-screen bg-[#062b54] text-white selection:bg-hormozi-yellow selection:text-black font-body">
+    <main className="min-h-screen bg-[#0a0a0a] text-white selection:bg-hormozi-yellow selection:text-black font-body">
       
       {/* ── 1. TICKER ── */}
       <div className="bg-hormozi-yellow text-black py-2 md:py-3 overflow-hidden whitespace-nowrap sticky top-0 z-[100] border-b-2 border-black/10">
@@ -252,7 +252,7 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
         
         {/* Marcadores de Calidad de Vida */}
         <div className="absolute top-4 left-4 md:top-8 md:left-8 z-20 flex flex-col gap-2">
-          <div className="flex items-center gap-3 px-3 py-1.5 md:px-4 md:py-2 bg-[#062b54]/80 backdrop-blur-xl rounded-xl md:rounded-2xl border border-white/10">
+          <div className="flex items-center gap-3 px-3 py-1.5 md:px-4 md:py-2 bg-[#0a0a0a]/80 backdrop-blur-xl rounded-xl md:rounded-2xl border border-white/10">
             <div className="w-2 h-2 bg-red-500 rounded-full animate-ping" />
             <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.3em] md:tracking-[0.4em] text-hormozi-yellow italic">
               En Vivo <span className="text-white hidden md:inline">{property.title}</span>
@@ -265,24 +265,27 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
              <X size={18} className="md:w-5 md:h-5" />
           </Link>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-32 md:h-64 bg-gradient-to-t from-[#062b54] via-[#062b54]/40 to-transparent z-10" />
+        <div className="absolute bottom-0 left-0 right-0 h-32 md:h-64 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/40 to-transparent z-10" />
       </section>
 
       {/* ── 3. ZONA DE CONVERSIÓN ── */}
-      <div className="relative z-30 mt-10 md:-mt-20 px-6 max-w-5xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <button 
+      <div className="relative z-30 mt-12 md:mt-16 px-6 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+          <motion.button 
+            animate={{ scale: [1, 1.05, 1] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
             onClick={() => setShowCRMModal(true)}
-            className="group relative overflow-hidden py-6 md:py-8 bg-green-500 text-white font-black rounded-3xl md:rounded-[2.5rem] uppercase text-[10px] md:text-[11px] tracking-[0.2em] shadow-[0_25px_60px_-15px_rgba(34,197,94,0.4)] flex items-center justify-center gap-4 hover:scale-[1.03] transition-all"
+            className="group relative overflow-hidden py-8 md:py-10 bg-green-500 text-white font-black rounded-3xl md:rounded-[3rem] uppercase text-[11px] md:text-[13px] tracking-[0.3em] shadow-[0_30px_70px_-20px_rgba(34,197,94,0.6)] flex items-center justify-center gap-6 hover:scale-[1.05] transition-all"
           >
             <div className="absolute inset-0 bg-white/20 -translate-x-full group-hover:translate-x-full transform skew-x-12 transition-transform duration-1000" />
-            <MessageCircle size={20} className="animate-bounce" /> Agendar Cita de Venta
-          </button>
+            <MessageCircle size={28} className="animate-pulse" /> Agendar Cita de Venta
+          </motion.button>
+          
           <button 
             onClick={() => document.getElementById('seccion-video')?.scrollIntoView({ behavior: 'smooth' })} 
-            className="py-6 md:py-8 bg-white text-black font-black rounded-3xl md:rounded-[2.5rem] uppercase text-[10px] md:text-[11px] tracking-[0.2em] shadow-[0_25px_60px_-15px_rgba(255,255,255,0.1)] flex items-center justify-center gap-4 hover:bg-hormozi-yellow transition-all"
+            className="py-8 md:py-10 bg-white text-black font-black rounded-3xl md:rounded-[3rem] uppercase text-[11px] md:text-[13px] tracking-[0.3em] shadow-[0_30px_70px_-20px_rgba(255,255,255,0.15)] flex items-center justify-center gap-6 hover:bg-hormozi-yellow transition-all"
           >
-            <Play size={20} fill="currentColor" /> Tour Video Cinematic
+            <Play size={24} fill="currentColor" /> Tour Video Cinematic
           </button>
         </div>
       </div>
@@ -358,7 +361,7 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
                  <div className="text-5xl md:text-8xl lg:text-9xl font-black italic tracking-tighter text-black leading-none mb-12 break-all">
                     ${property.price?.toLocaleString('es-CO')}
                  </div>
-                 <button onClick={() => setShowCRMModal(true)} className="w-full py-9 bg-[#062b54] text-white flex items-center justify-center gap-5 rounded-[2.5rem] font-black uppercase text-[11px] tracking-[0.3em] hover:bg-black hover:scale-[1.02] transition-all shadow-xl">
+                 <button onClick={() => setShowCRMModal(true)} className="w-full py-9 bg-[#0a0a0a] text-white flex items-center justify-center gap-5 rounded-[2.5rem] font-black uppercase text-[11px] tracking-[0.3em] hover:bg-black hover:scale-[1.02] transition-all shadow-xl">
                     Solicitar Agenda <ChevronRight size={20}/>
                  </button>
               </div>
@@ -386,7 +389,7 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
           >
             <motion.div 
               initial={{ scale: 0.9, y: 30 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 30 }}
-              className="bg-[#062b54] border border-white/10 rounded-[5rem] p-12 md:p-20 max-w-2xl w-full shadow-3xl relative overflow-hidden"
+              className="bg-[#0a0a0a] border border-white/10 rounded-[5rem] p-12 md:p-20 max-w-2xl w-full shadow-3xl relative overflow-hidden"
             >
               <button 
                 onClick={() => setShowCRMModal(false)} 
@@ -461,6 +464,27 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
         )}
       </AnimatePresence>
 
+      {/* ── CONTACT PILL FLOTANTE ── */}
+      <motion.button 
+        animate={{ 
+          scale: [1, 1.1, 1],
+          boxShadow: [
+            "0 20px 40px rgba(34,197,94,0.3)",
+            "0 20px 70px rgba(34,197,94,0.7)",
+            "0 20px 40px rgba(34,197,94,0.3)"
+          ] 
+        }}
+        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+        whileHover={{ scale: 1.2 }}
+        whileTap={{ scale: 0.9 }}
+        className="fixed bottom-10 right-10 z-[200] p-6 bg-green-500 rounded-full shadow-[0_20px_50px_rgba(34,197,94,0.4)] border-4 border-white text-white"
+        onClick={() => {
+            const phone = property.contact_phone || "573004341768";
+            window.open(`https://wa.me/${phone.replace(/[^0-9]/g, '')}`, '_blank');
+        }}
+      >
+        <MessageCircle size={32} fill="currentColor" className="text-white" />
+      </motion.button>
     </main>
   );
 }
