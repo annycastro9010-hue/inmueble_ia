@@ -41,7 +41,7 @@ function MagicSlider({ before, after }: { before: string; after: string }) {
       </div>
       <div className="absolute inset-0 pointer-events-none" style={{ left: `${sliderPos}%` }}>
         <div className="h-full w-0.5 bg-white shadow-xl relative">
-          <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-10 h-10 bg-white rounded-full flex items-center justify-center text-black shadow-xl border-4 border-[#0a0a0a]">
+          <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-10 h-10 bg-white rounded-full flex items-center justify-center text-black shadow-xl border-4 border-[#020617]">
              <ArrowLeftRight size={14} />
           </div>
         </div>
@@ -209,13 +209,13 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
   const originalImg = useMemo(() => images.find(img => img.status === 'original' || img.status === 'enhanced'), [images]);
 
   if (loading) return (
-    <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+    <div className="min-h-screen bg-[#020617] flex items-center justify-center">
       <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-hormozi-yellow"></div>
     </div>
   );
 
   if (!property && !loading) return (
-    <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center p-10 text-center">
+    <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center p-10 text-center">
       <Home size={64} className="text-hormozi-yellow mb-8 animate-pulse" />
       <h1 className="text-4xl font-black uppercase italic mb-4">Propiedad no encontrada</h1>
       <p className="text-white/40 mb-12 max-w-md">No pudimos localizar la propiedad con el identificador: <span className="text-white">{id}</span>. Es posible que el enlace haya cambiado.</p>
@@ -227,7 +227,7 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
 
 
   return (
-    <main className="min-h-screen bg-[#0a0a0a] text-white selection:bg-hormozi-yellow selection:text-black font-body">
+    <main className="min-h-screen bg-[#020617] text-white selection:bg-hormozi-yellow selection:text-black font-body">
       
       {/* ── 1. TICKER ── */}
       <div className="bg-hormozi-yellow text-black py-2 md:py-3 overflow-hidden whitespace-nowrap sticky top-0 z-[100] border-b-2 border-black/10">
@@ -252,7 +252,7 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
         
         {/* Marcadores de Calidad de Vida */}
         <div className="absolute top-4 left-4 md:top-8 md:left-8 z-20 flex flex-col gap-2">
-          <div className="flex items-center gap-3 px-3 py-1.5 md:px-4 md:py-2 bg-[#0a0a0a]/80 backdrop-blur-xl rounded-xl md:rounded-2xl border border-white/10">
+          <div className="flex items-center gap-3 px-3 py-1.5 md:px-4 md:py-2 bg-[#020617]/80 backdrop-blur-xl rounded-xl md:rounded-2xl border border-white/10">
             <div className="w-2 h-2 bg-red-500 rounded-full animate-ping" />
             <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.3em] md:tracking-[0.4em] text-hormozi-yellow italic">
               En Vivo <span className="text-white hidden md:inline">{property.title}</span>
@@ -265,7 +265,7 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
              <X size={18} className="md:w-5 md:h-5" />
           </Link>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-32 md:h-64 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/40 to-transparent z-10" />
+        <div className="absolute bottom-0 left-0 right-0 h-32 md:h-64 bg-gradient-to-t from-[#020617] via-[#020617]/40 to-transparent z-10" />
       </section>
 
       {/* ── 3. ZONA DE CONVERSIÓN ── */}
@@ -296,8 +296,10 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
         {property.video_url && (
           <section id="seccion-video" className="space-y-12">
              <div className="text-center space-y-4">
-               <div className="text-hormozi-yellow text-[11px] font-black uppercase tracking-[0.5em] italic">Propiedad Destacada</div>
-               <h2 className="text-5xl md:text-8xl font-black uppercase italic tracking-tighter leading-[0.9]">Cine <span className="text-hormozi-yellow">Inmobiliario</span></h2>
+             <div className="inline-flex items-center gap-2 px-4 py-2 bg-hormozi-yellow/10 text-hormozi-yellow rounded-full border border-hormozi-yellow/20 text-[10px] font-black uppercase tracking-[0.3em] italic mb-4">
+                Sello de Calidad Santandereana
+             </div>
+             <h2 className="text-5xl md:text-8xl font-black uppercase italic tracking-tighter leading-[0.9]">Cine <span className="text-hormozi-yellow">Inmobiliario</span></h2>
              </div>
              <div className="aspect-video max-w-6xl mx-auto rounded-[5rem] overflow-hidden border-8 border-white/5 shadow-[0_60px_100px_rgba(0,0,0,0.6)] bg-black">
                 <video src={property.video_url} autoPlay loop muted playsInline className="w-full h-full object-cover brightness-[0.9]" />
@@ -356,12 +358,26 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
               </div>
            </div>
            <div className="lg:col-span-5 space-y-12 lg:sticky lg:top-40">
-              <div className="bg-white p-14 md:p-20 rounded-[5rem] shadow-[0_80px_150px_-30px_rgba(0,0,0,0.4)]">
-                 <div className="text-black/30 font-black uppercase tracking-[0.4em] text-[11px] mb-6 italic">Inversión Patrimonial</div>
-                 <div className="text-5xl md:text-8xl lg:text-9xl font-black italic tracking-tighter text-black leading-none mb-12 break-all">
+              <div className="bg-white p-14 md:p-20 rounded-[5rem] shadow-[0_80px_150px_-30px_rgba(0,0,0,0.5)] border-t-8 border-green-500/20">
+                 <div className="inline-block px-4 py-2 bg-red-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest mb-6 animate-pulse">
+                    ¡Oportunidad de Oro! Negocio Inmediato en Santander
+                 </div>
+                 
+                 {property.old_price && (
+                    <div className="text-black/30 font-black text-2xl md:text-3xl italic line-through mb-1 tracking-tighter opacity-50">
+                       Antes: ${property.old_price.toLocaleString('es-CO')}
+                    </div>
+                 )}
+                 
+                 <div className="text-5xl md:text-8xl lg:text-9xl font-black italic tracking-tighter text-black leading-none mb-4 break-all">
                     ${property.price?.toLocaleString('es-CO')}
                  </div>
-                 <button onClick={() => setShowCRMModal(true)} className="w-full py-9 bg-[#0a0a0a] text-white flex items-center justify-center gap-5 rounded-[2.5rem] font-black uppercase text-[11px] tracking-[0.3em] hover:bg-black hover:scale-[1.02] transition-all shadow-xl">
+                 
+                 <div className="text-green-600 font-bold uppercase text-[12px] tracking-widest mb-12 flex items-center gap-2">
+                    <CheckCircle size={14} />Usted ahorra ${((property.old_price || property.price * 1.15) - property.price).toLocaleString('es-CO')}
+                 </div>
+                 
+                 <button onClick={() => setShowCRMModal(true)} className="w-full py-9 bg-[#020617] text-white flex items-center justify-center gap-5 rounded-[2.5rem] font-black uppercase text-[11px] tracking-[0.3em] hover:bg-black hover:scale-[1.02] transition-all shadow-xl">
                     Solicitar Agenda <ChevronRight size={20}/>
                  </button>
               </div>
@@ -369,7 +385,7 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
               {stagedImg && originalImg && (
                 <div className="bg-black/40 p-10 rounded-[5rem] border-2 border-white/5 space-y-8 shadow-2xl backdrop-blur-xl">
                    <div className="flex items-center justify-between px-4">
-                     <span className="text-[11px] font-black uppercase tracking-[0.3em] text-hormozi-yellow">Visión Evolucionada</span>
+                     <span className="text-[11px] font-black uppercase tracking-[0.3em] text-hormozi-yellow">Hogar con Potencial</span>
                      <span className="text-[10px] font-bold text-white/20 uppercase tracking-widest italic animate-pulse">Desliza para ver el cambio</span>
                    </div>
                    <MagicSlider before={originalImg.url} after={stagedImg.url} />
@@ -389,7 +405,7 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
           >
             <motion.div 
               initial={{ scale: 0.9, y: 30 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 30 }}
-              className="bg-[#0a0a0a] border border-white/10 rounded-[5rem] p-12 md:p-20 max-w-2xl w-full shadow-3xl relative overflow-hidden"
+              className="bg-[#020617] border border-white/10 rounded-[5rem] p-12 md:p-20 max-w-2xl w-full shadow-3xl relative overflow-hidden"
             >
               <button 
                 onClick={() => setShowCRMModal(false)} 
