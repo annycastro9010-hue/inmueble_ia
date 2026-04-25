@@ -247,30 +247,29 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
       </div>
 
       {/* ── 2. EL TOUR 360 (Automático y Ordenado) ── */}
-      <section className="relative h-[70vh] md:h-[85vh] bg-black overflow-hidden shadow-2xl">
+      <section className="relative h-[60vh] md:h-[85vh] bg-black overflow-hidden shadow-2xl">
         <TourViewer scenes={tourScenes} initialSceneId={tourScenes[0]?.id} autoPlay={true} />
         
         {/* Marcadores de Calidad de Vida */}
-        <div className="absolute top-6 left-6 md:top-8 md:left-8 z-20 flex flex-col gap-2">
+        <div className="absolute top-4 left-4 md:top-8 md:left-8 z-20 flex flex-col gap-2">
           <div className="flex items-center gap-3 px-3 py-1.5 md:px-4 md:py-2 bg-[#062b54]/80 backdrop-blur-xl rounded-xl md:rounded-2xl border border-white/10">
             <div className="w-2 h-2 bg-red-500 rounded-full animate-ping" />
-            <span className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] md:tracking-[0.4em] text-hormozi-yellow italic">
-              Visitando <span className="text-white hidden md:inline">{property.title}</span>
-              <span className="text-white md:hidden">En Vivo</span>
+            <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.3em] md:tracking-[0.4em] text-hormozi-yellow italic">
+              En Vivo <span className="text-white hidden md:inline">{property.title}</span>
             </span>
           </div>
         </div>
 
-        <div className="absolute top-6 right-6 md:top-8 md:right-8 z-30">
-          <Link href="/" className="p-3 md:p-4 bg-black/40 backdrop-blur-md rounded-xl md:rounded-2xl hover:bg-black/60 border border-white/5 transition-all block">
-             <X size={18} />
+        <div className="absolute top-4 right-4 md:top-8 md:right-8 z-30">
+          <Link href="/" className="p-2.5 md:p-4 bg-black/40 backdrop-blur-md rounded-xl md:rounded-2xl hover:bg-black/60 border border-white/5 transition-all block">
+             <X size={18} className="md:w-5 md:h-5" />
           </Link>
         </div>
         <div className="absolute bottom-0 left-0 right-0 h-32 md:h-64 bg-gradient-to-t from-[#062b54] via-[#062b54]/40 to-transparent z-10" />
       </section>
 
       {/* ── 3. ZONA DE CONVERSIÓN ── */}
-      <div className="relative z-30 -mt-10 md:-mt-20 px-6 max-w-5xl mx-auto">
+      <div className="relative z-30 mt-10 md:-mt-20 px-6 max-w-5xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <button 
             onClick={() => setShowCRMModal(true)}

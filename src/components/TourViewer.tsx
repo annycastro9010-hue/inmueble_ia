@@ -55,19 +55,30 @@ function SceneDisplay({ scene }: { scene: Scene }) {
 
   return (
     <>
-      <motion.div
-        animate={{ x: travelX, scale: scaleAnim }}
-        transition={{ duration, repeat: Infinity, repeatType: "mirror", ease: "linear" }}
-        style={{ width: containerWidth, left: containerLeft }}
-        className="absolute inset-0 h-full overflow-hidden"
-      >
-        <img
-          src={scene.imageUrl}
-          crossOrigin="anonymous"
-          className="w-full h-full object-cover transition-all duration-1000"
-          alt={scene.name}
-        />
-      </motion.div>
+      <div className="absolute inset-0 bg-black overflow-hidden">
+        {/* Fondo desenfocado para móviles para ver la imagen completa */}
+        <div className="absolute inset-0 md:hidden overflow-hidden">
+           <img
+            src={scene.imageUrl}
+            className="w-full h-full object-cover blur-3xl opacity-40 scale-110"
+            alt=""
+          />
+        </div>
+        
+        <motion.div
+          animate={{ x: travelX, scale: scaleAnim }}
+          transition={{ duration, repeat: Infinity, repeatType: "mirror", ease: "linear" }}
+          style={{ width: containerWidth, left: containerLeft }}
+          className="absolute inset-0 h-full overflow-hidden"
+        >
+          <img
+            src={scene.imageUrl}
+            crossOrigin="anonymous"
+            className="w-full h-full object-contain md:object-cover transition-all duration-1000"
+            alt={scene.name}
+          />
+        </motion.div>
+      </div>
 
       {/* Badge de Panorámica */}
       {isPanoramic && (
