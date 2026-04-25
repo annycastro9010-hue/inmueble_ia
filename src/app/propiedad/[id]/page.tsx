@@ -269,7 +269,7 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
       </section>
 
       {/* ── 3. ZONA DE CONVERSIÓN ── */}
-      <div className="relative z-30 mt-12 md:mt-16 px-6 max-w-5xl mx-auto">
+      <div className="relative z-[40] mt-24 md:mt-40 px-6 max-w-5xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
           <motion.button 
             animate={{ scale: [1, 1.05, 1] }}

@@ -250,7 +250,7 @@ export default function TourViewer({ scenes, initialSceneId, autoPlay }: TourVie
       </AnimatePresence>
 
       {/* Controles Inferiores */}
-      <div className="absolute inset-x-0 bottom-0 p-6 md:p-10 flex flex-col md:flex-row items-start md:items-end justify-between bg-gradient-to-t from-black via-black/40 to-transparent pointer-events-none gap-4 md:gap-0">
+      <div className="absolute inset-x-0 bottom-0 p-6 md:p-10 flex flex-col md:flex-row items-start md:items-end justify-between bg-gradient-to-t from-black via-black/40 to-transparent pointer-events-none gap-4 md:gap-0 z-20">
         <div className="pointer-events-auto">
           <div className="flex items-center gap-2 text-[8px] md:text-[10px] uppercase font-black tracking-[0.3em] md:tracking-[0.5em] text-hormozi-yellow mb-2 md:mb-4">
             <div className="w-1.5 h-1.5 bg-hormozi-yellow rounded-full animate-pulse" />
