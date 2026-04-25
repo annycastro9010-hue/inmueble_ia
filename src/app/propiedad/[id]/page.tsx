@@ -167,7 +167,8 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
       setSentSuccess(true);
       setTimeout(() => {
         const text = `¡Hola! Soy ${leadForm.name}. Vi la propiedad "${property.title}" y quiero agendar una visita.`;
-        window.open(`https://wa.me/573004341768?text=${encodeURIComponent(text)}`, '_blank');
+        const phone = property.contact_phone || "573004341768";
+        window.open(`https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(text)}`, '_blank');
         setShowCRMModal(false);
         setSentSuccess(false);
         setIsSending(false);
@@ -353,7 +354,9 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
            <div className="lg:col-span-5 space-y-12 lg:sticky lg:top-40">
               <div className="bg-white p-14 md:p-20 rounded-[5rem] shadow-[0_80px_150px_-30px_rgba(0,0,0,0.4)]">
                  <div className="text-black/30 font-black uppercase tracking-[0.4em] text-[11px] mb-6 italic">Inversión Patrimonial</div>
-                 <div className="text-5xl md:text-8xl lg:text-9xl font-black italic tracking-tighter text-black leading-none mb-12 break-all">${property.price?.toLocaleString()}</div>
+                 <div className="text-5xl md:text-8xl lg:text-9xl font-black italic tracking-tighter text-black leading-none mb-12 break-all">
+                    ${property.price?.toLocaleString('es-CO')}
+                 </div>
                  <button onClick={() => setShowCRMModal(true)} className="w-full py-9 bg-[#062b54] text-white flex items-center justify-center gap-5 rounded-[2.5rem] font-black uppercase text-[11px] tracking-[0.3em] hover:bg-black hover:scale-[1.02] transition-all shadow-xl">
                     Solicitar Agenda <ChevronRight size={20}/>
                  </button>

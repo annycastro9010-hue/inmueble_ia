@@ -42,6 +42,7 @@ export default function DashboardPage() {
   const [propertyLocation, setPropertyLocation] = useState("");
   const [propertyDescription, setPropertyDescription] = useState("");
   const [propertySlug, setPropertySlug] = useState("");
+  const [propertyContactPhone, setPropertyContactPhone] = useState("573004341768");
   const [loading, setLoading] = useState(true);
 
   const formattedPrice = (parseFloat(propertyPrice?.toString().replace(/[^0-9.]/g, '') || "0")).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
@@ -65,10 +66,12 @@ export default function DashboardPage() {
     const { data: propData } = await supabase.from("properties").select("*").eq("id", id).maybeSingle();
     if (propData) {
       setProjectName(propData.title);
+      // El precio lo manejamos como string para el input
       setPropertyPrice(propData.price?.toString() || "0");
       setPropertyLocation(propData.location || "");
       setPropertyDescription(propData.description || "");
       setPropertySlug(propData.slug || "");
+      setPropertyContactPhone(propData.contact_phone || "573004341768");
     }
 
     const { data: mediaData } = await supabase.from("media").select("*").eq("property_id", id).order("floor", { ascending: true }).order("created_at", { ascending: true });
@@ -106,12 +109,17 @@ export default function DashboardPage() {
     setCurrentAction("Guardando cambios...");
     try {
       const slug = projectName.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+      
+      // Limpiamos el precio de puntos o comas antes de guardar
+      const cleanPrice = parseFloat(propertyPrice.toString().replace(/\./g, '').replace(/,/g, '')) || 0;
+      
       await supabase.from("properties").update({
         title: projectName,
         slug,
-        price: parseFloat(propertyPrice.replace(/[^0-9.]/g, '')) || 0,
+        price: cleanPrice,
         location: propertyLocation,
-        description: propertyDescription
+        description: propertyDescription,
+        contact_phone: propertyContactPhone
       }).eq("id", activePropertyId);
       setPropertySlug(slug);
       alert("✅ ¡Información actualizada!");
@@ -693,6 +701,10 @@ export default function DashboardPage() {
                 <div>
                   <label className="text-[9px] font-black uppercase tracking-widest text-white/40 block mb-2">Descripción</label>
                   <textarea value={propertyDescription} onChange={e => setPropertyDescription(e.target.value)} rows={5} className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-sm outline-none resize-none focus:border-hormozi-yellow transition-colors" />
+                </div>
+                <div>
+                  <label className="text-[9px] font-black uppercase tracking-widest text-white/40 block mb-2">WhatsApp de Contacto (Ej: 57300...)</label>
+                  <input value={propertyContactPhone} onChange={e => setPropertyContactPhone(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 font-bold outline-none focus:border-hormozi-yellow transition-colors" />
                 </div>
                 <button onClick={handleSaveProperty} className="w-full py-4 bg-white text-black font-black rounded-2xl uppercase text-xs tracking-widest hover:bg-hormozi-yellow transition-colors">
                   Guardar Cambios
