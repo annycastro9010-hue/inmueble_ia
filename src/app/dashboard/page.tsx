@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import {
   LayoutDashboard, Settings, Trash2, Video, ChevronRight,
   Upload, Home, ExternalLink, X, Sparkles, CheckCircle2,
-  ArrowLeftRight, Wand2, RefreshCw, MapPin, MessageCircle
+  ArrowLeftRight, Wand2, RefreshCw, MapPin, MessageCircle, Download
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase, supabaseUrl } from "@/lib/supabase";
