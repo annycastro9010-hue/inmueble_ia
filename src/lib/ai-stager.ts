@@ -102,8 +102,8 @@ export async function processPropertyImage({ imageUrl, roomType, mode }: AIProce
       const base64 = await toBase64(imageUrl);
       const mimeType = getMimeType(imageUrl);
 
-      // Usar el modelo actual de Gemini 3.0 Flash (estándar en 2026)
-      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.0-flash:generateContent?key=${googleKey}`;
+      // Usar el modelo actual de Gemini 3 Flash Preview (según documentación 2026)
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${googleKey}`;
 
       const response = await fetch(apiUrl, {
         method: "POST",
