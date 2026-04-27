@@ -29,6 +29,20 @@ export async function processPropertyImage({ imageUrl, roomType, mode }: AIProce
     throw new Error("❌ Error: GOOGLE_AI_STUDIO_API_KEY no configurada. Necesitas la llave de Google AI Studio.");
   }
 
+  const prompt = mode === "clean"
+    ? `TASK: CLEAN ROOM PHOTOGRAPHY.
+       Remove all furniture, clutter, and personal items. 
+       Leave the room completely empty. 
+       MANTEN PAREDES, SUELOS Y VENTANAS EXACTAMENTE IGUAL.
+       Do not change architecture. 
+       Return only the empty room photo.`
+    : `TASK: VIRTUAL STAGING. 
+       Add luxury, modern, high-end furniture to this empty room. 
+       ROOM TYPE: ${roomType || 'luxurious living room'}.
+       MANTEN PAREDES, SUELOS Y ARQUITECTURA EXACTAMENTE IGUAL. 
+       The furniture should be attractive, modern and well-placed. 
+       Return only the final professional photograph.`;
+
   // MOTOR UNIFICADO: GEMINI 3.1 FLASH IMAGE (Nativo 2026)
   try {
     console.log(`[AI-STAGER] Generando imagen con Gemini 3.1 Flash Image...`);
