@@ -56,14 +56,15 @@ export async function autoEnhanceImage(file: File): Promise<EnhancementResult> {
   const { width, height } = await getImageDimensions(file);
   const originalSize = `${width}x${height}`;
 
-  // 2. Si ya tiene buena calidad, NO tocar
-  if (width >= MIN_WIDTH_PX) {
+  // 2. Si tiene calidad óptima (entre 1200px y 3000px), NO tocar
+  const MAX_WIDTH_PX = 3000;
+  if (width >= MIN_WIDTH_PX && width <= MAX_WIDTH_PX) {
     return {
       blob: file,
       enhanced: false,
       originalSize,
       finalSize: originalSize,
-      message: `✅ Calidad OK (${width}px) — sin cambios`,
+      message: `✅ Calidad Óptima (${width}px) — sin cambios`,
     };
   }
 

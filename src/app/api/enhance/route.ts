@@ -22,9 +22,11 @@ export async function POST(request: Request) {
 
     console.log(`📸 Imagen recibida: ${width}x${height} (${format})`);
 
-    // 2. VERIFICAR SI NECESITA MEJORA
-    if (width >= MIN_WIDTH) {
-      // Calidad ya es buena — devolver tal cual en base64
+    // 2. VERIFICAR SI NECESITA MEJORA O REDUCCIÓN (MAX 3000px para evitar errores de memoria)
+    const MAX_WIDTH = 3000;
+    
+    if (width >= MIN_WIDTH && width <= MAX_WIDTH) {
+      // Calidad ya es buena y no es excesivamente pesada — devolver tal cual en base64
       console.log(`✅ Calidad OK (${width}px), sin cambios.`);
       const base64 = inputBuffer.toString('base64');
       const mimeType = file.type || 'image/jpeg';
@@ -36,12 +38,21 @@ export async function POST(request: Request) {
       });
     }
 
-    // 3. NECESITA MEJORA — calcular nuevo tamaño manteniendo proporción
-    const scaleFactor = MIN_WIDTH / width;
-    const newWidth = MIN_WIDTH;
-    const newHeight = Math.round(height * scaleFactor);
+    // 3. NECESITA MEJORA (Upscale) O REDUCCIÓN (Downscale)
+    let newWidth = width;
+    let newHeight = height;
 
-    console.log(`⬆️ Escalando de ${width}x${height} → ${newWidth}x${newHeight}`);
+    if (width < MIN_WIDTH) {
+      const scaleFactor = MIN_WIDTH / width;
+      newWidth = MIN_WIDTH;
+      newHeight = Math.round(height * scaleFactor);
+      console.log(`⬆️ Escalando de ${width}x${height} → ${newWidth}x${newHeight}`);
+    } else if (width > MAX_WIDTH) {
+      const scaleFactor = MAX_WIDTH / width;
+      newWidth = MAX_WIDTH;
+      newHeight = Math.round(height * scaleFactor);
+      console.log(`⬇️ Reduciendo de ${width}x${height} → ${newWidth}x${newHeight} (por exceso de peso)`);
+    }
 
     // 4. PROCESAR CON SHARP: Upscale + Sharpen + Optimización
     const enhancedBuffer = await sharp(inputBuffer)

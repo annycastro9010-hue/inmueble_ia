@@ -103,7 +103,7 @@ export async function processPropertyImage({ imageUrl, roomType, mode }: AIProce
       const mimeType = getMimeType(imageUrl);
 
       // Usar un modelo estable de Gemini 1.5 Flash que soporte multimodal
-      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${googleKey}`;
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${googleKey}`;
 
       const response = await fetch(apiUrl, {
         method: "POST",

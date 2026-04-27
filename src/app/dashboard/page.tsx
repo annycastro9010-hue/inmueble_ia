@@ -292,14 +292,14 @@ export default function DashboardPage() {
           const blob = await (await fetch(finalUrl)).blob();
           const fileName = `ai_${type}_${Date.now()}.jpg`;
           const { data: uploadData, error: uploadError } = await supabase.storage
-            .from("media")
-            .upload(fileName, blob, { contentType: 'image/jpeg' });
+            .from("propiedades")
+            .upload(`ai/${fileName}`, blob, { contentType: 'image/jpeg' });
 
           if (uploadError) throw new Error(`Error subiendo resultado IA: ${uploadError.message}`);
 
           const { data: { publicUrl } } = supabase.storage
-            .from("media")
-            .getPublicUrl(fileName);
+            .from("propiedades")
+            .getPublicUrl(`ai/${fileName}`);
           
           finalUrl = publicUrl;
         }
@@ -647,20 +647,39 @@ export default function DashboardPage() {
                     <div className="absolute top-3 left-3">{statusBadge(img.status)}</div>
                   </div>
 
+                  {/* Selector de Habitación */}
+                  <div className="px-4 pt-4">
+                    <select 
+                      value={img.room_type || "sala"}
+                      onChange={async (e) => {
+                        const newType = e.target.value;
+                        await supabase.from("media").update({ room_type: newType }).eq("id", img.id);
+                        setImages(prev => prev.map(m => m.id === img.id ? { ...m, room_type: newType } : m));
+                      }}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-[10px] uppercase font-black tracking-widest outline-none focus:border-hormozi-yellow transition-all"
+                    >
+                      <option value="sala" className="bg-[#062b54]">🛋️ Sala / Estancia</option>
+                      <option value="bedroom" className="bg-[#062b54]">🛏️ Dormitorio</option>
+                      <option value="kitchen" className="bg-[#062b54]">🍳 Cocina</option>
+                      <option value="bathroom" className="bg-[#062b54]">🚿 Baño / Toilet</option>
+                      <option value="dining" className="bg-[#062b54]">🍽️ Comedor</option>
+                    </select>
+                  </div>
+
                   {/* Acciones IA */}
-                  <div className="p-4 space-y-2">
-                    <div className="grid grid-cols-2 gap-2">
+                  <div className="p-4 space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
                       <button
                         onClick={() => processAI(img.id, "clean")}
-                        className="py-3 bg-white/5 border border-white/10 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-white/10 hover:border-white/20 transition-all flex items-center justify-center gap-1.5"
+                        className="py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 hover:border-white/20 transition-all flex items-center justify-center gap-2 group/btn"
                       >
-                        <X size={12} className="text-yellow-400" /> Limpiar
+                        <X size={14} className="text-yellow-400 group-hover/btn:scale-125 transition-transform" /> Limpiar
                       </button>
                       <button
                         onClick={() => processAI(img.id, "stage")}
-                        className="py-3 bg-gradient-to-r from-purple-600/30 to-blue-600/30 border border-purple-500/30 rounded-xl text-[9px] font-black uppercase tracking-widest hover:from-purple-600/50 hover:to-blue-600/50 transition-all flex items-center justify-center gap-1.5 text-purple-300"
+                        className="py-4 bg-gradient-to-br from-indigo-600 to-purple-700 border border-indigo-400/30 rounded-2xl text-[11px] font-black uppercase tracking-widest hover:brightness-125 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-white shadow-lg shadow-indigo-900/20"
                       >
-                        <Wand2 size={12} /> Amoblar IA
+                        <Wand2 size={14} className="animate-pulse" /> Arreglar con IA
                       </button>
                     </div>
                   </div>
