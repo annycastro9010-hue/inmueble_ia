@@ -636,13 +636,38 @@ export default function DashboardPage() {
                       crossOrigin="anonymous"
                       alt="Imagen propiedad"
                     />
-                    {/* Botón borrar */}
-                    <button
-                      onClick={() => removeImage(img.id)}
-                      className="absolute top-3 right-3 p-2 bg-black/60 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500"
-                    >
-                      <Trash2 size={13}/>
-                    </button>
+                    {/* Acciones flotantes */}
+                    <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={async () => {
+                          try {
+                            const res = await fetch(img.url);
+                            const blob = await res.blob();
+                            const url = window.URL.createObjectURL(blob);
+                            const link = document.createElement('a');
+                            link.href = url;
+                            link.download = `foto_${activePropertyId}_${img.id}.jpg`;
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            window.URL.revokeObjectURL(url);
+                          } catch (e) {
+                            window.open(img.url, '_blank');
+                          }
+                        }}
+                        className="p-2 bg-black/60 rounded-xl hover:bg-blue-600 transition-colors"
+                        title="Descargar Foto"
+                      >
+                        <Download size={13}/>
+                      </button>
+                      <button
+                        onClick={() => removeImage(img.id)}
+                        className="p-2 bg-black/60 rounded-xl hover:bg-red-500 transition-colors"
+                        title="Borrar Foto"
+                      >
+                        <Trash2 size={13}/>
+                      </button>
+                    </div>
                     {/* Badge de estado */}
                     <div className="absolute top-3 left-3">{statusBadge(img.status)}</div>
                   </div>
