@@ -43,6 +43,10 @@ export default function DashboardPage() {
   const [propertyDescription, setPropertyDescription] = useState("");
   const [propertySlug, setPropertySlug] = useState("");
   const [propertyContactPhone, setPropertyContactPhone] = useState("573004341768");
+  const [propertyBedrooms, setPropertyBedrooms] = useState("3");
+  const [propertyBathrooms, setPropertyBathrooms] = useState("2");
+  const [propertyArea, setPropertyArea] = useState("125");
+  const [propertyGarages, setPropertyGarages] = useState("1");
   const [loading, setLoading] = useState(true);
 
   const formattedPrice = (parseFloat(propertyPrice?.toString().replace(/[^0-9.]/g, '') || "0")).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
@@ -72,6 +76,10 @@ export default function DashboardPage() {
       setPropertyDescription(propData.description || "");
       setPropertySlug(propData.slug || "");
       setPropertyContactPhone(propData.contact_phone || "573004341768");
+      setPropertyBedrooms(propData.bedrooms?.toString() || "3");
+      setPropertyBathrooms(propData.bathrooms?.toString() || "2");
+      setPropertyArea(propData.area?.toString() || "125");
+      setPropertyGarages(propData.garages?.toString() || "1");
     }
 
     const { data: mediaData } = await supabase.from("media").select("*").eq("property_id", id).order("floor", { ascending: true }).order("created_at", { ascending: true });
@@ -119,7 +127,11 @@ export default function DashboardPage() {
         price: cleanPrice,
         location: propertyLocation,
         description: propertyDescription,
-        contact_phone: propertyContactPhone
+        contact_phone: propertyContactPhone,
+        bedrooms: parseInt(propertyBedrooms) || 0,
+        bathrooms: parseInt(propertyBathrooms) || 0,
+        area: parseInt(propertyArea) || 0,
+        garages: parseInt(propertyGarages) || 0
       }).eq("id", activePropertyId);
       setPropertySlug(slug);
       alert("✅ ¡Información actualizada!");
@@ -750,6 +762,29 @@ export default function DashboardPage() {
                   <label className="text-[9px] font-black uppercase tracking-widest text-white/40 block mb-2">WhatsApp de Contacto (Ej: 57300...)</label>
                   <input value={propertyContactPhone} onChange={e => setPropertyContactPhone(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 font-bold outline-none focus:border-hormozi-yellow transition-colors" />
                 </div>
+
+                <div className="pt-4 border-t border-white/10">
+                  <h3 className="text-xs font-black uppercase italic tracking-widest text-hormozi-yellow mb-4">Detalles Técnicos (Ficha)</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                      <label className="text-[8px] font-black uppercase tracking-widest text-white/40 block mb-2">Habitaciones</label>
+                      <input type="number" value={propertyBedrooms} onChange={e => setPropertyBedrooms(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-2xl p-3 font-bold outline-none focus:border-hormozi-yellow transition-colors text-center" />
+                    </div>
+                    <div>
+                      <label className="text-[8px] font-black uppercase tracking-widest text-white/40 block mb-2">Baños</label>
+                      <input type="number" value={propertyBathrooms} onChange={e => setPropertyBathrooms(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-2xl p-3 font-bold outline-none focus:border-hormozi-yellow transition-colors text-center" />
+                    </div>
+                    <div>
+                      <label className="text-[8px] font-black uppercase tracking-widest text-white/40 block mb-2">Área (m²)</label>
+                      <input type="number" value={propertyArea} onChange={e => setPropertyArea(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-2xl p-3 font-bold outline-none focus:border-hormozi-yellow transition-colors text-center" />
+                    </div>
+                    <div>
+                      <label className="text-[8px] font-black uppercase tracking-widest text-white/40 block mb-2">Parqueo</label>
+                      <input type="number" value={propertyGarages} onChange={e => setPropertyGarages(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-2xl p-3 font-bold outline-none focus:border-hormozi-yellow transition-colors text-center" />
+                    </div>
+                  </div>
+                </div>
+
                 <button onClick={handleSaveProperty} className="w-full py-4 bg-white text-black font-black rounded-2xl uppercase text-xs tracking-widest hover:bg-hormozi-yellow transition-colors">
                   Guardar Cambios
                 </button>
