@@ -344,10 +344,10 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
                 {[
-                  { ic: <BedDouble size={32} />, val: "3", l: "Habs" },
-                  { ic: <Bath size={32} />, val: "2", l: "Baños" },
-                  { ic: <Square size={32} />, val: "125", l: "m² Total" },
-                  { ic: <Car size={32} />, val: "1", l: "Plaza" }
+                  { ic: <BedDouble size={32} />, val: property.bedrooms || "3", l: "Habs" },
+                  { ic: <Bath size={32} />, val: property.bathrooms || "2", l: "Baños" },
+                  { ic: <Square size={32} />, val: property.area || "125", l: "m² Total" },
+                  { ic: <Car size={32} />, val: property.parking || property.garages || "1", l: "Parqueo" }
                 ].map((s, i) => (
                   <div key={i} className="bg-white/5 p-12 rounded-[4rem] border-2 border-white/5 flex flex-col items-center hover:border-hormozi-yellow/30 transition-all">
                     <div className="text-hormozi-yellow mb-5">{s.ic}</div>
@@ -357,19 +357,19 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
                 ))}
               </div>
            </div>
-           <div className="lg:col-span-5 space-y-12 lg:sticky lg:top-40">
+           <div className="lg:col-span-5 space-y-12 lg:sticky lg:top-24">
               <div className="bg-white p-14 md:p-20 rounded-[5rem] shadow-[0_80px_150px_-30px_rgba(0,0,0,0.5)] border-t-8 border-green-500/20">
                  <div className="inline-block px-4 py-2 bg-red-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest mb-6 animate-pulse">
                     ¡Oportunidad de Oro! Negocio Inmediato en Santander
                  </div>
                  
                  {property.old_price && (
-                    <div className="text-black/30 font-black text-2xl md:text-3xl italic line-through mb-1 tracking-tighter opacity-50">
+                    <div className="text-black/40 font-black text-xl md:text-2xl italic line-through mb-2 tracking-tighter">
                        Antes: ${property.old_price.toLocaleString('es-CO')}
                     </div>
                  )}
                  
-                 <div className="text-5xl md:text-8xl lg:text-9xl font-black italic tracking-tighter text-black leading-none mb-4 break-all">
+                 <div className="text-5xl sm:text-6xl lg:text-7xl xl:text-[5rem] 2xl:text-8xl font-black italic tracking-tighter text-black leading-none mb-6 break-words">
                     ${property.price?.toLocaleString('es-CO')}
                  </div>
                  
@@ -480,27 +480,34 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
         )}
       </AnimatePresence>
 
-      {/* ── CONTACT PILL FLOTANTE ── */}
-      <motion.button 
-        animate={{ 
-          scale: [1, 1.1, 1],
-          boxShadow: [
-            "0 20px 40px rgba(34,197,94,0.3)",
-            "0 20px 70px rgba(34,197,94,0.7)",
-            "0 20px 40px rgba(34,197,94,0.3)"
-          ] 
-        }}
-        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-        whileHover={{ scale: 1.2 }}
-        whileTap={{ scale: 0.9 }}
-        className="fixed bottom-10 right-10 z-[200] p-6 bg-green-500 rounded-full shadow-[0_20px_50px_rgba(34,197,94,0.4)] border-4 border-white text-white"
-        onClick={() => {
-            const phone = property.contact_phone || "573004341768";
-            window.open(`https://wa.me/${phone.replace(/[^0-9]/g, '')}`, '_blank');
-        }}
+      {/* ── BARRA FLOTANTE DE INFO / CONTACTO ── */}
+      <motion.div 
+        initial={{ y: 200 }} animate={{ y: 0 }} transition={{ delay: 0.5, type: "spring", stiffness: 60 }}
+        className="fixed bottom-0 left-0 right-0 z-[200] p-4 md:p-5 bg-black/95 backdrop-blur-3xl border-t border-white/10 md:bottom-8 md:left-1/2 md:-translate-x-1/2 md:w-full md:max-w-3xl md:rounded-full md:border flex items-center justify-between shadow-[0_-30px_60px_rgba(0,0,0,0.6)] md:shadow-[0_40px_80px_rgba(0,0,0,0.8)]"
       >
-        <MessageCircle size={32} fill="currentColor" className="text-white" />
-      </motion.button>
+        <div className="flex items-center gap-4">
+           {images[0] && (
+             <div className="hidden md:block w-14 h-14 bg-[#020617] rounded-full overflow-hidden border-2 border-white/10">
+                <img src={images[0].url} className="w-full h-full object-cover" />
+             </div>
+           )}
+           <div className="flex flex-col">
+             <span className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.4em] text-hormozi-yellow truncate max-w-[150px] md:max-w-[200px]">{property.title}</span>
+             <span className="text-lg md:text-2xl font-black italic tracking-tighter text-white">${property.price?.toLocaleString('es-CO')}</span>
+           </div>
+        </div>
+        <button 
+          onClick={() => {
+              const phone = property.contact_phone || "573004341768";
+              const text = `¡Hola! Vi la propiedad "${property.title}" desde la tarjeta flotante y quiero más información.`;
+              window.open(`https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(text)}`, '_blank');
+          }}
+          className="px-6 py-4 md:px-8 md:py-4 bg-green-500 hover:bg-green-400 text-white font-black uppercase text-[10px] md:text-[12px] tracking-[0.3em] rounded-full shadow-[0_0_30px_rgba(34,197,94,0.4)] flex items-center gap-3 transition-all hover:scale-[1.05] active:scale-95"
+        >
+          <MessageCircle size={20} fill="currentColor" />
+          <span className="hidden sm:inline">WhatsApp</span>
+        </button>
+      </motion.div>
     </main>
   );
 }
