@@ -28,7 +28,7 @@ function MagicSlider({ before, after }: { before: string; after: string }) {
   return (
     <div 
       ref={containerRef}
-      className="relative w-full aspect-video rounded-[3rem] overflow-hidden cursor-ew-resize border-2 border-white/10 group shadow-2xl"
+      className="relative w-full aspect-video rounded-3xl md:rounded-[3rem] overflow-hidden cursor-ew-resize border-2 border-white/10 group shadow-2xl"
       onMouseMove={handleMove}
       onTouchMove={handleMove}
     >
@@ -301,7 +301,7 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
              </div>
              <h2 className="text-5xl md:text-8xl font-black uppercase italic tracking-tighter leading-[0.9]">Cine <span className="text-hormozi-yellow">Inmobiliario</span></h2>
              </div>
-             <div className="aspect-video max-w-6xl mx-auto rounded-[5rem] overflow-hidden border-8 border-white/5 shadow-[0_60px_100px_rgba(0,0,0,0.6)] bg-black">
+             <div className="aspect-video max-w-6xl mx-auto rounded-3xl md:rounded-[5rem] overflow-hidden border-4 md:border-8 border-white/5 shadow-[0_60px_100px_rgba(0,0,0,0.6)] bg-black">
                 <video src={property.video_url} autoPlay loop muted playsInline className="w-full h-full object-cover brightness-[0.9]" />
              </div>
           </section>
@@ -317,7 +317,7 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
                  ))}
               </div>
             </div>
-           <div className="relative aspect-[21/9] rounded-[5rem] overflow-hidden border-2 border-white/10 bg-black group shadow-3xl">
+           <div className="relative aspect-video md:aspect-[21/9] rounded-3xl md:rounded-[5rem] overflow-hidden border-2 border-white/10 bg-black group shadow-3xl">
               <AnimatePresence mode="wait">
                 <motion.img
                   key={autoCarouselIndex}
@@ -349,7 +349,7 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
                   { ic: <Square size={32} />, val: property.area || "125", l: "m² Total" },
                   { ic: <Car size={32} />, val: property.parking || property.garages || "1", l: "Parqueo" }
                 ].map((s, i) => (
-                  <div key={i} className="bg-white/5 p-12 rounded-[4rem] border-2 border-white/5 flex flex-col items-center hover:border-hormozi-yellow/30 transition-all">
+                  <div key={i} className="bg-white/5 p-6 md:p-12 rounded-3xl md:rounded-[4rem] border-2 border-white/5 flex flex-col items-center hover:border-hormozi-yellow/30 transition-all">
                     <div className="text-hormozi-yellow mb-5">{s.ic}</div>
                     <div className="text-4xl font-black italic mb-2">{s.val}</div>
                     <div className="text-[11px] uppercase font-bold text-white/20 tracking-[0.3em]">{s.l}</div>
@@ -358,7 +358,7 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
               </div>
            </div>
            <div className="lg:col-span-5 space-y-12 lg:sticky lg:top-24">
-              <div className="bg-white p-14 md:p-20 rounded-[5rem] shadow-[0_80px_150px_-30px_rgba(0,0,0,0.5)] border-t-8 border-green-500/20">
+              <div className="bg-white p-8 md:p-20 rounded-[2.5rem] md:rounded-[5rem] shadow-[0_80px_150px_-30px_rgba(0,0,0,0.5)] border-t-8 border-green-500/20">
                  <div className="inline-block px-4 py-2 bg-red-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest mb-6 animate-pulse">
                     ¡Oportunidad de Oro! Negocio Inmediato en Santander
                  </div>
@@ -383,7 +383,7 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
               </div>
               
               {stagedImg && originalImg && (
-                <div className="bg-black/40 p-10 rounded-[5rem] border-2 border-white/5 space-y-8 shadow-2xl backdrop-blur-xl">
+                <div className="bg-black/40 p-6 md:p-10 rounded-[2.5rem] md:rounded-[5rem] border-2 border-white/5 space-y-8 shadow-2xl backdrop-blur-xl">
                    <div className="flex items-center justify-between px-4">
                      <span className="text-[11px] font-black uppercase tracking-[0.3em] text-hormozi-yellow">Hogar con Potencial</span>
                      <span className="text-[10px] font-bold text-white/20 uppercase tracking-widest italic animate-pulse">Desliza para ver el cambio</span>
@@ -405,7 +405,7 @@ export default function PropertyDynamicPage({ params }: { params: { id: string }
           >
             <motion.div 
               initial={{ scale: 0.9, y: 30 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 30 }}
-              className="bg-[#020617] border border-white/10 rounded-[5rem] p-12 md:p-20 max-w-2xl w-full shadow-3xl relative overflow-hidden"
+              className="bg-[#020617] border border-white/10 rounded-[2rem] md:rounded-[5rem] p-8 md:p-20 max-w-2xl w-full shadow-3xl relative overflow-hidden"
             >
               <button 
                 onClick={() => setShowCRMModal(false)} 
